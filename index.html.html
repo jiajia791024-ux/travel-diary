@@ -1,0 +1,1468 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>我的生活手記</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=ZCOOL+KuaiLe&family=Noto+Sans+TC:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+/* ============ tokens ============ */
+:root{
+  --bg-app:#FFF8EF;
+  --ink:#4A3F35;
+  --ink-soft:#94897A;
+  --white:#FFFFFF;
+  --shadow:rgba(74,63,53,.16);
+
+  --travel-accent:#FF9B6A; --travel-accent-dark:#E2703A; --travel-bg:#FFE9D9; --travel-bg-2:#FFF4EB;
+  --diary-accent:#6FA8DC;  --diary-accent-dark:#4A85BB;  --diary-bg:#E8F2FC;  --diary-bg-2:#F3F9FE;
+  --recipe-accent:#8FC17E; --recipe-accent-dark:#5F9C4E; --recipe-bg:#EAF7E4; --recipe-bg-2:#F4FBF0;
+  --book-accent:#C98BC9;   --book-accent-dark:#A15FA1;   --book-bg:#F6EAF8;   --book-bg-2:#FBF2FC;
+
+  --status-planning-bg:#FFE3C2; --status-planning-fg:#B5651D;
+  --status-soon-bg:#FFD6D6;     --status-soon-fg:#C0392B;
+  --status-done-bg:#D9F2D2;     --status-done-fg:#3C7A3C;
+}
+*{box-sizing:border-box;}
+html,body{margin:0;padding:0;}
+body{
+  font-family:'Noto Sans TC', sans-serif;
+  color:var(--ink);
+  background:var(--bg-app);
+  min-height:100vh;
+  -webkit-font-smoothing:antialiased;
+}
+button,input,textarea,select{font-family:'Noto Sans TC', sans-serif;}
+h1,h2,h3{margin:0;font-weight:400;}
+.hidden{display:none !important;}
+:focus-visible{outline:3px solid #E2703A; outline-offset:2px;}
+a{color:inherit;}
+@media (prefers-reduced-motion: reduce){ *{transition:none !important; animation:none !important;} }
+
+.brush{ font-family:'ZCOOL KuaiLe', cursive; font-weight:400; }
+
+/* ============ HOME ============ */
+#view-home{
+  min-height:100vh;
+  position:relative;
+  overflow:hidden;
+  padding-bottom:3rem;
+  background:var(--bg-app);
+}
+#view-home::before, #view-home::after{
+  content:""; position:absolute; border-radius:50%; filter:blur(2px); z-index:0;
+}
+#view-home::before{ width:340px; height:340px; background:var(--travel-bg); top:-120px; left:-100px; opacity:.7; }
+#view-home::after{ width:260px; height:260px; background:var(--book-bg); bottom:-80px; right:-60px; opacity:.7; }
+.home-header{ position:relative; z-index:1; text-align:center; padding:4rem 1.5rem .5rem; }
+.home-header h1{ font-size:clamp(2.2rem, 7vw, 3.1rem); color:var(--ink); }
+.home-header p{ font-size:1.05rem; color:var(--ink-soft); margin-top:.6rem; }
+
+.desk-items{
+  position:relative; z-index:1;
+  display:flex; flex-wrap:wrap; justify-content:center; align-items:stretch;
+  gap:1.6rem; padding:2.5rem 1.5rem 4rem; max-width:900px; margin:0 auto;
+}
+.desk-item{
+  width:190px; border:3px solid transparent; border-radius:26px;
+  background:var(--white);
+  padding:1.6rem 1.1rem 1.3rem;
+  display:flex; flex-direction:column; align-items:center; gap:.55rem;
+  box-shadow:0 8px 0 var(--shadow), 0 10px 18px var(--shadow);
+  transition:transform .18s ease, box-shadow .18s ease;
+}
+.desk-item:hover, .desk-item:focus-visible{ transform:translateY(-6px) scale(1.03); }
+.desk-item .badge{
+  width:70px; height:70px; border-radius:50%;
+  display:flex; align-items:center; justify-content:center;
+  font-size:2.1rem;
+}
+.desk-item .d-title{ font-family:'ZCOOL KuaiLe',cursive; font-size:1.35rem; }
+.desk-item .d-tag{ font-size:.85rem; color:var(--ink-soft); text-align:center; }
+.desk-item.i-travel{ border-color:var(--travel-accent); }
+.desk-item.i-travel .badge{ background:var(--travel-bg); }
+.desk-item.i-diary{ border-color:var(--diary-accent); }
+.desk-item.i-diary .badge{ background:var(--diary-bg); }
+.desk-item.i-recipes{ border-color:var(--recipe-accent); }
+.desk-item.i-recipes .badge{ background:var(--recipe-bg); }
+.desk-item.i-books{ border-color:var(--book-accent); }
+.desk-item.i-books .badge{ background:var(--book-bg); }
+
+/* ============ shared module chrome ============ */
+.module-view{ min-height:100vh; padding-bottom:4rem; }
+.module-header{ display:flex; align-items:flex-start; justify-content:space-between; gap:1rem; flex-wrap:wrap; padding:2rem 1.5rem 1rem; max-width:820px; margin:0 auto; }
+.back-link{ border:none; background:none; font-size:.92rem; padding:0; color:var(--ink-soft); cursor:pointer; }
+.back-link:hover{ text-decoration:underline; }
+.module-title{ font-family:'ZCOOL KuaiLe',cursive; font-size:2rem; margin-top:.3rem; }
+.module-sub{ font-size:.95rem; color:var(--ink-soft); margin-top:.15rem; }
+.module-body{ max-width:820px; margin:0 auto; padding:0 1.5rem; }
+
+.btn{ border:none; border-radius:999px; padding:.62rem 1.25rem; font-size:.92rem; font-weight:700; color:#fff; box-shadow:0 3px 0 rgba(0,0,0,.15); }
+.btn:active{ transform:translateY(2px); box-shadow:0 1px 0 rgba(0,0,0,.15); }
+.btn-sm{ padding:.4rem .9rem; font-size:.85rem; }
+.btn-ghost{ background:var(--white); color:var(--ink-soft); border:2px solid #e6ddce; box-shadow:none; }
+.btn-danger{ background:#E2703A; }
+.icon-btn{ border:none; background:var(--white); border-radius:50%; width:2.1rem; height:2.1rem; box-shadow:0 2px 6px var(--shadow); font-size:1rem; }
+.tiny-link{ border:none; background:none; font-size:.82rem; color:var(--ink-soft); text-decoration:underline; padding:.2rem 0; }
+.tiny-link-danger{ color:#C0392B; }
+.tiny-x{ border:none; background:none; color:#C0392B; font-size:.85rem; padding:0 .3rem; }
+
+.field{ margin-bottom:.9rem; }
+.field label{ display:block; font-size:.8rem; color:var(--ink-soft); margin-bottom:.25rem; font-weight:500; }
+.field input[type=text], .field input[type=date], .field input[type=time], .field input[type=datetime-local], .field input[type=number], .field textarea, .field select{
+  width:100%; border:2px solid #ecdfc9; border-radius:12px; background:var(--white); padding:.55rem .7rem; font-size:.95rem; color:var(--ink);
+}
+.field textarea{ resize:vertical; min-height:4rem; line-height:1.6; }
+.field input:focus, .field textarea:focus, .field select:focus{ border-color:var(--travel-accent); }
+.checkbox-field label{ display:flex; align-items:center; gap:.4rem; font-size:.9rem; color:var(--ink); }
+.row-2{ display:grid; grid-template-columns:1fr 1fr; gap:.9rem; }
+@media (max-width:480px){ .row-2{grid-template-columns:1fr;} }
+
+.form-panel{ background:var(--white); border-radius:18px; padding:1.2rem 1.2rem 1rem; margin-bottom:1.2rem; box-shadow:0 4px 14px var(--shadow); }
+.form-actions{ display:flex; gap:.6rem; margin-top:.4rem; flex-wrap:wrap; }
+.img-preview{ display:block; margin-top:.5rem; max-height:100px; border-radius:10px; }
+
+.empty-state{ font-size:1.05rem; color:var(--ink-soft); text-align:center; padding:2.6rem 1rem; }
+.loading-msg{ text-align:center; padding:2.2rem 1rem; color:var(--ink-soft); }
+
+/* module backgrounds/colors */
+#view-travel{ background:var(--travel-bg-2); } #view-travel .module-title, #view-travel .back-link{ color:var(--travel-accent-dark); } #view-travel .btn-primary{ background:var(--travel-accent); }
+#view-diary{  background:var(--diary-bg-2); }  #view-diary  .module-title, #view-diary  .back-link{ color:var(--diary-accent-dark); }  #view-diary  .btn-primary{ background:var(--diary-accent); }
+#view-recipes{background:var(--recipe-bg-2);}  #view-recipes.module-title{}
+#view-recipes .module-title, #view-recipes .back-link{ color:var(--recipe-accent-dark); } #view-recipes .btn-primary{ background:var(--recipe-accent); }
+#view-books{  background:var(--book-bg-2); }   #view-books  .module-title, #view-books  .back-link{ color:var(--book-accent-dark); }  #view-books  .btn-primary{ background:var(--book-accent); }
+
+/* ---------- Travel: trip list ---------- */
+.trip-card{ background:var(--white); border-radius:20px; padding:1.1rem 1.2rem; margin-bottom:1rem; box-shadow:0 4px 12px var(--shadow); cursor:pointer; transition:transform .15s ease; }
+.trip-card:hover{ transform:translateY(-3px); }
+.trip-card-top{ display:flex; justify-content:space-between; align-items:center; gap:.6rem; flex-wrap:wrap; }
+.trip-card-title{ font-family:'ZCOOL KuaiLe',cursive; font-size:1.3rem; }
+.trip-status-badge{ font-size:.75rem; font-weight:700; padding:.2rem .65rem; border-radius:999px; }
+.status-planning{ background:var(--status-planning-bg); color:var(--status-planning-fg); }
+.status-soon{ background:var(--status-soon-bg); color:var(--status-soon-fg); }
+.status-done{ background:var(--status-done-bg); color:var(--status-done-fg); }
+.trip-card-dest{ color:var(--ink-soft); margin-top:.2rem; font-size:.92rem; }
+.trip-card-range{ font-size:.85rem; color:var(--ink-soft); margin-top:.3rem; }
+.trip-card-stats{ display:flex; gap:1rem; margin-top:.55rem; font-size:.85rem; color:var(--travel-accent-dark); font-weight:600; flex-wrap:wrap; }
+
+/* ---------- Travel: workspace ---------- */
+.ws-title-row{ display:flex; align-items:center; gap:.6rem; margin-top:.3rem; flex-wrap:wrap; }
+.ws-meta-row{ display:flex; gap:.9rem; align-items:center; margin-top:.4rem; font-size:.88rem; color:var(--ink-soft); flex-wrap:wrap; }
+.subtabs{ display:flex; gap:.5rem; flex-wrap:wrap; padding:0 1.5rem 1rem; max-width:820px; margin:0 auto; }
+.subtab-pill{ border:2px solid var(--travel-accent); background:var(--white); color:var(--travel-accent-dark); border-radius:999px; padding:.45rem 1rem; font-size:.88rem; font-weight:600; }
+.subtab-pill-active{ background:var(--travel-accent); color:#fff; }
+.subtab-h{ font-weight:700; font-size:.95rem; color:var(--travel-accent-dark); margin:0 0 .5rem; }
+.flight-block{ background:var(--white); border-radius:18px; padding:1.1rem 1.2rem; margin-bottom:1rem; box-shadow:0 4px 12px var(--shadow); }
+
+.day-card{ background:var(--white); border-radius:18px; padding:1rem 1.1rem 1.1rem; margin-bottom:1.1rem; box-shadow:0 4px 12px var(--shadow); }
+.day-card-head{ cursor:pointer; }
+.day-card-head-top{ display:flex; align-items:center; justify-content:space-between; gap:.6rem; }
+.day-card-head-main{ display:flex; align-items:center; gap:.7rem; flex-wrap:wrap; }
+.day-date{ font-family:'ZCOOL KuaiLe',cursive; font-size:1.15rem; color:var(--travel-accent-dark); }
+.day-stay{ font-size:.85rem; color:var(--ink-soft); }
+.day-title{ font-size:.9rem; color:var(--ink-soft); margin-top:.3rem; }
+.day-expand-arrow{ font-size:.78rem; color:var(--travel-accent-dark); font-weight:600; white-space:nowrap; }
+.day-edit-link{ margin-top:.4rem; display:inline-block; }
+
+.itinerary-track{ margin-top:.7rem; }
+.transit-connector{ display:flex; gap:.4rem; align-items:center; font-size:.8rem; color:var(--ink-soft); padding:.3rem 0 .3rem 30px; margin-left:13px; border-left:2px dashed #eadfc9; }
+.item-card{ display:flex; gap:.7rem; padding:.65rem 0; }
+.item-num{ flex-shrink:0; width:26px; height:26px; border-radius:50%; background:var(--travel-accent); color:#fff; font-size:.78rem; font-weight:700; display:flex; align-items:center; justify-content:center; margin-top:.1rem; }
+.item-thumb-sq{ width:60px; height:60px; object-fit:cover; border-radius:12px; flex-shrink:0; display:block; }
+.item-thumb-placeholder{ width:60px; height:60px; border-radius:12px; background:var(--travel-bg); display:flex; align-items:center; justify-content:center; font-size:1.4rem; flex-shrink:0; }
+.item-card-body{ flex:1; min-width:0; }
+.item-card-top{ display:flex; align-items:baseline; gap:.5rem; flex-wrap:wrap; }
+.item-time{ font-weight:700; color:var(--travel-accent-dark); font-size:.86rem; }
+.item-place{ font-weight:700; font-size:.98rem; }
+.item-badge{ font-size:.72rem; background:var(--status-soon-bg); color:var(--status-soon-fg); border-radius:999px; padding:.1rem .5rem; }
+.item-stay-badge{ font-size:.72rem; background:var(--travel-bg); color:var(--travel-accent-dark); border-radius:999px; padding:.1rem .55rem; font-weight:600; }
+.item-card-sub{ display:flex; gap:.7rem; font-size:.8rem; color:var(--ink-soft); margin-top:.25rem; flex-wrap:wrap; align-items:center; }
+.item-card-sub a{ text-decoration:underline; }
+.item-note{ font-size:.83rem; color:var(--ink-soft); margin-top:.3rem; white-space:pre-wrap; }
+
+.transport-picker{ display:flex; flex-wrap:wrap; gap:.4rem; }
+.transport-pick{ border:2px solid #ecdfc9; background:var(--white); border-radius:14px; padding:.35rem .5rem; font-size:1.05rem; text-align:center; min-width:52px; }
+.transport-pick span{ display:block; font-size:.62rem; color:var(--ink-soft); margin-top:.1rem; }
+.transport-pick-active{ border-color:var(--travel-accent); background:var(--travel-bg); }
+
+.checklist-pills{ display:flex; gap:.5rem; flex-wrap:wrap; margin-bottom:1rem; }
+.pill{ border:2px solid var(--travel-accent); background:var(--white); color:var(--travel-accent-dark); border-radius:999px; padding:.4rem .9rem; font-size:.85rem; font-weight:600; }
+.pill-active{ background:var(--travel-accent); color:#fff; }
+.pill-add{ border-style:dashed; }
+.checklist-panel{ background:var(--white); border-radius:18px; padding:1.1rem 1.2rem; box-shadow:0 4px 12px var(--shadow); }
+.checklist-panel-head{ display:flex; align-items:center; gap:.7rem; flex-wrap:wrap; margin-bottom:.5rem; }
+.checklist-name{ font-family:'ZCOOL KuaiLe',cursive; font-size:1.15rem; }
+.checklist-progress{ font-size:.82rem; color:var(--ink-soft); }
+.checklist-items{ display:flex; flex-direction:column; gap:.3rem; }
+.checklist-item{ display:flex; align-items:center; gap:.55rem; font-size:.93rem; padding:.3rem 0; }
+.checklist-item input{ width:18px; height:18px; accent-color:var(--travel-accent); }
+.checklist-item.is-done span{ text-decoration:line-through; color:var(--ink-soft); }
+.checklist-item span{ flex:1; }
+.checklist-add-row{ display:flex; gap:.5rem; margin-top:.7rem; }
+.checklist-add-row input{ flex:1; border:2px solid #ecdfc9; border-radius:12px; padding:.5rem .7rem; }
+
+.moment-card{ background:var(--white); border-radius:18px; padding:1rem 1.1rem; margin-bottom:1rem; box-shadow:0 4px 12px var(--shadow); }
+.moment-date{ font-size:.82rem; color:var(--travel-accent-dark); font-weight:600; margin-bottom:.4rem; }
+.moment-photo{ display:block; max-height:220px; border-radius:14px; margin-bottom:.6rem; }
+.moment-text{ font-size:.95rem; line-height:1.7; white-space:pre-wrap; }
+
+.expense-total{ text-align:center; background:var(--white); border-radius:18px; padding:1.3rem 1rem; margin-bottom:1.1rem; box-shadow:0 4px 12px var(--shadow); font-size:.95rem; color:var(--ink-soft); }
+.expense-total-num{ font-family:'ZCOOL KuaiLe',cursive; font-size:2rem; color:var(--travel-accent-dark); }
+.expense-daylist, .expense-itemlist{ background:var(--white); border-radius:18px; padding:.5rem 1.1rem; box-shadow:0 4px 12px var(--shadow); }
+.expense-day-row{ display:flex; justify-content:space-between; padding:.55rem 0; font-size:.9rem; border-top:1px dashed #eee0cc; }
+.expense-item-row{ display:flex; justify-content:space-between; align-items:center; gap:.5rem; flex-wrap:wrap; padding:.55rem 0; font-size:.9rem; border-top:1px dashed #eee0cc; }
+.expense-day-row:first-child, .expense-item-row:first-child{ border-top:none; }
+.expense-item-row .ex-amount{ font-weight:700; color:var(--travel-accent-dark); }
+.expense-currency-totals{ display:flex; flex-direction:column; gap:.2rem; }
+
+.modal-overlay{ position:fixed; inset:0; background:rgba(50,40,30,.42); display:flex; align-items:center; justify-content:center; z-index:100; padding:1rem; }
+.modal-box{ background:var(--white); border-radius:22px; padding:1.4rem; max-width:420px; width:100%; max-height:88vh; overflow:auto; box-shadow:0 12px 30px rgba(0,0,0,.25); }
+.modal-box-wide{ max-width:480px; }
+
+.settings-gear-btn{ position:fixed; top:14px; right:14px; z-index:60; width:44px; height:44px; border-radius:50%; background:var(--white); border:none; box-shadow:0 4px 10px var(--shadow); font-size:1.3rem; display:flex; align-items:center; justify-content:center; }
+.settings-section{ margin-bottom:1.2rem; padding-bottom:1.1rem; border-bottom:1px dashed #eee0cc; }
+.settings-section:last-of-type{ border-bottom:none; margin-bottom:.4rem; padding-bottom:0; }
+.settings-section-title{ font-weight:700; margin-bottom:.4rem; font-size:1rem; }
+.settings-hint{ font-size:.8rem; color:var(--ink-soft); margin:0 0 .7rem; line-height:1.6; }
+.settings-status{ font-size:.82rem; color:var(--ink-soft); margin:.6rem 0 0; }
+.settings-status-msg{ color:var(--travel-accent-dark); font-weight:600; }
+
+/* ---------- Diary ---------- */
+.diary-entry{ background:var(--white); border-radius:18px; padding:1rem 1.15rem; margin-bottom:1rem; box-shadow:0 4px 12px var(--shadow); }
+.diary-top{ display:flex; justify-content:space-between; gap:.6rem; align-items:center; flex-wrap:wrap;}
+.diary-date{ font-size:.82rem; color:var(--diary-accent-dark); font-weight:600; }
+.diary-mood{ font-size:1.2rem; }
+.diary-title{ font-family:'ZCOOL KuaiLe',cursive; font-size:1.25rem; margin-top:.2rem; }
+.diary-content{ margin-top:.4rem; font-size:.93rem; line-height:1.75; white-space:pre-wrap; }
+
+/* ---------- Recipes ---------- */
+.recipe-card{ background:var(--white); border-radius:18px; padding:1.1rem 1.2rem; margin-bottom:1rem; box-shadow:0 4px 12px var(--shadow); }
+.recipe-top{ display:flex; justify-content:space-between; gap:.6rem; align-items:baseline; flex-wrap:wrap;}
+.recipe-name{ font-family:'ZCOOL KuaiLe',cursive; font-size:1.3rem; }
+.recipe-meta{ font-size:.8rem; color:var(--recipe-accent-dark); font-weight:600; }
+.recipe-stars{ color:#E0A32E; font-size:.9rem; }
+.recipe-section-label{ font-size:.78rem; color:var(--recipe-accent-dark); font-weight:700; margin-top:.6rem; }
+.recipe-list{ margin:.3rem 0 0; padding-left:1.1rem; font-size:.9rem; line-height:1.7; }
+.recipe-notes{ margin-top:.5rem; font-size:.88rem; color:var(--ink-soft); white-space:pre-wrap;}
+
+/* ---------- Books ---------- */
+.book-card{ display:flex; background:var(--white); border-radius:18px; overflow:hidden; margin-bottom:1rem; box-shadow:0 4px 12px var(--shadow); }
+.book-spine{ width:9px; background:var(--book-accent); flex-shrink:0; }
+.book-main{ padding:1rem 1.15rem; flex:1; }
+.book-top{ display:flex; justify-content:space-between; gap:.6rem; align-items:baseline; flex-wrap:wrap;}
+.book-title{ font-family:'ZCOOL KuaiLe',cursive; font-size:1.25rem; }
+.book-author{ font-size:.8rem; color:var(--ink-soft); }
+.book-status{ font-size:.72rem; font-weight:700; padding:.15rem .55rem; border-radius:999px; background:var(--book-bg); color:var(--book-accent-dark); }
+.book-stars{ color:#E0A32E; font-size:.88rem; margin-top:.2rem;}
+.book-notes{ margin-top:.4rem; font-size:.9rem; line-height:1.7; white-space:pre-wrap;}
+
+@media (max-width:480px){ .desk-item{ width:44%; min-width:150px; } }
+</style>
+</head>
+<body>
+<button class="settings-gear-btn" onclick="openSettingsModal()" title="設定" aria-label="設定">⚙️</button>
+
+<!-- ================= HOME ================= -->
+<section id="view-home">
+  <div class="home-header">
+    <h1 class="brush">我的生活手記</h1>
+    <p>旅行、日常、料理與閱讀，都留在這裡</p>
+  </div>
+  <div class="desk-items">
+    <button class="desk-item i-travel" onclick="goTo('travel')"><span class="badge">🧳</span><span class="d-title brush">旅行手札</span><span class="d-tag">下一趟去哪呢？</span></button>
+    <button class="desk-item i-diary" onclick="goTo('diary')"><span class="badge">📔</span><span class="d-title brush">生活日記</span><span class="d-tag">今天過得如何？</span></button>
+    <button class="desk-item i-recipes" onclick="goTo('recipes')"><span class="badge">🍲</span><span class="d-title brush">食譜卡</span><span class="d-tag">來記一道好菜</span></button>
+    <button class="desk-item i-books" onclick="goTo('books')"><span class="badge">📚</span><span class="d-title brush">讀書心得</span><span class="d-tag">最近在讀什麼？</span></button>
+  </div>
+</section>
+
+<!-- ================= TRAVEL ================= -->
+<section id="view-travel" class="module-view hidden">
+  <div class="module-header">
+    <div>
+      <button class="back-link" onclick="goTo('home')">← 回到桌面</button>
+      <h2 class="module-title brush">旅行手札</h2>
+      <p class="module-sub">規劃中的與走過的旅程</p>
+    </div>
+    <button class="btn btn-primary" onclick="openTripMetaForm(null)">+ 新增行程</button>
+  </div>
+
+  <div id="travel-list-panel" class="module-body">
+    <div id="travel-list"></div>
+  </div>
+
+  <div id="travel-workspace-panel" class="hidden">
+    <div class="module-body" id="travel-workspace-header"></div>
+    <div id="travel-subtabs" class="subtabs"></div>
+    <div class="module-body" id="travel-subtab-content"></div>
+  </div>
+</section>
+
+<!-- trip meta modal -->
+<div id="trip-meta-overlay" class="modal-overlay hidden">
+  <div class="modal-box" id="trip-meta-modal-content"></div>
+</div>
+
+<!-- generic confirm/prompt modal (used instead of window.confirm/prompt, which can be blocked in embedded views) -->
+<div id="generic-modal-overlay" class="modal-overlay hidden" style="z-index:200;">
+  <div class="modal-box" id="generic-modal-content"></div>
+</div>
+
+<!-- settings modal -->
+<div id="settings-modal-overlay" class="modal-overlay hidden">
+  <div class="modal-box modal-box-wide" id="settings-modal-content"></div>
+</div>
+
+<!-- ================= DIARY ================= -->
+<section id="view-diary" class="module-view hidden">
+  <div class="module-header">
+    <div>
+      <button class="back-link" onclick="goTo('home')">← 回到桌面</button>
+      <h2 class="module-title brush">生活日記</h2>
+      <p class="module-sub">寫給自己的日常紀錄</p>
+    </div>
+    <button class="btn btn-primary" onclick="openForm('diary')">+ 新增一篇</button>
+  </div>
+  <div class="module-body">
+    <div id="diary-form-slot"></div>
+    <div id="diary-list"></div>
+  </div>
+</section>
+
+<!-- ================= RECIPES ================= -->
+<section id="view-recipes" class="module-view hidden">
+  <div class="module-header">
+    <div>
+      <button class="back-link" onclick="goTo('home')">← 回到桌面</button>
+      <h2 class="module-title brush">食譜卡</h2>
+      <p class="module-sub">做過、想再做一次的菜</p>
+    </div>
+    <button class="btn btn-primary" onclick="openForm('recipes')">+ 新增食譜</button>
+  </div>
+  <div class="module-body">
+    <div id="recipes-form-slot"></div>
+    <div id="recipes-list"></div>
+  </div>
+</section>
+
+<!-- ================= BOOKS ================= -->
+<section id="view-books" class="module-view hidden">
+  <div class="module-header">
+    <div>
+      <button class="back-link" onclick="goTo('home')">← 回到桌面</button>
+      <h2 class="module-title brush">讀書心得</h2>
+      <p class="module-sub">讀過的、正在讀的、想讀的書</p>
+    </div>
+    <button class="btn btn-primary" onclick="openForm('books')">+ 新增一本</button>
+  </div>
+  <div class="module-body">
+    <div id="books-form-slot"></div>
+    <div id="books-list"></div>
+  </div>
+</section>
+
+<script>
+/* ===================== helpers ===================== */
+function uid(){ return (crypto.randomUUID ? crypto.randomUUID() : 'id-' + Date.now() + '-' + Math.random().toString(16).slice(2)); }
+function esc(str){ if(str===undefined||str===null) return ''; return String(str).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function attrJson(obj){ return JSON.stringify(obj).replace(/&/g,'&amp;').replace(/'/g,'&#39;'); }
+function val(id){ const el=document.getElementById(id); return el ? el.value : ''; }
+function fmtDate(d){ if(!d) return ''; const p=d.split('-'); if(p.length!==3) return d; return `${p[0]}/${parseInt(p[1],10)}/${parseInt(p[2],10)}`; }
+function fmtDayLabel(d){ if(!d) return '尚未設定日期'; const dt=new Date(d+'T00:00:00'); if(isNaN(dt)) return d; const week=['日','一','二','三','四','五','六'][dt.getDay()]; return `${dt.getMonth()+1}/${dt.getDate()}（${week}）`; }
+function stars(n){ n=parseInt(n,10)||0; return '★★★★★☆☆☆☆☆'.slice(5-n,10-n); }
+function formatMoney(n){ if(n===undefined||n===null||isNaN(n)) return 'NT$ 0'; return 'NT$ ' + Math.round(n).toLocaleString('zh-TW'); }
+function minutesLabel(m){ m=parseInt(m,10); if(isNaN(m)||m<=0) return ''; if(m<60) return m+'分'; const h=Math.floor(m/60), r=m%60; return h+'時'+(r?r+'分':''); }
+
+const TRANSPORT_ICONS = { plane:'✈️', metro:'🚇', train:'🚆', taxi:'🚕', bus:'🚌', bike:'🚲', boat:'⛴️', walk:'🚶' };
+const TRANSPORT_LABELS = { plane:'飛機', metro:'地鐵', train:'火車', taxi:'計程車', bus:'公車', bike:'腳踏車', boat:'船', walk:'走路' };
+const CURRENCIES = ['TWD','JPY','USD','KRW','EUR','CNY','HKD','THB','GBP','AUD','SGD','VND'];
+const EXPENSE_CATEGORY_SUGGESTIONS = ['機票','住宿','保險','交通','餐飲','購物','門票','網卡/網路','簽證','其他'];
+const ITEM_TYPES = {
+  landmark:{icon:'📍',label:'地標'}, food:{icon:'🍽️',label:'吃飯'}, teatime:{icon:'🍡',label:'下午茶'},
+  coffee:{icon:'☕',label:'咖啡'}, animal:{icon:'🐾',label:'動物'}, amusement:{icon:'🎢',label:'遊樂園'},
+  park:{icon:'🌳',label:'公園'}, rest:{icon:'😴',label:'休息'}, shopping:{icon:'🛍️',label:'購物'},
+};
+function itemIcon(item){ if(item.customIcon) return item.customIcon; const t = ITEM_TYPES[item.type]; return t ? t.icon : '📍'; }
+
+/* ---- generic modal (replaces window.confirm/prompt, which some embedded views block) ---- */
+function closeGenericModal(){ document.getElementById('generic-modal-overlay').classList.add('hidden'); }
+function showConfirmModal(message, onYes){
+  document.getElementById('generic-modal-content').innerHTML = `
+    <p style="margin:0 0 1.1rem;font-size:.95rem;line-height:1.6;">${esc(message)}</p>
+    <div class="form-actions">
+      <button class="btn btn-danger" id="generic-modal-yes">確定刪除</button>
+      <button class="btn btn-ghost" onclick="closeGenericModal()">取消</button>
+    </div>`;
+  document.getElementById('generic-modal-overlay').classList.remove('hidden');
+  document.getElementById('generic-modal-yes').onclick = () => { closeGenericModal(); onYes(); };
+}
+function showPromptModal(message, defaultValue, onSubmit){
+  document.getElementById('generic-modal-content').innerHTML = `
+    <p style="margin:0 0 .6rem;font-size:.95rem;">${esc(message)}</p>
+    <div class="field"><input type="text" id="generic-modal-input" value="${esc(defaultValue||'')}"></div>
+    <div class="form-actions">
+      <button class="btn btn-primary" id="generic-modal-ok">確定</button>
+      <button class="btn btn-ghost" onclick="closeGenericModal()">取消</button>
+    </div>`;
+  document.getElementById('generic-modal-overlay').classList.remove('hidden');
+  const inp = document.getElementById('generic-modal-input');
+  inp.focus();
+  const submit = () => { const v = inp.value.trim(); closeGenericModal(); if(v) onSubmit(v); };
+  document.getElementById('generic-modal-ok').onclick = submit;
+  inp.onkeydown = (e) => { if(e.key==='Enter'){ submit(); } };
+}
+
+/* ---- settings modal (GitHub sync + future settings) ---- */
+function openSettingsModal(){
+  document.getElementById('settings-modal-content').innerHTML = settingsModalHtml();
+  document.getElementById('settings-modal-overlay').classList.remove('hidden');
+}
+function closeSettingsModal(){ document.getElementById('settings-modal-overlay').classList.add('hidden'); }
+function settingsModalHtml(msg){
+  const s = _appSettings;
+  const connected = githubConfigured();
+  const lastSync = s.lastSyncedAt ? new Date(s.lastSyncedAt).toLocaleString('zh-TW') : '尚未同步過';
+  return `
+    <h3 class="brush" style="font-size:1.3rem;margin-bottom:.6rem;">⚙️ 設定</h3>
+    <div class="settings-section">
+      <div class="settings-section-title">☁️ GitHub 同步</div>
+      <p class="settings-hint">設定後，資料會存到你自己的 GitHub 倉庫，讓不同電腦、手機都能讀到最新資料。這個功能要把檔案發佈成真正的網頁（例如 GitHub Pages）後才能用，Claude 的預覽視窗裡連不到 GitHub。</p>
+      <div class="field"><label>Personal Access Token</label><input type="password" id="set-gh-token" value="${esc(s.githubToken)}" placeholder="ghp_xxxxxxxxxxxx"></div>
+      <div class="field"><label>倉庫（owner/repo）</label><input type="text" id="set-gh-repo" value="${esc(s.githubOwnerRepo)}" placeholder="yourname/life-journal-data"></div>
+      <div class="field"><label>檔案路徑</label><input type="text" id="set-gh-path" value="${esc(s.githubPath || 'data.json')}" placeholder="data.json"></div>
+      <div class="form-actions">
+        <button class="btn btn-primary" onclick="saveGithubSettings()">儲存設定</button>
+        ${connected ? `<button class="btn btn-ghost" onclick="disconnectGithub()">取消連結</button>` : ''}
+      </div>
+      ${connected ? `
+      <div class="settings-status">✅ 已設定・上次同步：${esc(lastSync)}</div>
+      <div class="form-actions" style="margin-top:.5rem;">
+        <button class="btn btn-primary btn-sm" onclick="doPush()">⬆️ 上傳目前資料</button>
+        <button class="btn btn-ghost btn-sm" onclick="doPull()">⬇️ 下載最新資料</button>
+      </div>` : ''}
+      ${msg ? `<div class="settings-status settings-status-msg">${esc(msg)}</div>` : ''}
+    </div>
+    <div class="settings-section">
+      <div class="settings-section-title">📊 匯出 Excel</div>
+      <p class="settings-hint">即將推出。</p>
+    </div>
+    <div class="form-actions"><button class="btn btn-ghost" onclick="closeSettingsModal()">關閉</button></div>`;
+}
+async function saveGithubSettings(){
+  _appSettings.githubToken = val('set-gh-token').trim();
+  _appSettings.githubOwnerRepo = val('set-gh-repo').trim().replace(/^\/+|\/+$/g,'');
+  _appSettings.githubPath = val('set-gh-path').trim() || 'data.json';
+  await setAppSettings(_appSettings);
+  document.getElementById('settings-modal-content').innerHTML = settingsModalHtml('設定已儲存。');
+}
+function disconnectGithub(){
+  showConfirmModal('確定要取消 GitHub 同步連結嗎？（不會刪除 GitHub 上已經同步的資料，只是這台裝置不再自動同步）', async () => {
+    _appSettings = {};
+    await setAppSettings(_appSettings);
+    document.getElementById('settings-modal-content').innerHTML = settingsModalHtml('已取消連結。');
+  });
+}
+async function doPush(){
+  document.getElementById('settings-modal-content').innerHTML = settingsModalHtml('上傳中…');
+  try{ await pushToGithub(); document.getElementById('settings-modal-content').innerHTML = settingsModalHtml('已上傳目前資料到 GitHub。'); }
+  catch(e){ document.getElementById('settings-modal-content').innerHTML = settingsModalHtml('上傳失敗：' + e.message); }
+}
+async function doPull(){
+  document.getElementById('settings-modal-content').innerHTML = settingsModalHtml('下載中…');
+  try{ await pullFromGithub(); location.reload(); }
+  catch(e){ document.getElementById('settings-modal-content').innerHTML = settingsModalHtml('下載失敗：' + e.message); }
+}
+
+function fileToDataURL(file, maxDim, quality){
+  maxDim = maxDim || 900; quality = quality || 0.72;
+  return new Promise((resolve, reject) => {
+    if(!file){ resolve(''); return; }
+    const reader = new FileReader();
+    reader.onerror = () => reject(reader.error);
+    reader.onload = () => {
+      const img = new Image();
+      img.onerror = reject;
+      img.onload = () => {
+        let w = img.width, h = img.height;
+        if(w > maxDim || h > maxDim){
+          if(w > h){ h = Math.round(h * maxDim / w); w = maxDim; }
+          else { w = Math.round(w * maxDim / h); h = maxDim; }
+        }
+        const canvas = document.createElement('canvas');
+        canvas.width = w; canvas.height = h;
+        canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+        resolve(canvas.toDataURL('image/jpeg', quality));
+      };
+      img.src = reader.result;
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+/* ===================== storage (window.storage when available, else localStorage; optional GitHub sync layer) ===================== */
+const STORAGE_KEYS = { travel:'travel:entries', diary:'diary:entries', recipes:'recipes:entries', books:'books:entries' };
+const HAS_CLAUDE_STORAGE = (typeof window.storage !== 'undefined' && window.storage !== null);
+
+async function localGet(key){
+  if(HAS_CLAUDE_STORAGE){
+    try{ const res = await window.storage.get(key, false); return res && res.value ? res.value : null; }
+    catch(e){ return null; }
+  }
+  try{ return window.localStorage.getItem(key); } catch(e){ return null; }
+}
+async function localSet(key, value){
+  if(HAS_CLAUDE_STORAGE){
+    try{ return !!(await window.storage.set(key, value, false)); }
+    catch(e){ return false; }
+  }
+  try{ window.localStorage.setItem(key, value); return true; } catch(e){ return false; }
+}
+
+async function loadEntries(moduleKey){
+  const raw = await localGet(STORAGE_KEYS[moduleKey]);
+  try{ return raw ? JSON.parse(raw) : []; } catch(e){ return []; }
+}
+async function saveEntriesRaw(moduleKey, arr){ return await localSet(STORAGE_KEYS[moduleKey], JSON.stringify(arr)); }
+async function saveEntries(moduleKey, arr){
+  const ok = await saveEntriesRaw(moduleKey, arr);
+  if(githubConfigured()) autoPushToGithub();
+  return ok;
+}
+
+/* ---- app settings (GitHub sync config) ---- */
+const SETTINGS_KEY = 'app:settings';
+let _appSettings = {};
+async function getAppSettings(){
+  const raw = await localGet(SETTINGS_KEY);
+  try{ return raw ? JSON.parse(raw) : {}; } catch(e){ return {}; }
+}
+async function setAppSettings(settings){ await localSet(SETTINGS_KEY, JSON.stringify(settings)); }
+function githubConfigured(){ return !!(_appSettings.githubToken && _appSettings.githubOwnerRepo && _appSettings.githubPath); }
+
+/* ---- GitHub Contents API helpers ---- */
+function b64EncodeUnicode(str){
+  const bytes = new TextEncoder().encode(str);
+  let binary = '';
+  bytes.forEach(b => { binary += String.fromCharCode(b); });
+  return btoa(binary);
+}
+function b64DecodeUnicode(b64){
+  const binary = atob(b64.replace(/\n/g,''));
+  const bytes = Uint8Array.from(binary, c => c.charCodeAt(0));
+  return new TextDecoder('utf-8').decode(bytes);
+}
+function githubApiUrl(){
+  const pathParts = _appSettings.githubPath.split('/').map(encodeURIComponent).join('/');
+  return `https://api.github.com/repos/${_appSettings.githubOwnerRepo}/contents/${pathParts}`;
+}
+async function githubGetFile(){
+  const res = await fetch(githubApiUrl(), {
+    headers: { 'Authorization': 'token ' + _appSettings.githubToken, 'Accept': 'application/vnd.github+json' }
+  });
+  if(res.status === 404) return { notFound: true };
+  if(!res.ok) throw new Error('GitHub 讀取失敗（' + res.status + '）');
+  const json = await res.json();
+  return { sha: json.sha, content: b64DecodeUnicode(json.content) };
+}
+async function githubPutFile(contentStr, sha, message){
+  const body = { message: message || '同步生活手記資料', content: b64EncodeUnicode(contentStr) };
+  if(sha) body.sha = sha;
+  const res = await fetch(githubApiUrl(), {
+    method: 'PUT',
+    headers: { 'Authorization': 'token ' + _appSettings.githubToken, 'Accept': 'application/vnd.github+json', 'Content-Type': 'application/json' },
+    body: JSON.stringify(body)
+  });
+  if(!res.ok){ const t = await res.text().catch(()=>''); throw new Error('GitHub 寫入失敗（' + res.status + '）' + t.slice(0,150)); }
+  return await res.json();
+}
+async function buildFullSnapshot(){
+  const travel = state.travel.entries !== null ? state.travel.entries : await loadEntries('travel');
+  const diary = state.diary.entries !== null ? state.diary.entries : await loadEntries('diary');
+  const recipes = state.recipes.entries !== null ? state.recipes.entries : await loadEntries('recipes');
+  const books = state.books.entries !== null ? state.books.entries : await loadEntries('books');
+  return { travel, diary, recipes, books, updatedAt: Date.now() };
+}
+async function pushToGithub(){
+  if(!githubConfigured()) return;
+  const snapshot = await buildFullSnapshot();
+  const content = JSON.stringify(snapshot, null, 2);
+  let sha = null;
+  const existing = await githubGetFile();
+  if(!existing.notFound) sha = existing.sha;
+  await githubPutFile(content, sha, '更新生活手記資料');
+  _appSettings.lastSyncedAt = Date.now();
+  await setAppSettings(_appSettings);
+}
+let _pushInFlight = false, _pushQueued = false;
+async function autoPushToGithub(){
+  if(_pushInFlight){ _pushQueued = true; return; }
+  _pushInFlight = true;
+  try{ await pushToGithub(); } catch(e){ /* best-effort background sync; surfaced next time the settings panel is opened */ }
+  _pushInFlight = false;
+  if(_pushQueued){ _pushQueued = false; autoPushToGithub(); }
+}
+async function pullFromGithub(){
+  if(!githubConfigured()) throw new Error('尚未設定 GitHub 同步。');
+  const existing = await githubGetFile();
+  if(existing.notFound) throw new Error('GitHub 上還沒有資料檔，請先按「上傳目前資料」建立一次。');
+  const data = JSON.parse(existing.content);
+  await saveEntriesRaw('travel', data.travel || []);
+  await saveEntriesRaw('diary', data.diary || []);
+  await saveEntriesRaw('recipes', data.recipes || []);
+  await saveEntriesRaw('books', data.books || []);
+  _appSettings.lastSyncedAt = Date.now();
+  await setAppSettings(_appSettings);
+}
+(async function initAppSettings(){ _appSettings = await getAppSettings(); })();
+
+/* ===================== state ===================== */
+const state = {
+  travel: { entries: null, ui: { view:'list', tripId:null, subTab:'flights', dayForm:null, itemForm:null, momentForm:null, expenseForm:null, activeChecklist:null, tripMetaEditId:null, expandedDays:new Set() } },
+  diary: { entries: null, editingId: null },
+  recipes: { entries: null, editingId: null },
+  books: { entries: null, editingId: null },
+};
+
+/* ===================== navigation ===================== */
+function goTo(view){
+  document.querySelectorAll('#view-home, .module-view').forEach(el => el.classList.add('hidden'));
+  document.getElementById('view-' + view).classList.remove('hidden');
+  window.scrollTo(0,0);
+  if(view === 'travel'){ state.travel.ui.view = 'list'; }
+  if(view !== 'home' && state[view].entries === null){
+    initModule(view);
+  } else if(view === 'travel'){
+    renderTravelModule();
+  }
+}
+
+async function initModule(moduleKey){
+  if(moduleKey === 'travel'){
+    document.getElementById('travel-list').innerHTML = '<div class="loading-msg">翻頁中…</div>';
+    const entries = await loadEntries('travel');
+    entries.forEach(t => {
+      if(!t.flights) t.flights = { outbound:{}, ret:{} };
+      if(!t.days) t.days = [];
+      t.days.forEach(d => { if(!d.items) d.items = []; });
+      if(!t.checklists) t.checklists = seedChecklists();
+      if(!t.moments) t.moments = [];
+      if(!t.expenses) t.expenses = [];
+    });
+    state.travel.entries = entries;
+    renderTravelModule();
+    return;
+  }
+  const listEl = document.getElementById(moduleKey + '-list');
+  listEl.innerHTML = '<div class="loading-msg">翻頁中…</div>';
+  const entries = await loadEntries(moduleKey);
+  state[moduleKey].entries = entries;
+  render[moduleKey]();
+}
+
+function seedChecklists(){
+  return [
+    { id: uid(), name:'行前清單', items: [] },
+    { id: uid(), name:'購物清單', items: [] },
+    { id: uid(), name:'美食清單', items: [] },
+  ];
+}
+
+/* ===================== TRAVEL: core ===================== */
+function getCurrentTrip(){ return state.travel.entries.find(t => t.id === state.travel.ui.tripId); }
+async function persistTravel(){ await saveEntries('travel', state.travel.entries); }
+
+function computeTripDateRange(trip){
+  const dates = (trip.days||[]).map(d=>d.date).filter(Boolean).sort();
+  if(!dates.length) return '尚未安排日期';
+  const first=dates[0], last=dates[dates.length-1];
+  return first===last ? fmtDayLabel(first) : `${fmtDayLabel(first)} → ${fmtDayLabel(last)}`;
+}
+function computeChecklistProgress(trip){
+  let total=0, done=0;
+  (trip.checklists||[]).forEach(l => { total += l.items.length; done += l.items.filter(i=>i.done).length; });
+  return { total, done };
+}
+function computeExpenseTotalsByCurrency(trip){
+  const totals = {};
+  (trip.expenses||[]).forEach(x => { totals[x.currency] = (totals[x.currency]||0) + (parseFloat(x.amount)||0); });
+  return totals;
+}
+function statusClass(status){ return status==='已完成' ? 'done' : (status==='即將出發' ? 'soon' : 'planning'); }
+
+function renderTravelModule(){
+  const ui = state.travel.ui;
+  document.getElementById('travel-list-panel').classList.toggle('hidden', ui.view!=='list');
+  document.getElementById('travel-workspace-panel').classList.toggle('hidden', ui.view!=='workspace');
+  if(ui.view==='list') renderTripList(); else renderTripWorkspace();
+}
+
+/* ---- trip list ---- */
+function tripCardHtml(trip){
+  const range = computeTripDateRange(trip);
+  const prog = computeChecklistProgress(trip);
+  const isDone = trip.status === '已完成';
+  const totals = computeExpenseTotalsByCurrency(trip);
+  const currencyKeys = Object.keys(totals);
+  const expenseStat = (isDone && currencyKeys.length)
+    ? `💰 ${currencyKeys.map(cur => `${esc(cur)} ${totals[cur].toLocaleString('zh-TW')}`).join('・')}`
+    : `💰 ${(trip.expenses||[]).length} 筆花費`;
+  return `<div class="trip-card" onclick="openTrip('${trip.id}')">
+    <div class="trip-card-top">
+      <span class="trip-card-title brush">🧳 ${esc(trip.title)}</span>
+      <span class="trip-status-badge status-${statusClass(trip.status)}">${esc(trip.status||'規劃中')}</span>
+    </div>
+    <div class="trip-card-dest">${esc(trip.destination||'')}</div>
+    <div class="trip-card-range">📅 ${esc(range)}</div>
+    <div class="trip-card-stats">
+      <span>🗓 ${(trip.days||[]).length} 天</span>
+      <span>✅ ${prog.done}/${prog.total}</span>
+      <span>${expenseStat}</span>
+    </div>
+  </div>`;
+}
+function renderTripList(){
+  const wrap = document.getElementById('travel-list');
+  const list = state.travel.entries || [];
+  if(list.length===0){ wrap.innerHTML = '<div class="empty-state">這本手札還是空的，新增第一趟旅程吧！</div>'; return; }
+  wrap.innerHTML = list.map(tripCardHtml).join('');
+}
+
+/* ---- trip meta modal ---- */
+function tripMetaFormHtml(trip){
+  const t = trip || {};
+  return `
+    <h3 class="brush" style="font-size:1.3rem;margin-bottom:.8rem;">${trip?'編輯行程資訊':'新增行程'}</h3>
+    <div class="field"><label>行程名稱</label><input type="text" id="tm-title" value="${esc(t.title)}" placeholder="例如：沖繩五日遊"></div>
+    <div class="field"><label>目的地</label><input type="text" id="tm-dest" value="${esc(t.destination)}" placeholder="沖繩，日本"></div>
+    <div class="field"><label>狀態</label>
+      <select id="tm-status">
+        <option value="規劃中" ${t.status==='規劃中'?'selected':''}>規劃中</option>
+        <option value="即將出發" ${t.status==='即將出發'?'selected':''}>即將出發</option>
+        <option value="已完成" ${t.status==='已完成'?'selected':''}>已完成</option>
+      </select>
+    </div>
+    <div class="form-actions">
+      <button class="btn btn-primary" style="background:var(--travel-accent);" onclick="saveTripMeta()">儲存</button>
+      <button class="btn btn-ghost" onclick="closeTripMetaForm()">取消</button>
+      ${trip ? `<button class="btn btn-danger" onclick="deleteTrip('${trip.id}')">刪除整趟行程</button>` : ''}
+    </div>`;
+}
+function openTripMetaForm(trip){
+  state.travel.ui.tripMetaEditId = trip ? trip.id : null;
+  document.getElementById('trip-meta-modal-content').innerHTML = tripMetaFormHtml(trip);
+  document.getElementById('trip-meta-overlay').classList.remove('hidden');
+}
+function closeTripMetaForm(){ document.getElementById('trip-meta-overlay').classList.add('hidden'); }
+async function saveTripMeta(){
+  const editId = state.travel.ui.tripMetaEditId;
+  let trip = editId ? state.travel.entries.find(t=>t.id===editId) : null;
+  const isNew = !trip;
+  if(isNew){ trip = { id: uid(), createdAt: Date.now(), flights:{outbound:{},ret:{}}, days:[], checklists: seedChecklists(), moments:[], expenses:[] }; }
+  trip.title = val('tm-title').trim() || '未命名行程';
+  trip.destination = val('tm-dest').trim();
+  trip.status = val('tm-status');
+  if(isNew) state.travel.entries.push(trip);
+  closeTripMetaForm();
+  await persistTravel();
+  if(isNew){ openTrip(trip.id); } else { if(state.travel.ui.view==='workspace') renderTripWorkspace(); else renderTravelModule(); }
+}
+function deleteTrip(id){
+  showConfirmModal('確定要刪除整趟行程嗎？所有航班、每日行程、清單、趣事都會一起刪除，無法復原。', async () => {
+    state.travel.entries = state.travel.entries.filter(t=>t.id!==id);
+    closeTripMetaForm();
+    state.travel.ui.view = 'list';
+    renderTravelModule();
+    await persistTravel();
+  });
+}
+
+/* ---- workspace shell ---- */
+function openTrip(id){
+  const ui = state.travel.ui;
+  ui.view='workspace'; ui.tripId=id; ui.subTab = ui.subTab || 'flights';
+  ui.dayForm=null; ui.itemForm=null; ui.momentForm=null; ui.activeChecklist=null;
+  renderTravelModule();
+  window.scrollTo(0,0);
+}
+function backToTripList(){ state.travel.ui.view='list'; renderTravelModule(); window.scrollTo(0,0); }
+
+function renderTripWorkspace(){
+  const trip = getCurrentTrip();
+  if(!trip){ state.travel.ui.view='list'; renderTravelModule(); return; }
+  renderWorkspaceHeader(trip);
+  renderSubtabsBar();
+  renderSubtabContent();
+}
+function renderWorkspaceHeader(trip){
+  const range = computeTripDateRange(trip);
+  document.getElementById('travel-workspace-header').innerHTML = `
+    <button class="back-link" onclick="backToTripList()">← 回到行程列表</button>
+    <div class="ws-title-row">
+      <h2 class="module-title brush" style="margin:0;">🧳 ${esc(trip.title)}</h2>
+      <button class="icon-btn" onclick="openTripMetaForm(getCurrentTrip())" title="編輯行程資訊">✏️</button>
+    </div>
+    <div class="ws-meta-row">
+      <span class="trip-status-badge status-${statusClass(trip.status)}">${esc(trip.status||'規劃中')}</span>
+      <span>${esc(trip.destination||'')}</span>
+      <span>📅 ${esc(range)}</span>
+    </div>`;
+}
+function renderSubtabsBar(){
+  const tabs = [['flights','✈️ 航班'],['days','📅 每日行程'],['checklists','✅ 清單'],['moments','📸 趣事'],['expense','💰 花費']];
+  document.getElementById('travel-subtabs').innerHTML = tabs.map(([key,label]) =>
+    `<button class="subtab-pill ${state.travel.ui.subTab===key?'subtab-pill-active':''}" onclick="switchSubTab('${key}')">${label}</button>`
+  ).join('');
+}
+function switchSubTab(tab){
+  const ui = state.travel.ui;
+  ui.subTab = tab; ui.dayForm=null; ui.itemForm=null; ui.momentForm=null;
+  renderSubtabsBar();
+  renderSubtabContent();
+}
+function renderSubtabContent(){
+  const trip = getCurrentTrip();
+  ({ flights:renderFlightsTab, days:renderDaysTab, checklists:renderChecklistsTab, moments:renderMomentsTab, expense:renderExpenseTab })[state.travel.ui.subTab](trip);
+}
+
+/* ---- flights ---- */
+function renderFlightsTab(trip){
+  const f = trip.flights || { outbound:{}, ret:{} };
+  const o = f.outbound || {}, r = f.ret || {};
+  document.getElementById('travel-subtab-content').innerHTML = `
+    <div class="flight-block">
+      <div class="subtab-h">✈️ 去程</div>
+      <div class="row-2">
+        <div class="field"><label>航班編號</label><input type="text" id="fl-out-no" value="${esc(o.flightNo)}" placeholder="CI100"></div>
+        <div class="field"><label>出發地</label><input type="text" id="fl-out-from" value="${esc(o.from)}" placeholder="桃園機場"></div>
+      </div>
+      <div class="row-2">
+        <div class="field"><label>出發時間</label><input type="datetime-local" id="fl-out-dep" value="${esc(o.departTime)}"></div>
+        <div class="field"><label>抵達地</label><input type="text" id="fl-out-to" value="${esc(o.to)}" placeholder="那霸機場"></div>
+      </div>
+      <div class="field"><label>抵達時間</label><input type="datetime-local" id="fl-out-arr" value="${esc(o.arriveTime)}"></div>
+    </div>
+    <div class="flight-block">
+      <div class="subtab-h">🛬 回程</div>
+      <div class="row-2">
+        <div class="field"><label>航班編號</label><input type="text" id="fl-ret-no" value="${esc(r.flightNo)}" placeholder="CI101"></div>
+        <div class="field"><label>出發地</label><input type="text" id="fl-ret-from" value="${esc(r.from)}" placeholder="那霸機場"></div>
+      </div>
+      <div class="row-2">
+        <div class="field"><label>出發時間</label><input type="datetime-local" id="fl-ret-dep" value="${esc(r.departTime)}"></div>
+        <div class="field"><label>抵達地</label><input type="text" id="fl-ret-to" value="${esc(r.to)}" placeholder="桃園機場"></div>
+      </div>
+      <div class="field"><label>抵達時間</label><input type="datetime-local" id="fl-ret-arr" value="${esc(r.arriveTime)}"></div>
+    </div>
+    <button class="btn btn-primary" onclick="saveFlights()">儲存航班資訊</button>`;
+}
+async function saveFlights(){
+  const trip = getCurrentTrip();
+  trip.flights = {
+    outbound: { flightNo: val('fl-out-no'), from: val('fl-out-from'), to: val('fl-out-to'), departTime: val('fl-out-dep'), arriveTime: val('fl-out-arr') },
+    ret: { flightNo: val('fl-ret-no'), from: val('fl-ret-from'), to: val('fl-ret-to'), departTime: val('fl-ret-dep'), arriveTime: val('fl-ret-arr') },
+  };
+  await persistTravel();
+}
+
+/* ---- days & items ---- */
+function dayFormHtml(day){
+  const d = day || {};
+  return `<div class="form-panel">
+    <div class="row-2">
+      <div class="field"><label>日期</label><input type="date" id="day-date" value="${esc(d.date)}"></div>
+      <div class="field"><label>住宿地點</label><input type="text" id="day-stay" value="${esc(d.stay)}" placeholder="○○飯店"></div>
+    </div>
+    <div class="field"><label>今日主題／標題</label><input type="text" id="day-title" value="${esc(d.title)}" placeholder="淺草老街散策"></div>
+    <div class="form-actions">
+      <button class="btn btn-primary" onclick="saveDayForm()">儲存</button>
+      <button class="btn btn-ghost" onclick="closeDayForm()">取消</button>
+      ${day ? `<button class="btn btn-danger" onclick="deleteDay('${day.id}')">刪除這天</button>` : ''}
+    </div>
+  </div>`;
+}
+function openDayForm(editId){ state.travel.ui.dayForm = { editId: editId || null }; renderDaysTab(getCurrentTrip()); }
+function closeDayForm(){ state.travel.ui.dayForm = null; renderDaysTab(getCurrentTrip()); }
+async function saveDayForm(){
+  const trip = getCurrentTrip();
+  const editId = state.travel.ui.dayForm.editId;
+  let day;
+  if(editId){ day = trip.days.find(d=>d.id===editId); }
+  else { day = { id: uid(), items: [] }; trip.days.push(day); state.travel.ui.expandedDays.add(day.id); }
+  day.date = val('day-date'); day.stay = val('day-stay'); day.title = val('day-title');
+  state.travel.ui.dayForm = null;
+  renderDaysTab(trip);
+  await persistTravel();
+}
+function deleteDay(id){
+  showConfirmModal('確定要刪除這一天的所有行程嗎？', async () => {
+    const trip = getCurrentTrip();
+    trip.days = trip.days.filter(d=>d.id!==id);
+    state.travel.ui.dayForm = null;
+    renderDaysTab(trip);
+    await persistTravel();
+  });
+}
+
+function pickTransport(key){
+  document.getElementById('it-transport').value = key;
+  document.querySelectorAll('#it-transport-picker .transport-pick').forEach(b=>b.classList.remove('transport-pick-active'));
+  if(window.event && window.event.currentTarget) window.event.currentTarget.classList.add('transport-pick-active');
+}
+function pickItemType(key){
+  document.getElementById('it-type').value = key;
+  document.querySelectorAll('#it-type-picker .transport-pick').forEach(b=>b.classList.remove('transport-pick-active'));
+  if(window.event && window.event.currentTarget) window.event.currentTarget.classList.add('transport-pick-active');
+}
+function itemFormHtml(day, item){
+  const it = item || {};
+  const transportButtons = Object.keys(TRANSPORT_ICONS).map(key =>
+    `<button type="button" class="transport-pick ${it.transport===key?'transport-pick-active':''}" onclick="pickTransport('${key}')">${TRANSPORT_ICONS[key]}<span>${TRANSPORT_LABELS[key]}</span></button>`
+  ).join('');
+  const typeButtons = Object.keys(ITEM_TYPES).map(key =>
+    `<button type="button" class="transport-pick ${it.type===key?'transport-pick-active':''}" onclick="pickItemType('${key}')">${ITEM_TYPES[key].icon}<span>${ITEM_TYPES[key].label}</span></button>`
+  ).join('');
+  return `<div class="form-panel item-form">
+    <div class="row-2">
+      <div class="field"><label>時間</label><input type="time" id="it-time" value="${esc(it.time)}"></div>
+      <div class="field"><label>地點</label><input type="text" id="it-place" value="${esc(it.place)}" placeholder="美麗海水族館"></div>
+    </div>
+    <div class="field"><label>這是什麼類型的行程？</label>
+      <div class="transport-picker" id="it-type-picker">${typeButtons}</div>
+      <input type="hidden" id="it-type" value="${esc(it.type||'')}">
+    </div>
+    <div class="field"><label>自訂圖示（選填，貼一個 emoji 會取代上面選的類型圖示）</label><input type="text" id="it-custom-icon" value="${esc(it.customIcon)}" placeholder="🎡"></div>
+    <div class="field"><label>抵達交通方式</label>
+      <div class="transport-picker" id="it-transport-picker">${transportButtons}</div>
+      <input type="hidden" id="it-transport" value="${esc(it.transport||'')}">
+    </div>
+    <div class="row-2">
+      <div class="field"><label>交通時間（分鐘）</label><input type="number" id="it-transit-min" value="${it.transitMinutes!==undefined?it.transitMinutes:''}" placeholder="20"></div>
+      <div class="field"><label>停留時間（分鐘）</label><input type="number" id="it-stay-min" value="${it.stayMinutes!==undefined?it.stayMinutes:''}" placeholder="60"></div>
+    </div>
+    <div class="row-2">
+      <div class="field"><label>預估花費</label><input type="number" step="0.01" id="it-est-cost" value="${it.estCost!==undefined?it.estCost:''}" placeholder="0"></div>
+      <div class="field"><label>幣值</label><select id="it-est-currency">${CURRENCIES.map(c=>`<option value="${c}" ${(it.estCurrency||'TWD')===c?'selected':''}>${c}</option>`).join('')}</select></div>
+    </div>
+    <div class="field"><label>備註</label><textarea id="it-note" placeholder="小提醒、營業時間…">${esc(it.note)}</textarea></div>
+    <div class="field"><label>地圖連結</label><input type="text" id="it-map" value="${esc(it.mapLink)}" placeholder="貼上 Google 地圖網址"></div>
+    <div class="field checkbox-field"><label><input type="checkbox" id="it-reserve" ${it.needReservation?'checked':''}> 需要預約／提前購買</label></div>
+    <div class="field"><label>圖片</label><input type="file" id="it-image" accept="image/*">
+      ${it.image ? `<img src="${it.image}" class="img-preview">` : ''}
+    </div>
+    <div class="form-actions">
+      <button class="btn btn-primary" onclick="saveItemForm()">儲存</button>
+      <button class="btn btn-ghost" onclick="closeItemForm()">取消</button>
+      ${item ? `<button class="btn btn-danger" onclick="deleteItem('${day.id}','${item.id}')">刪除</button>` : ''}
+    </div>
+  </div>`;
+}
+function openItemForm(dayId, editId){ state.travel.ui.itemForm = { dayId, editId: editId || null }; renderDaysTab(getCurrentTrip()); }
+function closeItemForm(){ state.travel.ui.itemForm = null; renderDaysTab(getCurrentTrip()); }
+async function saveItemForm(){
+  const trip = getCurrentTrip();
+  const { dayId, editId } = state.travel.ui.itemForm;
+  const day = trip.days.find(d=>d.id===dayId);
+  let item = editId ? day.items.find(i=>i.id===editId) : { id: uid() };
+  item.time = val('it-time');
+  item.place = val('it-place');
+  item.type = val('it-type') || undefined;
+  item.customIcon = val('it-custom-icon').trim() || undefined;
+  item.transport = val('it-transport') || undefined;
+  const transitVal = val('it-transit-min'); item.transitMinutes = transitVal===''?undefined:parseInt(transitVal,10);
+  const stayVal = val('it-stay-min'); item.stayMinutes = stayVal===''?undefined:parseInt(stayVal,10);
+  const costVal = val('it-est-cost'); item.estCost = costVal===''?undefined:parseFloat(costVal);
+  item.estCurrency = val('it-est-currency');
+  item.note = val('it-note');
+  item.mapLink = val('it-map');
+  item.needReservation = document.getElementById('it-reserve').checked;
+  const fileInput = document.getElementById('it-image');
+  if(fileInput && fileInput.files[0]){ item.image = await fileToDataURL(fileInput.files[0]); }
+  if(!editId) day.items.push(item);
+  state.travel.ui.itemForm = null;
+  renderDaysTab(trip);
+  await persistTravel();
+}
+function deleteItem(dayId, itemId){
+  showConfirmModal('確定要刪除這個行程項目嗎？', async () => {
+    const trip = getCurrentTrip();
+    const day = trip.days.find(d=>d.id===dayId);
+    day.items = day.items.filter(i=>i.id!==itemId);
+    state.travel.ui.itemForm = null;
+    renderDaysTab(trip);
+    await persistTravel();
+  });
+}
+function itemRowHtml(day, item, index){
+  let html = '';
+  if(item.transport || item.transitMinutes){
+    const icon = TRANSPORT_ICONS[item.transport] || '🚏';
+    const label = TRANSPORT_LABELS[item.transport] || '交通';
+    html += `<div class="transit-connector"><span>${icon} ${esc(label)}</span>${item.transitMinutes?`<span>・${esc(minutesLabel(item.transitMinutes))}</span>`:''}</div>`;
+  }
+  html += `<div class="item-card">
+    <span class="item-num">${index+1}</span>
+    ${item.image ? `<a href="${item.image}" target="_blank" rel="noopener"><img src="${item.image}" class="item-thumb-sq"></a>` : `<span class="item-thumb-placeholder">${esc(itemIcon(item))}</span>`}
+    <div class="item-card-body">
+      <div class="item-card-top">
+        ${item.time ? `<span class="item-time">${esc(item.time)}</span>` : ''}
+        <span class="item-place">${esc(itemIcon(item))} ${esc(item.place || '未命名項目')}</span>
+      </div>
+      <div class="item-card-sub">
+        ${item.stayMinutes ? `<span class="item-stay-badge">停留 ${esc(minutesLabel(item.stayMinutes))}</span>` : ''}
+        ${item.needReservation ? '<span class="item-badge">🔖 需預約／購票</span>' : ''}
+        ${item.estCost!==undefined ? `<span>💰 約 ${esc(String(item.estCost))} ${esc(item.estCurrency||'TWD')}</span>` : ''}
+        ${item.mapLink ? `<a href="${esc(item.mapLink)}" target="_blank" rel="noopener">📍 地圖</a>` : ''}
+      </div>
+      ${item.note ? `<div class="item-note">${esc(item.note)}</div>` : ''}
+      <button class="tiny-link" onclick="openItemForm('${day.id}','${item.id}')">編輯</button>
+    </div>
+  </div>`;
+  return html;
+}
+function toggleDayExpand(id){
+  const s = state.travel.ui.expandedDays;
+  if(s.has(id)) s.delete(id); else s.add(id);
+  renderDaysTab(getCurrentTrip());
+}
+function dayCardHtml(day){
+  const ui = state.travel.ui;
+  const expanded = ui.expandedDays.has(day.id);
+  const items = [...(day.items||[])].sort((a,b)=>(a.time||'').localeCompare(b.time||''));
+  let html = `<div class="day-card">
+    <div class="day-card-head" onclick="toggleDayExpand('${day.id}')">
+      <div class="day-card-head-top">
+        <div class="day-card-head-main">
+          <span class="day-date brush">📅 ${esc(fmtDayLabel(day.date))}</span>
+          ${day.stay ? `<span class="day-stay">🏨 ${esc(day.stay)}</span>` : ''}
+        </div>
+        <span class="day-expand-arrow">${expanded?'收起 ▲':'展開 ▼'}</span>
+      </div>
+      ${day.title ? `<div class="day-title">🎯 ${esc(day.title)}</div>` : ''}
+    </div>
+    <button class="tiny-link day-edit-link" onclick="openDayForm('${day.id}')">編輯這天</button>`;
+  if(expanded){
+    html += `<div class="itinerary-track">` + items.map((it,i) => itemRowHtml(day, it, i)).join('') + `</div>`;
+    if(ui.itemForm && ui.itemForm.dayId===day.id){
+      const editItem = ui.itemForm.editId ? items.find(i=>i.id===ui.itemForm.editId) : null;
+      html += itemFormHtml(day, editItem);
+    } else {
+      html += `<button class="btn btn-ghost btn-sm" style="margin-top:.6rem;" onclick="openItemForm('${day.id}')">+ 新增行程項目</button>`;
+    }
+  }
+  html += `</div>`;
+  return html;
+}
+function renderDaysTab(trip){
+  const ui = state.travel.ui;
+  const days = [...(trip.days||[])].sort((a,b)=>(a.date||'').localeCompare(b.date||''));
+  let html = `<button class="btn btn-primary btn-sm" onclick="openDayForm()">+ 新增日期</button>`;
+  if(ui.dayForm){
+    const editingDay = ui.dayForm.editId ? days.find(d=>d.id===ui.dayForm.editId) : null;
+    html += dayFormHtml(editingDay);
+  }
+  if(days.length===0 && !ui.dayForm){ html += `<div class="empty-state">還沒有安排任何一天，先新增第一天吧！</div>`; }
+  html += days.map(dayCardHtml).join('');
+  document.getElementById('travel-subtab-content').innerHTML = html;
+}
+
+/* ---- checklists ---- */
+function renderChecklistsTab(trip){
+  const ui = state.travel.ui;
+  const lists = trip.checklists || [];
+  if(!ui.activeChecklist || !lists.find(l=>l.id===ui.activeChecklist)){ ui.activeChecklist = lists.length ? lists[0].id : null; }
+  let html = `<div class="checklist-pills">`;
+  html += lists.map(l => `<button class="pill ${l.id===ui.activeChecklist?'pill-active':''}" onclick="setActiveChecklist('${l.id}')">${esc(l.name)}</button>`).join('');
+  html += `<button class="pill pill-add" onclick="addChecklist()">＋ 新清單</button></div>`;
+  const active = lists.find(l=>l.id===ui.activeChecklist);
+  if(active){
+    const done = active.items.filter(i=>i.done).length;
+    html += `<div class="checklist-panel">
+      <div class="checklist-panel-head">
+        <span class="checklist-name brush">${esc(active.name)}</span>
+        <span class="checklist-progress">${done}/${active.items.length}</span>
+        <button class="tiny-link" onclick="renameChecklist('${active.id}')">重新命名</button>
+        <button class="tiny-link tiny-link-danger" onclick="deleteChecklist('${active.id}')">刪除清單</button>
+      </div>
+      <div class="checklist-items">`;
+    html += active.items.map(it => `
+        <label class="checklist-item ${it.done?'is-done':''}">
+          <input type="checkbox" ${it.done?'checked':''} onchange="toggleChecklistItem('${active.id}','${it.id}')">
+          <span>${esc(it.text)}</span>
+          <button type="button" class="tiny-x" onclick="deleteChecklistItem('${active.id}','${it.id}')">✕</button>
+        </label>`).join('');
+    html += `</div>
+      <div class="checklist-add-row">
+        <input type="text" id="checklist-new-item" placeholder="新增項目，按 Enter 加入" onkeydown="if(event.key==='Enter'){addChecklistItem('${active.id}')}">
+        <button class="btn btn-primary btn-sm" onclick="addChecklistItem('${active.id}')">加入</button>
+      </div>
+    </div>`;
+  } else {
+    html += `<div class="empty-state">還沒有清單，先新增一個吧（例如：行前清單）。</div>`;
+  }
+  document.getElementById('travel-subtab-content').innerHTML = html;
+}
+function setActiveChecklist(id){ state.travel.ui.activeChecklist = id; renderChecklistsTab(getCurrentTrip()); }
+function addChecklist(){
+  showPromptModal('清單名稱？例如：行前清單／購物清單／美食清單', '', async (name) => {
+    const trip = getCurrentTrip();
+    const l = { id: uid(), name, items: [] };
+    trip.checklists.push(l);
+    state.travel.ui.activeChecklist = l.id;
+    renderChecklistsTab(trip);
+    await persistTravel();
+  });
+}
+function renameChecklist(id){
+  const trip = getCurrentTrip();
+  const l = trip.checklists.find(x=>x.id===id);
+  showPromptModal('重新命名清單', l.name, async (name) => {
+    l.name = name;
+    renderChecklistsTab(trip);
+    await persistTravel();
+  });
+}
+function deleteChecklist(id){
+  showConfirmModal('確定刪除這份清單嗎？', async () => {
+    const trip = getCurrentTrip();
+    trip.checklists = trip.checklists.filter(x=>x.id!==id);
+    state.travel.ui.activeChecklist = null;
+    renderChecklistsTab(trip);
+    await persistTravel();
+  });
+}
+async function toggleChecklistItem(listId, itemId){
+  const trip = getCurrentTrip();
+  const l = trip.checklists.find(x=>x.id===listId);
+  const it = l.items.find(x=>x.id===itemId);
+  it.done = !it.done;
+  renderChecklistsTab(trip);
+  await persistTravel();
+}
+async function deleteChecklistItem(listId, itemId){
+  const trip = getCurrentTrip();
+  const l = trip.checklists.find(x=>x.id===listId);
+  l.items = l.items.filter(x=>x.id!==itemId);
+  renderChecklistsTab(trip);
+  await persistTravel();
+}
+async function addChecklistItem(listId){
+  const inp = document.getElementById('checklist-new-item');
+  const text = inp.value.trim();
+  if(!text) return;
+  const trip = getCurrentTrip();
+  const l = trip.checklists.find(x=>x.id===listId);
+  l.items.push({ id: uid(), text, done:false });
+  renderChecklistsTab(trip);
+  await persistTravel();
+}
+
+/* ---- moments ---- */
+function momentFormHtml(m){
+  const mm = m || {};
+  return `<div class="form-panel">
+    <div class="field"><label>日期</label><input type="date" id="moment-date" value="${esc(mm.date || new Date().toISOString().slice(0,10))}"></div>
+    <div class="field"><label>趣事 / 心情記錄</label><textarea id="moment-text" style="min-height:6rem;" placeholder="今天發生了什麼有趣的事…">${esc(mm.text)}</textarea></div>
+    <div class="field"><label>照片</label><input type="file" id="moment-photo" accept="image/*">
+      ${mm.photo ? `<img src="${mm.photo}" class="img-preview">` : ''}
+    </div>
+    <div class="form-actions">
+      <button class="btn btn-primary" onclick="saveMomentForm()">儲存</button>
+      <button class="btn btn-ghost" onclick="closeMomentForm()">取消</button>
+      ${m ? `<button class="btn btn-danger" onclick="deleteMoment('${m.id}')">刪除</button>` : ''}
+    </div>
+  </div>`;
+}
+function openMomentForm(editId){ state.travel.ui.momentForm = { editId: editId || null }; renderMomentsTab(getCurrentTrip()); }
+function closeMomentForm(){ state.travel.ui.momentForm = null; renderMomentsTab(getCurrentTrip()); }
+async function saveMomentForm(){
+  const trip = getCurrentTrip();
+  const editId = state.travel.ui.momentForm.editId;
+  let m = editId ? trip.moments.find(x=>x.id===editId) : { id: uid(), createdAt: Date.now() };
+  m.date = val('moment-date');
+  m.text = val('moment-text');
+  const fileInput = document.getElementById('moment-photo');
+  if(fileInput && fileInput.files[0]){ m.photo = await fileToDataURL(fileInput.files[0], 1100, 0.75); }
+  if(!editId) trip.moments.push(m);
+  state.travel.ui.momentForm = null;
+  renderMomentsTab(trip);
+  await persistTravel();
+}
+function deleteMoment(id){
+  showConfirmModal('確定要刪除這則記錄嗎？', async () => {
+    const trip = getCurrentTrip();
+    trip.moments = trip.moments.filter(x=>x.id!==id);
+    state.travel.ui.momentForm = null;
+    renderMomentsTab(trip);
+    await persistTravel();
+  });
+}
+function renderMomentsTab(trip){
+  const ui = state.travel.ui;
+  let html = `<button class="btn btn-primary btn-sm" onclick="openMomentForm()">+ 新增趣事</button>`;
+  if(ui.momentForm){
+    const editing = ui.momentForm.editId ? trip.moments.find(m=>m.id===ui.momentForm.editId) : null;
+    html += momentFormHtml(editing);
+  }
+  const moments = [...(trip.moments||[])].sort((a,b)=>(b.date||'').localeCompare(a.date||'') || (b.createdAt||0)-(a.createdAt||0));
+  if(moments.length===0 && !ui.momentForm){ html += `<div class="empty-state">還沒有記錄旅途中的趣事，寫下第一則吧！</div>`; }
+  html += moments.map(m => `
+    <div class="moment-card">
+      ${m.date ? `<div class="moment-date">${esc(fmtDate(m.date))}</div>` : ''}
+      ${m.photo ? `<img src="${m.photo}" class="moment-photo" alt="">` : ''}
+      <div class="moment-text">${esc(m.text)}</div>
+      <button class="tiny-link" onclick="openMomentForm('${m.id}')">編輯</button>
+    </div>`).join('');
+  document.getElementById('travel-subtab-content').innerHTML = html;
+}
+
+/* ---- expense (separate from daily-itinerary estimates) ---- */
+function expenseFormHtml(x){
+  const e = x || {};
+  const isCustom = e.category && !EXPENSE_CATEGORY_SUGGESTIONS.includes(e.category);
+  const presetValue = isCustom ? '其他' : (e.category || EXPENSE_CATEGORY_SUGGESTIONS[0]);
+  return `<div class="form-panel">
+    <div class="field"><label>類別</label>
+      <select id="ex-category-select" onchange="toggleExpenseCategoryCustom()">
+        ${EXPENSE_CATEGORY_SUGGESTIONS.map(c=>`<option value="${c}" ${presetValue===c?'selected':''}>${c}</option>`).join('')}
+      </select>
+    </div>
+    <div class="field" id="ex-category-custom-wrap" ${presetValue==='其他'?'':'style="display:none;"'}>
+      <label>自訂類別名稱</label>
+      <input type="text" id="ex-category-custom" value="${isCustom?esc(e.category):''}" placeholder="例如：紀念品">
+    </div>
+    <div class="row-2">
+      <div class="field"><label>金額</label><input type="number" step="0.01" id="ex-amount" value="${e.amount!==undefined?e.amount:''}" placeholder="0"></div>
+      <div class="field"><label>幣值</label><select id="ex-currency">${CURRENCIES.map(c=>`<option value="${c}" ${(e.currency||'TWD')===c?'selected':''}>${c}</option>`).join('')}</select></div>
+    </div>
+    <div class="field"><label>備註</label><input type="text" id="ex-note" value="${esc(e.note)}" placeholder="選填"></div>
+    <div class="form-actions">
+      <button class="btn btn-primary" onclick="saveExpenseForm()">儲存</button>
+      <button class="btn btn-ghost" onclick="closeExpenseForm()">取消</button>
+      ${x ? `<button class="btn btn-danger" onclick="deleteExpense('${x.id}')">刪除</button>` : ''}
+    </div>
+  </div>`;
+}
+function toggleExpenseCategoryCustom(){
+  const sel = document.getElementById('ex-category-select');
+  const wrap = document.getElementById('ex-category-custom-wrap');
+  wrap.style.display = sel.value==='其他' ? '' : 'none';
+}
+function openExpenseForm(editId){ state.travel.ui.expenseForm = { editId: editId || null }; renderExpenseTab(getCurrentTrip()); }
+function closeExpenseForm(){ state.travel.ui.expenseForm = null; renderExpenseTab(getCurrentTrip()); }
+async function saveExpenseForm(){
+  const trip = getCurrentTrip();
+  const editId = state.travel.ui.expenseForm.editId;
+  let x = editId ? trip.expenses.find(e=>e.id===editId) : { id: uid(), createdAt: Date.now() };
+  const presetVal = val('ex-category-select');
+  x.category = presetVal==='其他' ? (val('ex-category-custom').trim() || '其他') : presetVal;
+  const amtVal = val('ex-amount'); x.amount = amtVal===''?0:parseFloat(amtVal);
+  x.currency = val('ex-currency');
+  x.note = val('ex-note');
+  if(!editId) trip.expenses.push(x);
+  state.travel.ui.expenseForm = null;
+  renderExpenseTab(trip);
+  await persistTravel();
+}
+function deleteExpense(id){
+  showConfirmModal('確定要刪除這筆花費紀錄嗎？', async () => {
+    const trip = getCurrentTrip();
+    trip.expenses = trip.expenses.filter(x=>x.id!==id);
+    state.travel.ui.expenseForm = null;
+    renderExpenseTab(trip);
+    await persistTravel();
+  });
+}
+function renderExpenseTab(trip){
+  const ui = state.travel.ui;
+  const expenses = [...(trip.expenses||[])].sort((a,b)=>(b.createdAt||0)-(a.createdAt||0));
+  const totals = computeExpenseTotalsByCurrency(trip);
+  const currencyKeys = Object.keys(totals);
+
+  let html = `<button class="btn btn-primary btn-sm" onclick="openExpenseForm()">+ 新增花費</button>`;
+  if(ui.expenseForm){
+    const editing = ui.expenseForm.editId ? expenses.find(x=>x.id===ui.expenseForm.editId) : null;
+    html += expenseFormHtml(editing);
+  }
+  if(currencyKeys.length){
+    html += `<div class="expense-total"><div class="expense-currency-totals">` + currencyKeys.map(cur =>
+      `<div>${esc(cur)} 總計　<span class="expense-total-num brush">${totals[cur].toLocaleString('zh-TW')}</span></div>`
+    ).join('') + `</div></div>`;
+  }
+  if(expenses.length===0 && !ui.expenseForm){
+    html += `<div class="empty-state">還沒有記錄任何花費，把機票、住宿、保險都記下來吧（這裡跟每日行程的預估花費是分開計算的）。</div>`;
+  } else if(expenses.length){
+    html += `<div class="expense-itemlist">` + expenses.map(x => `
+      <div class="expense-item-row">
+        <span>${esc(x.category)}${x.note?`・${esc(x.note)}`:''}</span>
+        <span class="ex-amount">${esc(String(x.amount))} ${esc(x.currency)}</span>
+        <button class="tiny-link" onclick="openExpenseForm('${x.id}')">編輯</button>
+      </div>`).join('') + `</div>`;
+  }
+  document.getElementById('travel-subtab-content').innerHTML = html;
+}
+
+/* ===================== generic engine (diary / recipes / books) ===================== */
+function formShell(moduleKey, innerFieldsHtml){
+  return `<div class="form-panel">
+      ${innerFieldsHtml}
+      <div class="form-actions">
+        <button class="btn btn-primary" onclick="saveForm('${moduleKey}')">儲存</button>
+        <button class="btn btn-ghost" onclick="closeForm('${moduleKey}')">取消</button>
+        <button class="btn btn-danger hidden" id="${moduleKey}-delete-btn" onclick="deleteEntry('${moduleKey}')">刪除這筆</button>
+      </div>
+    </div>`;
+}
+function openForm(moduleKey, entry){
+  state[moduleKey].editingId = entry ? entry.id : null;
+  const slot = document.getElementById(moduleKey + '-form-slot');
+  slot.innerHTML = formBuilders[moduleKey](entry || {});
+  const delBtn = document.getElementById(moduleKey + '-delete-btn');
+  if(delBtn && entry) delBtn.classList.remove('hidden');
+  slot.scrollIntoView({behavior:'smooth', block:'start'});
+}
+function closeForm(moduleKey){ state[moduleKey].editingId = null; document.getElementById(moduleKey + '-form-slot').innerHTML = ''; }
+
+const formBuilders = {
+  diary: (e) => formShell('diary', `
+    <div class="row-2">
+      <div class="field"><label>日期</label><input type="date" id="diary-date" value="${esc(e.date || new Date().toISOString().slice(0,10))}"></div>
+      <div class="field"><label>心情</label>
+        <select id="diary-mood">${['😊','😌','😐','😔','😤','🥱','🤩'].map(m=>`<option value="${m}" ${e.mood===m?'selected':''}>${m}</option>`).join('')}</select>
+      </div>
+    </div>
+    <div class="field"><label>標題</label><input type="text" id="diary-title" value="${esc(e.title)}" placeholder="今天的一句話標題"></div>
+    <div class="field"><label>內容</label><textarea id="diary-content" style="min-height:8rem;" placeholder="寫下今天發生的事…">${esc(e.content)}</textarea></div>
+  `),
+  recipes: (e) => formShell('recipes', `
+    <div class="row-2">
+      <div class="field"><label>菜名</label><input type="text" id="recipe-name" value="${esc(e.name)}" placeholder="蔥油拌麵"></div>
+      <div class="field"><label>分類</label><input type="text" id="recipe-category" value="${esc(e.category)}" placeholder="家常菜／烘焙…"></div>
+    </div>
+    <div class="row-2">
+      <div class="field"><label>份量</label><input type="text" id="recipe-servings" value="${esc(e.servings)}" placeholder="2人份"></div>
+      <div class="field"><label>評分（0-5）</label><input type="number" id="recipe-rating" min="0" max="5" value="${e.rating!==undefined?e.rating:''}"></div>
+    </div>
+    <div class="field"><label>食材（一行一項）</label><textarea id="recipe-ingredients" placeholder="麵條 200g&#10;蔥 3根&#10;醬油 1大匙">${esc((e.ingredients||[]).join('\\n'))}</textarea></div>
+    <div class="field"><label>做法（一行一步）</label><textarea id="recipe-steps" style="min-height:6rem;" placeholder="1. 蔥切段爆香&#10;2. 拌入麵條">${esc((e.steps||[]).join('\\n'))}</textarea></div>
+    <div class="field"><label>備註</label><textarea id="recipe-notes" placeholder="下次想調整的地方…">${esc(e.notes)}</textarea></div>
+  `),
+  books: (e) => formShell('books', `
+    <div class="row-2">
+      <div class="field"><label>書名</label><input type="text" id="book-title" value="${esc(e.title)}" placeholder="小王子"></div>
+      <div class="field"><label>作者</label><input type="text" id="book-author" value="${esc(e.author)}" placeholder="安東尼·聖修伯里"></div>
+    </div>
+    <div class="row-2">
+      <div class="field"><label>狀態</label>
+        <select id="book-status">
+          <option value="想讀" ${e.status==='想讀'?'selected':''}>想讀</option>
+          <option value="在讀" ${e.status==='在讀'?'selected':''}>在讀</option>
+          <option value="讀完" ${e.status==='讀完'?'selected':''}>讀完</option>
+        </select>
+      </div>
+      <div class="field"><label>評分（0-5）</label><input type="number" id="book-rating" min="0" max="5" value="${e.rating!==undefined?e.rating:''}"></div>
+    </div>
+    <div class="field"><label>完成日期（選填）</label><input type="date" id="book-date" value="${esc(e.dateFinished)}"></div>
+    <div class="field"><label>心得</label><textarea id="book-notes" style="min-height:7rem;" placeholder="這本書帶給你的想法…">${esc(e.notes)}</textarea></div>
+  `),
+};
+
+async function saveForm(moduleKey){
+  const list = state[moduleKey].entries;
+  const editingId = state[moduleKey].editingId;
+  let entry = editingId ? list.find(x=>x.id===editingId) : { id: uid(), createdAt: Date.now() };
+  if(!entry) entry = { id: uid(), createdAt: Date.now() };
+
+  if(moduleKey==='diary'){
+    entry.date = val('diary-date') || new Date().toISOString().slice(0,10);
+    entry.mood = val('diary-mood');
+    entry.title = val('diary-title').trim() || '無題';
+    entry.content = val('diary-content');
+  } else if(moduleKey==='recipes'){
+    entry.name = val('recipe-name').trim() || '未命名料理';
+    entry.category = val('recipe-category').trim();
+    entry.servings = val('recipe-servings').trim();
+    const ratingVal = val('recipe-rating');
+    entry.rating = ratingVal === '' ? undefined : Math.max(0, Math.min(5, parseInt(ratingVal,10)));
+    entry.ingredients = val('recipe-ingredients').split('\n').map(s=>s.trim()).filter(Boolean);
+    entry.steps = val('recipe-steps').split('\n').map(s=>s.trim()).filter(Boolean);
+    entry.notes = val('recipe-notes');
+  } else if(moduleKey==='books'){
+    entry.title = val('book-title').trim() || '未命名書籍';
+    entry.author = val('book-author').trim();
+    entry.status = val('book-status');
+    const ratingVal = val('book-rating');
+    entry.rating = ratingVal === '' ? undefined : Math.max(0, Math.min(5, parseInt(ratingVal,10)));
+    entry.dateFinished = val('book-date');
+    entry.notes = val('book-notes');
+  }
+
+  if(!editingId) list.push(entry);
+  state[moduleKey].entries = list;
+  closeForm(moduleKey);
+  render[moduleKey]();
+  await saveEntries(moduleKey, list);
+}
+function deleteEntry(moduleKey){
+  const editingId = state[moduleKey].editingId;
+  if(!editingId) return;
+  showConfirmModal('確定要刪除這一筆嗎？刪除後就找不回來了。', async () => {
+    state[moduleKey].entries = state[moduleKey].entries.filter(x=>x.id!==editingId);
+    closeForm(moduleKey);
+    render[moduleKey]();
+    await saveEntries(moduleKey, state[moduleKey].entries);
+  });
+}
+
+const render = {
+  diary(){
+    const list = [...state.diary.entries].sort((a,b)=>(b.date||'').localeCompare(a.date||''));
+    const el = document.getElementById('diary-list');
+    if(list.length===0){ el.innerHTML = '<div class="empty-state">今天還沒寫下什麼，要不要留一段話給未來的自己？</div>'; return; }
+    el.innerHTML = list.map(e => `
+      <div class="diary-entry">
+        <div class="diary-top"><span class="diary-date">${esc(fmtDate(e.date))}</span><span class="diary-mood">${esc(e.mood||'')}</span></div>
+        <div class="diary-title brush">${esc(e.title)}</div>
+        <div class="diary-content">${esc(e.content)}</div>
+        <button class="tiny-link" onclick='openForm("diary", ${attrJson(e)})'>編輯</button>
+      </div>`).join('');
+  },
+  recipes(){
+    const list = [...state.recipes.entries].sort((a,b)=>(b.createdAt||0)-(a.createdAt||0));
+    const el = document.getElementById('recipes-list');
+    if(list.length===0){ el.innerHTML = '<div class="empty-state">食譜盒是空的，把第一道拿手菜記下來吧。</div>'; return; }
+    el.innerHTML = list.map(e => `
+      <div class="recipe-card">
+        <div class="recipe-top"><span class="recipe-name brush">${esc(e.name)}</span><span class="recipe-meta">${esc(e.category||'')}${e.servings?`・${esc(e.servings)}`:''}</span></div>
+        ${e.rating!==undefined?`<div class="recipe-stars">${stars(e.rating)}</div>`:''}
+        ${(e.ingredients&&e.ingredients.length)?`<div class="recipe-section-label">食材</div><ul class="recipe-list">${e.ingredients.map(i=>`<li>${esc(i)}</li>`).join('')}</ul>`:''}
+        ${(e.steps&&e.steps.length)?`<div class="recipe-section-label">做法</div><ol class="recipe-list">${e.steps.map(i=>`<li>${esc(i)}</li>`).join('')}</ol>`:''}
+        ${e.notes?`<div class="recipe-notes">${esc(e.notes)}</div>`:''}
+        <button class="tiny-link" onclick='openForm("recipes", ${attrJson(e)})'>編輯</button>
+      </div>`).join('');
+  },
+  books(){
+    const order = {'在讀':0,'想讀':1,'讀完':2};
+    const list = [...state.books.entries].sort((a,b)=>(order[a.status]??3)-(order[b.status]??3) || (b.createdAt||0)-(a.createdAt||0));
+    const el = document.getElementById('books-list');
+    if(list.length===0){ el.innerHTML = '<div class="empty-state">書架還空著，寫下正在讀或想讀的第一本書。</div>'; return; }
+    el.innerHTML = list.map(e => `
+      <div class="book-card">
+        <div class="book-spine"></div>
+        <div class="book-main">
+          <div class="book-top">
+            <div><span class="book-title brush">${esc(e.title)}</span>${e.author?`<div class="book-author">${esc(e.author)}</div>`:''}</div>
+            <span class="book-status">${esc(e.status||'想讀')}</span>
+          </div>
+          ${e.rating!==undefined?`<div class="book-stars">${stars(e.rating)}</div>`:''}
+          ${e.dateFinished?`<div class="book-author">完成於 ${esc(fmtDate(e.dateFinished))}</div>`:''}
+          ${e.notes?`<div class="book-notes">${esc(e.notes)}</div>`:''}
+          <button class="tiny-link" onclick='openForm("books", ${attrJson(e)})'>編輯</button>
+        </div>
+      </div>`).join('');
+  }
+};
+</script>
+</body>
+</html>
