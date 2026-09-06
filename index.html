@@ -118,6 +118,8 @@ a{color:inherit;}
 .field input:focus, .field textarea:focus, .field select:focus{ border-color:var(--travel-accent); }
 .checkbox-field label{ display:flex; align-items:center; gap:.4rem; font-size:.9rem; color:var(--ink); }
 .row-2{ display:grid; grid-template-columns:1fr 1fr; gap:.9rem; }
+.row-3-icons{ display:grid; grid-template-columns:1fr 1fr 1fr; gap:.6rem; }
+.row-3-icons input{ text-align:center; }
 @media (max-width:480px){ .row-2{grid-template-columns:1fr;} }
 
 .form-panel{ background:var(--white); border-radius:18px; padding:1.2rem 1.2rem 1rem; margin-bottom:1.2rem; box-shadow:0 4px 14px var(--shadow); }
@@ -170,7 +172,7 @@ a{color:inherit;}
 .transit-connector{ display:flex; gap:.4rem; align-items:center; font-size:.8rem; color:var(--ink-soft); padding:.3rem 0 .3rem 30px; margin-left:13px; border-left:2px dashed #eadfc9; }
 .item-card{ display:flex; gap:.7rem; padding:.65rem 0; }
 .item-num{ flex-shrink:0; width:26px; height:26px; border-radius:50%; background:var(--travel-accent); color:#fff; font-size:.78rem; font-weight:700; display:flex; align-items:center; justify-content:center; margin-top:.1rem; }
-.item-thumb-sq{ width:60px; height:60px; object-fit:cover; border-radius:12px; flex-shrink:0; display:block; }
+.item-thumb-sq{ width:60px; height:60px; object-fit:cover; border-radius:12px; flex-shrink:0; display:block; cursor:zoom-in; }
 .item-thumb-placeholder{ width:60px; height:60px; border-radius:12px; background:var(--travel-bg); display:flex; align-items:center; justify-content:center; font-size:1.4rem; flex-shrink:0; }
 .item-card-body{ flex:1; min-width:0; }
 .item-card-top{ display:flex; align-items:baseline; gap:.5rem; flex-wrap:wrap; }
@@ -196,16 +198,21 @@ a{color:inherit;}
 .checklist-name{ font-family:'ZCOOL KuaiLe',cursive; font-size:1.15rem; }
 .checklist-progress{ font-size:.82rem; color:var(--ink-soft); }
 .checklist-items{ display:flex; flex-direction:column; gap:.3rem; }
-.checklist-item{ display:flex; align-items:center; gap:.55rem; font-size:.93rem; padding:.3rem 0; }
+.checklist-item{ display:flex; align-items:center; gap:.5rem; font-size:.93rem; padding:.3rem 0; flex-wrap:wrap; }
 .checklist-item input{ width:18px; height:18px; accent-color:var(--travel-accent); }
 .checklist-item.is-done span{ text-decoration:line-through; color:var(--ink-soft); }
-.checklist-item span{ flex:1; }
+.checklist-item span{ flex:1; min-width:80px; }
 .checklist-add-row{ display:flex; gap:.5rem; margin-top:.7rem; }
 .checklist-add-row input{ flex:1; border:2px solid #ecdfc9; border-radius:12px; padding:.5rem .7rem; }
+.day-link-select{ flex:none; font-size:.75rem; border:1px solid #ecdfc9; border-radius:8px; padding:.2rem .3rem; background:var(--white); color:var(--ink-soft); max-width:120px; }
+.checklist-item-thumb{ width:28px; height:28px; object-fit:cover; border-radius:6px; flex-shrink:0; cursor:zoom-in; }
+.tiny-icon-btn{ border:none; background:none; font-size:.95rem; padding:0 .2rem; flex-shrink:0; line-height:1; }
+.day-link-tag{ flex:none !important; font-size:.72rem; background:var(--travel-bg); color:var(--travel-accent-dark); border-radius:999px; padding:.1rem .55rem; font-weight:600; text-decoration:none !important; }
+.day-checklist-block{ margin-top:.8rem; padding-top:.6rem; border-top:1px dashed #eee0cc; }
 
 .moment-card{ background:var(--white); border-radius:18px; padding:1rem 1.1rem; margin-bottom:1rem; box-shadow:0 4px 12px var(--shadow); }
 .moment-date{ font-size:.82rem; color:var(--travel-accent-dark); font-weight:600; margin-bottom:.4rem; }
-.moment-photo{ display:block; max-height:220px; border-radius:14px; margin-bottom:.6rem; }
+.moment-photo{ display:block; max-height:220px; border-radius:14px; margin-bottom:.6rem; cursor:zoom-in; }
 .moment-text{ font-size:.95rem; line-height:1.7; white-space:pre-wrap; }
 
 .expense-total{ text-align:center; background:var(--white); border-radius:18px; padding:1.3rem 1rem; margin-bottom:1.1rem; box-shadow:0 4px 12px var(--shadow); font-size:.95rem; color:var(--ink-soft); }
@@ -220,8 +227,16 @@ a{color:inherit;}
 .modal-overlay{ position:fixed; inset:0; background:rgba(50,40,30,.42); display:flex; align-items:center; justify-content:center; z-index:100; padding:1rem; }
 .modal-box{ background:var(--white); border-radius:22px; padding:1.4rem; max-width:420px; width:100%; max-height:88vh; overflow:auto; box-shadow:0 12px 30px rgba(0,0,0,.25); }
 .modal-box-wide{ max-width:480px; }
+.lightbox-overlay{ background:rgba(20,15,10,.82); padding:2rem 1rem; z-index:150; cursor:zoom-out; }
+.lightbox-img{ max-width:94vw; max-height:90vh; border-radius:12px; display:block; box-shadow:0 10px 30px rgba(0,0,0,.4); }
 
-.settings-gear-btn{ position:fixed; top:14px; right:14px; z-index:60; width:44px; height:44px; border-radius:50%; background:var(--white); border:none; box-shadow:0 4px 10px var(--shadow); font-size:1.3rem; display:flex; align-items:center; justify-content:center; }
+.sync-status-badge{ position:fixed; top:14px; right:14px; z-index:60; display:flex; align-items:center; gap:.4rem; background:var(--white); border-radius:999px; padding:.45rem .85rem; box-shadow:0 4px 10px var(--shadow); font-size:.78rem; color:var(--ink-soft); cursor:pointer; border:none; font-family:'Noto Sans TC',sans-serif; }
+.sync-dot{ width:8px; height:8px; border-radius:50%; background:#ccc; flex-shrink:0; }
+.sync-dot.ok{ background:#4caf50; }
+.sync-dot.warn{ background:#e0a32e; }
+.sync-dot.err{ background:#c0392b; }
+.sync-version{ color:#bbb; font-size:.7rem; }
+.sync-banner{ position:fixed; top:16px; left:50%; transform:translateX(-50%); z-index:70; background:var(--white); border-radius:999px; padding:.5rem 1.1rem; font-size:.8rem; box-shadow:0 4px 10px var(--shadow); color:var(--ink-soft); max-width:80vw; text-align:center; }
 .settings-section{ margin-bottom:1.2rem; padding-bottom:1.1rem; border-bottom:1px dashed #eee0cc; }
 .settings-section:last-of-type{ border-bottom:none; margin-bottom:.4rem; padding-bottom:0; }
 .settings-section-title{ font-weight:700; margin-bottom:.4rem; font-size:1rem; }
@@ -229,13 +244,31 @@ a{color:inherit;}
 .settings-status{ font-size:.82rem; color:var(--ink-soft); margin:.6rem 0 0; }
 .settings-status-msg{ color:var(--travel-accent-dark); font-weight:600; }
 
-/* ---------- Diary ---------- */
-.diary-entry{ background:var(--white); border-radius:18px; padding:1rem 1.15rem; margin-bottom:1rem; box-shadow:0 4px 12px var(--shadow); }
-.diary-top{ display:flex; justify-content:space-between; gap:.6rem; align-items:center; flex-wrap:wrap;}
-.diary-date{ font-size:.82rem; color:var(--diary-accent-dark); font-weight:600; }
-.diary-mood{ font-size:1.2rem; }
-.diary-title{ font-family:'ZCOOL KuaiLe',cursive; font-size:1.25rem; margin-top:.2rem; }
-.diary-content{ margin-top:.4rem; font-size:.93rem; line-height:1.75; white-space:pre-wrap; }
+/* ---------- Diary (calendar) ---------- */
+.cal-header{ display:flex; align-items:center; justify-content:center; gap:1.2rem; margin-bottom:.8rem; }
+.cal-title{ font-size:1.35rem; color:var(--diary-accent-dark); min-width:8rem; text-align:center; }
+.cal-weekdays{ display:grid; grid-template-columns:repeat(7,1fr); text-align:center; font-size:.72rem; color:var(--ink-soft); margin-bottom:.35rem; }
+.cal-grid{ display:grid; grid-template-columns:repeat(7,1fr); gap:4px; }
+.cal-cell{ position:relative; aspect-ratio:1; border:none; background:var(--white); border-radius:10px; display:flex; flex-direction:column; align-items:center; justify-content:flex-start; gap:1px; padding:5px 2px 2px; box-shadow:0 2px 6px var(--shadow); font-family:'Noto Sans TC',sans-serif; }
+.cal-cell-empty{ background:transparent; box-shadow:none; }
+.cal-daynum{ font-size:.75rem; color:var(--ink-soft); }
+.cal-cell.has-entry .cal-daynum{ color:var(--diary-accent-dark); font-weight:700; }
+.cal-cell.is-today{ box-shadow:0 0 0 2px var(--diary-accent) inset, 0 2px 6px var(--shadow); }
+.cal-cell.is-selected{ outline:2px solid var(--diary-accent-dark); outline-offset:1px; }
+.cal-day-badge{ position:absolute; bottom:1px; font-size:.8rem; line-height:1; letter-spacing:-1px; max-width:100%; overflow:hidden; white-space:nowrap; }
+.cal-symbols{ font-size:.68rem; line-height:1; white-space:nowrap; overflow:hidden; max-width:100%; }
+.cal-detail-head{ display:flex; justify-content:space-between; align-items:center; gap:.6rem; flex-wrap:wrap; margin:1.1rem 0 .6rem; }
+.diary-entry-date-title{ font-size:1.4rem; margin:.4rem 0 1rem; color:var(--diary-accent-dark); }
+.diary-view-symbols{ font-size:1.6rem; margin-bottom:.5rem; }
+.diary-view-title{ font-size:1.25rem; margin-bottom:.5rem; }
+.diary-view-content{ font-size:.95rem; line-height:1.8; }
+.rte-toolbar{ display:flex; gap:.4rem; align-items:center; margin-bottom:.4rem; flex-wrap:wrap; }
+.rte-btn{ border:2px solid #ecdfc9; background:var(--white); border-radius:8px; width:32px; height:32px; font-size:.9rem; }
+.rte-swatch{ width:22px; height:22px; border-radius:50%; border:2px solid #fff; box-shadow:0 0 0 1px #ddd; padding:0; }
+.rte-swatch-reset{ background:var(--white) !important; color:var(--ink); font-size:.72rem; font-weight:700; display:flex; align-items:center; justify-content:center; }
+.rte-editor{ min-height:8rem; border:2px solid #ecdfc9; border-radius:12px; padding:.6rem .7rem; font-size:.95rem; line-height:1.7; background:var(--white); }
+.rte-editor:empty:before{ content: attr(data-placeholder); color:#b8ac9a; }
+.rte-editor:focus{ border-color:var(--diary-accent); outline:none; }
 
 /* ---------- Recipes ---------- */
 .recipe-card{ background:var(--white); border-radius:18px; padding:1.1rem 1.2rem; margin-bottom:1rem; box-shadow:0 4px 12px var(--shadow); }
@@ -262,7 +295,14 @@ a{color:inherit;}
 </style>
 </head>
 <body>
-<button class="settings-gear-btn" onclick="openSettingsModal()" title="設定" aria-label="設定">⚙️</button>
+<button class="sync-status-badge" onclick="openSettingsModal()" title="設定" aria-label="設定">
+  <span id="sync-dot" class="sync-dot"></span>
+  <span id="sync-status-text">尚未設定同步</span>
+  <span class="sync-version">v1.0</span>
+  <span>⚙️</span>
+</button>
+<div id="sync-banner" class="sync-banner hidden"></div>
+<div id="shared-view" class="hidden"></div>
 
 <!-- ================= HOME ================= -->
 <section id="view-home">
@@ -315,6 +355,11 @@ a{color:inherit;}
   <div class="modal-box modal-box-wide" id="settings-modal-content"></div>
 </div>
 
+<!-- image lightbox (tap any photo thumbnail to enlarge) -->
+<div id="image-lightbox-overlay" class="modal-overlay lightbox-overlay hidden" onclick="closeImageLightbox()">
+  <img id="image-lightbox-img" class="lightbox-img" src="" alt="">
+</div>
+
 <!-- ================= DIARY ================= -->
 <section id="view-diary" class="module-view hidden">
   <div class="module-header">
@@ -323,11 +368,11 @@ a{color:inherit;}
       <h2 class="module-title brush">生活日記</h2>
       <p class="module-sub">寫給自己的日常紀錄</p>
     </div>
-    <button class="btn btn-primary" onclick="openForm('diary')">+ 新增一篇</button>
+    <button class="btn btn-primary" onclick="jumpToToday()">📅 今天</button>
   </div>
   <div class="module-body">
-    <div id="diary-form-slot"></div>
-    <div id="diary-list"></div>
+    <div id="diary-calendar-panel"><div id="diary-calendar"></div></div>
+    <div id="diary-entry-panel" class="hidden"><div id="diary-entry-content"></div></div>
   </div>
 </section>
 
@@ -367,6 +412,19 @@ a{color:inherit;}
 /* ===================== helpers ===================== */
 function uid(){ return (crypto.randomUUID ? crypto.randomUUID() : 'id-' + Date.now() + '-' + Math.random().toString(16).slice(2)); }
 function esc(str){ if(str===undefined||str===null) return ''; return String(str).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function sanitizeHtml(html){
+  if(!html) return '';
+  return String(html).replace(/<script[\s\S]*?<\/script>/gi, '').replace(/ on\w+="[^"]*"/gi, '').replace(/ on\w+='[^']*'/gi, '');
+}
+function diaryContentToHtml(raw){
+  if(!raw) return '';
+  if(String(raw).indexOf('<') === -1) return esc(raw).replace(/\n/g, '<br>');
+  return sanitizeHtml(raw);
+}
+function richExec(cmd, value){
+  document.getElementById('diary-content').focus();
+  document.execCommand(cmd, false, value || null);
+}
 function attrJson(obj){ return JSON.stringify(obj).replace(/&/g,'&amp;').replace(/'/g,'&#39;'); }
 function val(id){ const el=document.getElementById(id); return el ? el.value : ''; }
 function fmtDate(d){ if(!d) return ''; const p=d.split('-'); if(p.length!==3) return d; return `${p[0]}/${parseInt(p[1],10)}/${parseInt(p[2],10)}`; }
@@ -374,6 +432,16 @@ function fmtDayLabel(d){ if(!d) return '尚未設定日期'; const dt=new Date(d
 function stars(n){ n=parseInt(n,10)||0; return '★★★★★☆☆☆☆☆'.slice(5-n,10-n); }
 function formatMoney(n){ if(n===undefined||n===null||isNaN(n)) return 'NT$ 0'; return 'NT$ ' + Math.round(n).toLocaleString('zh-TW'); }
 function minutesLabel(m){ m=parseInt(m,10); if(isNaN(m)||m<=0) return ''; if(m<60) return m+'分'; const h=Math.floor(m/60), r=m%60; return h+'時'+(r?r+'分':''); }
+function transitLabel(m){ m=parseInt(m,10); if(isNaN(m)||m<=0) return ''; if(m<60) return m+'分鐘'; const h=Math.floor(m/60), r=m%60; return h+'小時'+(r?r+'分鐘':''); }
+function addMinutesToTime(timeStr, minutes){
+  if(!timeStr) return '';
+  const parts = timeStr.split(':');
+  const h = parseInt(parts[0],10), m = parseInt(parts[1],10);
+  if(isNaN(h) || isNaN(m)) return '';
+  let total = ((h*60 + m + parseInt(minutes,10)) % 1440 + 1440) % 1440;
+  const eh = Math.floor(total/60), em = total%60;
+  return String(eh).padStart(2,'0') + ':' + String(em).padStart(2,'0');
+}
 
 const TRANSPORT_ICONS = { plane:'✈️', metro:'🚇', train:'🚆', taxi:'🚕', bus:'🚌', bike:'🚲', boat:'⛴️', walk:'🚶' };
 const TRANSPORT_LABELS = { plane:'飛機', metro:'地鐵', train:'火車', taxi:'計程車', bus:'公車', bike:'腳踏車', boat:'船', walk:'走路' };
@@ -388,6 +456,14 @@ function itemIcon(item){ if(item.customIcon) return item.customIcon; const t = I
 
 /* ---- generic modal (replaces window.confirm/prompt, which some embedded views block) ---- */
 function closeGenericModal(){ document.getElementById('generic-modal-overlay').classList.add('hidden'); }
+function openImageLightbox(src){
+  document.getElementById('image-lightbox-img').src = src;
+  document.getElementById('image-lightbox-overlay').classList.remove('hidden');
+}
+function closeImageLightbox(){
+  document.getElementById('image-lightbox-overlay').classList.add('hidden');
+  document.getElementById('image-lightbox-img').src = '';
+}
 function showConfirmModal(message, onYes){
   document.getElementById('generic-modal-content').innerHTML = `
     <p style="margin:0 0 1.1rem;font-size:.95rem;line-height:1.6;">${esc(message)}</p>
@@ -425,23 +501,26 @@ function settingsModalHtml(msg){
   const connected = githubConfigured();
   const lastSync = s.lastSyncedAt ? new Date(s.lastSyncedAt).toLocaleString('zh-TW') : '尚未同步過';
   return `
-    <h3 class="brush" style="font-size:1.3rem;margin-bottom:.6rem;">⚙️ 設定</h3>
+    <h3 class="brush" style="font-size:1.3rem;margin-bottom:.6rem;">⚙️ 設定 <span style="font-family:'Noto Sans TC',sans-serif;font-size:.7rem;color:var(--ink-soft);">${APP_VERSION}</span></h3>
     <div class="settings-section">
-      <div class="settings-section-title">☁️ GitHub 同步</div>
-      <p class="settings-hint">設定後，資料會存到你自己的 GitHub 倉庫，讓不同電腦、手機都能讀到最新資料。這個功能要把檔案發佈成真正的網頁（例如 GitHub Pages）後才能用，Claude 的預覽視窗裡連不到 GitHub。</p>
-      <div class="field"><label>Personal Access Token</label><input type="password" id="set-gh-token" value="${esc(s.githubToken)}" placeholder="ghp_xxxxxxxxxxxx"></div>
-      <div class="field"><label>倉庫（owner/repo）</label><input type="text" id="set-gh-repo" value="${esc(s.githubOwnerRepo)}" placeholder="yourname/life-journal-data"></div>
-      <div class="field"><label>檔案路徑</label><input type="text" id="set-gh-path" value="${esc(s.githubPath || 'data.json')}" placeholder="data.json"></div>
+      <div class="settings-section-title">☁️ GitHub 雲端同步</div>
+      <p class="settings-hint">建議建立一個「私有」repo 專門存放資料檔（例如 travel-diary-data），並用只限該 repo 權限的 Fine-grained token。App 本身可以放在另一個公開 repo 上用 GitHub Pages 開啟。設定後每次打開網頁會自動先讀取最新資料，修改時也會自動同步上去；下面的按鈕可以手動再同步一次。這個功能要把檔案發佈成真正的網頁後才能用，Claude 的預覽視窗裡連不到 GitHub。</p>
+      <div class="field"><label>Personal Access Token</label><input type="password" id="set-gh-token" value="${esc(s.githubToken)}" placeholder="github_pat_xxxxxxxxxxxx"></div>
+      <div class="row-2">
+        <div class="field"><label>帳號（owner）</label><input type="text" id="set-gh-owner" value="${esc(githubOwner())}" placeholder="yourname"></div>
+        <div class="field"><label>資料 repo 名稱</label><input type="text" id="set-gh-repo-name" value="${esc(githubRepoName())}" placeholder="travel-diary-data"></div>
+      </div>
+      <div class="row-2">
+        <div class="field"><label>檔案路徑</label><input type="text" id="set-gh-path" value="${esc(s.githubPath || 'data.json')}" placeholder="data.json"></div>
+        <div class="field"><label>分支</label><input type="text" id="set-gh-branch" value="${esc(githubBranch())}" placeholder="main"></div>
+      </div>
       <div class="form-actions">
         <button class="btn btn-primary" onclick="saveGithubSettings()">儲存設定</button>
-        ${connected ? `<button class="btn btn-ghost" onclick="disconnectGithub()">取消連結</button>` : ''}
+        ${connected ? `<button class="btn btn-ghost" onclick="doPull()">↓ 從雲端讀取</button>
+        <button class="btn btn-ghost" onclick="doPush()">↑ 立即同步</button>
+        <button class="btn btn-ghost" onclick="disconnectGithub()">取消連結</button>` : ''}
       </div>
-      ${connected ? `
-      <div class="settings-status">✅ 已設定・上次同步：${esc(lastSync)}</div>
-      <div class="form-actions" style="margin-top:.5rem;">
-        <button class="btn btn-primary btn-sm" onclick="doPush()">⬆️ 上傳目前資料</button>
-        <button class="btn btn-ghost btn-sm" onclick="doPull()">⬇️ 下載最新資料</button>
-      </div>` : ''}
+      ${connected ? `<div class="settings-status">✅ 已設定・上次同步：${esc(lastSync)}</div>` : ''}
       ${msg ? `<div class="settings-status settings-status-msg">${esc(msg)}</div>` : ''}
     </div>
     <div class="settings-section">
@@ -452,20 +531,26 @@ function settingsModalHtml(msg){
 }
 async function saveGithubSettings(){
   _appSettings.githubToken = val('set-gh-token').trim();
-  _appSettings.githubOwnerRepo = val('set-gh-repo').trim().replace(/^\/+|\/+$/g,'');
+  _appSettings.githubOwner = val('set-gh-owner').trim().replace(/^\/+|\/+$/g,'');
+  _appSettings.githubRepoName = val('set-gh-repo-name').trim().replace(/^\/+|\/+$/g,'');
   _appSettings.githubPath = val('set-gh-path').trim() || 'data.json';
+  _appSettings.githubBranch = val('set-gh-branch').trim() || 'main';
+  delete _appSettings.githubOwnerRepo;
   await setAppSettings(_appSettings);
+  updateSyncStatusBadge();
   document.getElementById('settings-modal-content').innerHTML = settingsModalHtml('設定已儲存。');
 }
 function disconnectGithub(){
   showConfirmModal('確定要取消 GitHub 同步連結嗎？（不會刪除 GitHub 上已經同步的資料，只是這台裝置不再自動同步）', async () => {
     _appSettings = {};
     await setAppSettings(_appSettings);
+    _syncState = 'unset';
+    updateSyncStatusBadge();
     document.getElementById('settings-modal-content').innerHTML = settingsModalHtml('已取消連結。');
   });
 }
 async function doPush(){
-  document.getElementById('settings-modal-content').innerHTML = settingsModalHtml('上傳中…');
+  document.getElementById('settings-modal-content').innerHTML = settingsModalHtml('同步中…');
   try{ await pushToGithub(); document.getElementById('settings-modal-content').innerHTML = settingsModalHtml('已上傳目前資料到 GitHub。'); }
   catch(e){ document.getElementById('settings-modal-content').innerHTML = settingsModalHtml('上傳失敗：' + e.message); }
 }
@@ -533,13 +618,18 @@ async function saveEntries(moduleKey, arr){
 
 /* ---- app settings (GitHub sync config) ---- */
 const SETTINGS_KEY = 'app:settings';
+const APP_VERSION = 'v1.0';
 let _appSettings = {};
+let _syncState = 'unset'; // unset | ok | warn | err
 async function getAppSettings(){
   const raw = await localGet(SETTINGS_KEY);
   try{ return raw ? JSON.parse(raw) : {}; } catch(e){ return {}; }
 }
 async function setAppSettings(settings){ await localSet(SETTINGS_KEY, JSON.stringify(settings)); }
-function githubConfigured(){ return !!(_appSettings.githubToken && _appSettings.githubOwnerRepo && _appSettings.githubPath); }
+function githubOwner(){ if(_appSettings.githubOwner) return _appSettings.githubOwner; if(_appSettings.githubOwnerRepo) return _appSettings.githubOwnerRepo.split('/')[0]; return ''; }
+function githubRepoName(){ if(_appSettings.githubRepoName) return _appSettings.githubRepoName; if(_appSettings.githubOwnerRepo) return _appSettings.githubOwnerRepo.split('/')[1]; return ''; }
+function githubBranch(){ return _appSettings.githubBranch || 'main'; }
+function githubConfigured(){ return !!(_appSettings.githubToken && githubOwner() && githubRepoName() && _appSettings.githubPath); }
 
 /* ---- GitHub Contents API helpers ---- */
 function b64EncodeUnicode(str){
@@ -555,10 +645,10 @@ function b64DecodeUnicode(b64){
 }
 function githubApiUrl(){
   const pathParts = _appSettings.githubPath.split('/').map(encodeURIComponent).join('/');
-  return `https://api.github.com/repos/${_appSettings.githubOwnerRepo}/contents/${pathParts}`;
+  return `https://api.github.com/repos/${githubOwner()}/${githubRepoName()}/contents/${pathParts}`;
 }
 async function githubGetFile(){
-  const res = await fetch(githubApiUrl(), {
+  const res = await fetch(githubApiUrl() + '?ref=' + encodeURIComponent(githubBranch()), {
     headers: { 'Authorization': 'token ' + _appSettings.githubToken, 'Accept': 'application/vnd.github+json' }
   });
   if(res.status === 404) return { notFound: true };
@@ -567,7 +657,7 @@ async function githubGetFile(){
   return { sha: json.sha, content: b64DecodeUnicode(json.content) };
 }
 async function githubPutFile(contentStr, sha, message){
-  const body = { message: message || '同步生活手記資料', content: b64EncodeUnicode(contentStr) };
+  const body = { message: message || '同步生活手記資料', content: b64EncodeUnicode(contentStr), branch: githubBranch() };
   if(sha) body.sha = sha;
   const res = await fetch(githubApiUrl(), {
     method: 'PUT',
@@ -577,6 +667,146 @@ async function githubPutFile(contentStr, sha, message){
   if(!res.ok){ const t = await res.text().catch(()=>''); throw new Error('GitHub 寫入失敗（' + res.status + '）' + t.slice(0,150)); }
   return await res.json();
 }
+
+/* ---- trip sharing (writes into the SAME repo that hosts this page, so it can be read back as a plain static file) ---- */
+function currentRepoFromLocation(){
+  const owner = location.hostname.split('.')[0];
+  const pathParts = location.pathname.split('/').filter(Boolean);
+  const repo = pathParts[0] || '';
+  const base = repo ? `/${repo}/` : '/';
+  return { owner, repo, base };
+}
+async function githubGetFileAtRepoPath(owner, repo, path){
+  const url = `https://api.github.com/repos/${owner}/${repo}/contents/${path.split('/').map(encodeURIComponent).join('/')}`;
+  const res = await fetch(url, { headers: { 'Authorization': 'token ' + _appSettings.githubToken, 'Accept': 'application/vnd.github+json' } });
+  if(res.status === 404) return { notFound: true };
+  if(!res.ok) throw new Error('讀取失敗（' + res.status + '）');
+  const json = await res.json();
+  return { sha: json.sha };
+}
+async function githubPutFileAtRepoPath(owner, repo, path, contentStr, sha, message){
+  const url = `https://api.github.com/repos/${owner}/${repo}/contents/${path.split('/').map(encodeURIComponent).join('/')}`;
+  const body = { message: message || '更新分享資料', content: b64EncodeUnicode(contentStr) };
+  if(sha) body.sha = sha;
+  const res = await fetch(url, {
+    method: 'PUT',
+    headers: { 'Authorization': 'token ' + _appSettings.githubToken, 'Accept': 'application/vnd.github+json', 'Content-Type': 'application/json' },
+    body: JSON.stringify(body)
+  });
+  if(!res.ok){ const t = await res.text().catch(()=>''); throw new Error('寫入失敗（' + res.status + '）' + t.slice(0,150)); }
+  return await res.json();
+}
+async function shareTrip(tripId){
+  if(!_appSettings.githubToken){
+    showConfirmModal('分享連結需要先在設定裡填好 GitHub Token，要現在去設定嗎？', () => openSettingsModal());
+    return;
+  }
+  const trip = getCurrentTrip();
+  const shareData = JSON.parse(JSON.stringify(trip));
+  (shareData.days||[]).forEach(d => (d.items||[]).forEach(it => { delete it.image; }));
+  (shareData.moments||[]).forEach(m => { delete m.photo; });
+  delete shareData.expenses;
+  const { owner, repo, base } = currentRepoFromLocation();
+  const path = 'shares/' + tripId + '.json';
+  try{
+    let sha = null;
+    const existing = await githubGetFileAtRepoPath(owner, repo, path);
+    if(!existing.notFound) sha = existing.sha;
+    await githubPutFileAtRepoPath(owner, repo, path, JSON.stringify(shareData), sha, '分享行程：' + trip.title);
+    const shareUrl = location.origin + base + '?trip=' + encodeURIComponent(tripId);
+    showShareLinkModal(shareUrl);
+  }catch(e){
+    showConfirmModal('產生分享連結失敗：' + e.message + '。請確認你的 GitHub Token 也有「' + owner + '/' + repo + '」這個 repo 的讀寫權限（跟存資料用的 repo 可能不是同一個）。', () => {});
+  }
+}
+function showShareLinkModal(url){
+  document.getElementById('generic-modal-content').innerHTML = `
+    <h3 class="brush" style="font-size:1.2rem;margin-bottom:.6rem;">🔗 行程分享連結</h3>
+    <p style="font-size:.85rem;color:var(--ink-soft);margin-bottom:.6rem;line-height:1.6;">把這個連結傳給一起旅行的人，他們不用登入、不用設定就能看到這趟行程（唯讀，看不到你其他的行程、日記或照片）。之後這個行程有更新，記得再分享一次連結來更新內容。</p>
+    <div class="field"><input type="text" id="share-link-input" value="${esc(url)}" readonly onclick="this.select()"></div>
+    <div class="form-actions">
+      <button class="btn btn-primary" onclick="copyShareLink()">複製連結</button>
+      <button class="btn btn-ghost" onclick="closeGenericModal()">關閉</button>
+    </div>`;
+  document.getElementById('generic-modal-overlay').classList.remove('hidden');
+}
+function copyShareLink(){
+  const inp = document.getElementById('share-link-input');
+  inp.select();
+  if(navigator.clipboard && navigator.clipboard.writeText){ navigator.clipboard.writeText(inp.value).catch(()=>{}); }
+  try{ document.execCommand('copy'); }catch(e){}
+}
+function renderSharedTrip(trip){
+  document.querySelectorAll('#view-home, .module-view, .settings-gear-btn, .sync-status-badge').forEach(el => el.classList.add('hidden'));
+  const view = document.getElementById('shared-view');
+  view.classList.remove('hidden');
+  const range = computeTripDateRange(trip);
+  let html = `<div class="module-header"><div>
+      <h2 class="module-title brush" style="margin:0;color:var(--travel-accent-dark);">🧳 ${esc(trip.title)}</h2>
+      <p class="module-sub">${esc(trip.destination||'')}・📅 ${esc(range)}・唯讀分享頁面</p>
+    </div></div><div class="module-body">`;
+
+  const f = trip.flights || {};
+  const legs = [['去程', f.outbound], ['回程', f.ret]].filter(([,x]) => x && (x.flightNo || x.from || x.to));
+  if(legs.length){
+    html += legs.map(([label, x]) => `<div class="flight-block"><b>${label}</b>　${esc(x.flightNo||'')}<br>${esc(x.from||'')} ${esc(x.departTime||'')} → ${esc(x.to||'')} ${esc(x.arriveTime||'')}</div>`).join('');
+  }
+
+  const days = [...(trip.days||[])].sort((a,b)=>(a.date||'').localeCompare(b.date||''));
+  html += days.map(day => {
+    const items = [...(day.items||[])].sort((a,b)=>(a.time||'').localeCompare(b.time||''));
+    let dayHtml = `<div class="day-card">
+      <div class="day-card-head-main"><span class="day-date brush">📅 ${esc(fmtDayLabel(day.date))}</span>${day.stay?`<span class="day-stay">🏨 ${esc(day.stay)}</span>`:''}</div>
+      ${day.title ? `<div class="day-title">🎯 ${esc(day.title)}</div>` : ''}
+      <div class="itinerary-track">`;
+    dayHtml += items.map((it,i) => {
+      let row = '';
+      if(it.transport || it.transitMinutes){
+        row += `<div class="transit-connector"><span>${TRANSPORT_ICONS[it.transport]||'🚏'} ${esc(TRANSPORT_LABELS[it.transport]||'交通')}${it.transitMinutes?esc(transitLabel(it.transitMinutes)):''}</span></div>`;
+      }
+      const timeDisplay = it.time ? (it.stayMinutes ? `${it.time}-${addMinutesToTime(it.time, it.stayMinutes)}` : it.time) : '';
+      row += `<div class="item-card">
+        <span class="item-num">${i+1}</span>
+        <span class="item-thumb-placeholder">${esc(itemIcon(it))}</span>
+        <div class="item-card-body">
+          <div class="item-card-top">${timeDisplay?`<span class="item-time">${esc(timeDisplay)}</span>`:''}<span class="item-place">${esc(itemIcon(it))} ${esc(it.place||'')}</span></div>
+          <div class="item-card-sub">
+            ${it.stayMinutes?`<span class="item-stay-badge">停留 ${esc(minutesLabel(it.stayMinutes))}</span>`:''}
+            ${it.needReservation?'<span class="item-badge">🔖 需預約／購票</span>':''}
+            ${it.mapLink?`<a href="${esc(it.mapLink)}" target="_blank" rel="noopener">📍 地圖</a>`:''}
+          </div>
+          ${it.note?`<div class="item-note">${esc(it.note)}</div>`:''}
+        </div>
+      </div>`;
+      return row;
+    }).join('');
+    dayHtml += `</div></div>`;
+    return dayHtml;
+  }).join('');
+
+  const moments = [...(trip.moments||[])].sort((a,b)=>(b.date||'').localeCompare(a.date||''));
+  if(moments.length){
+    html += `<div class="subtab-h" style="margin-top:1.2rem;">📸 趣事</div>` + moments.map(m => `
+      <div class="moment-card">${m.date?`<div class="moment-date">${esc(fmtDate(m.date))}</div>`:''}<div class="moment-text">${esc(m.text)}</div></div>`).join('');
+  }
+  html += `</div>`;
+  view.innerHTML = html;
+}
+(async function checkSharedView(){
+  const tripId = new URLSearchParams(location.search).get('trip');
+  if(!tripId) return;
+  const { base } = currentRepoFromLocation();
+  try{
+    const res = await fetch(base + 'shares/' + encodeURIComponent(tripId) + '.json', { cache: 'no-store' });
+    if(!res.ok) throw new Error('找不到這個分享連結');
+    const trip = await res.json();
+    renderSharedTrip(trip);
+  }catch(e){
+    document.querySelectorAll('#view-home, .module-view').forEach(el => el.classList.add('hidden'));
+    document.getElementById('shared-view').classList.remove('hidden');
+    document.getElementById('shared-view').innerHTML = `<div class="module-body"><div class="empty-state">這個分享連結目前無法讀取，可能已經失效。</div></div>`;
+  }
+})();
 async function buildFullSnapshot(){
   const travel = state.travel.entries !== null ? state.travel.entries : await loadEntries('travel');
   const diary = state.diary.entries !== null ? state.diary.entries : await loadEntries('diary');
@@ -594,19 +824,22 @@ async function pushToGithub(){
   await githubPutFile(content, sha, '更新生活手記資料');
   _appSettings.lastSyncedAt = Date.now();
   await setAppSettings(_appSettings);
+  _syncState = 'ok';
+  updateSyncStatusBadge();
 }
 let _pushInFlight = false, _pushQueued = false;
 async function autoPushToGithub(){
   if(_pushInFlight){ _pushQueued = true; return; }
   _pushInFlight = true;
-  try{ await pushToGithub(); } catch(e){ /* best-effort background sync; surfaced next time the settings panel is opened */ }
+  try{ await pushToGithub(); }
+  catch(e){ _syncState = 'err'; updateSyncStatusBadge(); /* best-effort background sync; surfaced next time the settings panel is opened */ }
   _pushInFlight = false;
   if(_pushQueued){ _pushQueued = false; autoPushToGithub(); }
 }
 async function pullFromGithub(){
   if(!githubConfigured()) throw new Error('尚未設定 GitHub 同步。');
   const existing = await githubGetFile();
-  if(existing.notFound) throw new Error('GitHub 上還沒有資料檔，請先按「上傳目前資料」建立一次。');
+  if(existing.notFound) throw new Error('GitHub 上還沒有資料檔，請先按「立即同步」建立一次。');
   const data = JSON.parse(existing.content);
   await saveEntriesRaw('travel', data.travel || []);
   await saveEntriesRaw('diary', data.diary || []);
@@ -614,13 +847,44 @@ async function pullFromGithub(){
   await saveEntriesRaw('books', data.books || []);
   _appSettings.lastSyncedAt = Date.now();
   await setAppSettings(_appSettings);
+  _syncState = 'ok';
+  updateSyncStatusBadge();
 }
-(async function initAppSettings(){ _appSettings = await getAppSettings(); })();
+function updateSyncStatusBadge(){
+  const dot = document.getElementById('sync-dot');
+  const text = document.getElementById('sync-status-text');
+  if(!dot || !text) return;
+  dot.classList.remove('ok','warn','err');
+  if(!githubConfigured()){ dot.classList.add('warn'); text.textContent = '尚未設定同步'; return; }
+  if(_syncState === 'err'){ dot.classList.add('err'); text.textContent = '同步失敗'; return; }
+  if(_appSettings.lastSyncedAt){
+    dot.classList.add('ok');
+    text.textContent = '已同步 ' + new Date(_appSettings.lastSyncedAt).toLocaleTimeString('zh-TW', {hour:'2-digit', minute:'2-digit', second:'2-digit'});
+  } else {
+    dot.classList.add('warn');
+    text.textContent = '已設定・尚未同步';
+  }
+}
+function showSyncBanner(text, autoHide){
+  const el = document.getElementById('sync-banner');
+  el.textContent = text;
+  el.classList.remove('hidden');
+  if(autoHide){ setTimeout(() => { el.classList.add('hidden'); }, 2500); }
+}
+const appReadyPromise = (async function initApp(){
+  _appSettings = await getAppSettings();
+  updateSyncStatusBadge();
+  if(githubConfigured()){
+    showSyncBanner('🔄 正在同步最新資料…');
+    try{ await pullFromGithub(); showSyncBanner('✅ 已同步最新資料', true); }
+    catch(e){ _syncState = 'err'; updateSyncStatusBadge(); showSyncBanner('⚠️ 同步失敗，先使用本機資料', true); }
+  }
+})();
 
 /* ===================== state ===================== */
 const state = {
   travel: { entries: null, ui: { view:'list', tripId:null, subTab:'flights', dayForm:null, itemForm:null, momentForm:null, expenseForm:null, activeChecklist:null, tripMetaEditId:null, expandedDays:new Set() } },
-  diary: { entries: null, editingId: null },
+  diary: { entries: null, editingId: null, calYear: new Date().getFullYear(), calMonth: new Date().getMonth(), selectedDate: new Date().toISOString().slice(0,10) },
   recipes: { entries: null, editingId: null },
   books: { entries: null, editingId: null },
 };
@@ -639,6 +903,7 @@ function goTo(view){
 }
 
 async function initModule(moduleKey){
+  await appReadyPromise;
   if(moduleKey === 'travel'){
     document.getElementById('travel-list').innerHTML = '<div class="loading-msg">翻頁中…</div>';
     const entries = await loadEntries('travel');
@@ -652,6 +917,13 @@ async function initModule(moduleKey){
     });
     state.travel.entries = entries;
     renderTravelModule();
+    return;
+  }
+  if(moduleKey === 'diary'){
+    document.getElementById('diary-calendar').innerHTML = '<div class="loading-msg">翻頁中…</div>';
+    const entries = await loadEntries('diary');
+    state.diary.entries = entries;
+    renderDiaryModule();
     return;
   }
   const listEl = document.getElementById(moduleKey + '-list');
@@ -802,6 +1074,7 @@ function renderWorkspaceHeader(trip){
     <div class="ws-title-row">
       <h2 class="module-title brush" style="margin:0;">🧳 ${esc(trip.title)}</h2>
       <button class="icon-btn" onclick="openTripMetaForm(getCurrentTrip())" title="編輯行程資訊">✏️</button>
+      <button class="icon-btn" onclick="shareTrip('${trip.id}')" title="分享行程">🔗</button>
     </div>
     <div class="ws-meta-row">
       <span class="trip-status-badge status-${statusClass(trip.status)}">${esc(trip.status||'規劃中')}</span>
@@ -999,14 +1272,15 @@ function itemRowHtml(day, item, index){
   if(item.transport || item.transitMinutes){
     const icon = TRANSPORT_ICONS[item.transport] || '🚏';
     const label = TRANSPORT_LABELS[item.transport] || '交通';
-    html += `<div class="transit-connector"><span>${icon} ${esc(label)}</span>${item.transitMinutes?`<span>・${esc(minutesLabel(item.transitMinutes))}</span>`:''}</div>`;
+    html += `<div class="transit-connector"><span>${icon} ${esc(label)}${item.transitMinutes?esc(transitLabel(item.transitMinutes)):''}</span></div>`;
   }
+  const timeDisplay = item.time ? (item.stayMinutes ? `${item.time}-${addMinutesToTime(item.time, item.stayMinutes)}` : item.time) : '';
   html += `<div class="item-card">
     <span class="item-num">${index+1}</span>
-    ${item.image ? `<a href="${item.image}" target="_blank" rel="noopener"><img src="${item.image}" class="item-thumb-sq"></a>` : `<span class="item-thumb-placeholder">${esc(itemIcon(item))}</span>`}
+    ${item.image ? `<img src="${item.image}" class="item-thumb-sq" onclick="openImageLightbox(this.src)">` : `<span class="item-thumb-placeholder">${esc(itemIcon(item))}</span>`}
     <div class="item-card-body">
       <div class="item-card-top">
-        ${item.time ? `<span class="item-time">${esc(item.time)}</span>` : ''}
+        ${timeDisplay ? `<span class="item-time">${esc(timeDisplay)}</span>` : ''}
         <span class="item-place">${esc(itemIcon(item))} ${esc(item.place || '未命名項目')}</span>
       </div>
       <div class="item-card-sub">
@@ -1026,10 +1300,27 @@ function toggleDayExpand(id){
   if(s.has(id)) s.delete(id); else s.add(id);
   renderDaysTab(getCurrentTrip());
 }
+function getLinkedChecklistItems(trip, dayId){
+  const out = [];
+  (trip.checklists||[]).forEach(l => {
+    (l.items||[]).forEach(it => { if(it.dayId===dayId) out.push({ listId:l.id, listName:l.name, item:it }); });
+  });
+  return out;
+}
+async function toggleChecklistItemFromDay(listId, itemId){
+  const trip = getCurrentTrip();
+  const l = trip.checklists.find(x=>x.id===listId);
+  const it = l.items.find(x=>x.id===itemId);
+  it.done = !it.done;
+  renderDaysTab(trip);
+  await persistTravel();
+}
 function dayCardHtml(day){
   const ui = state.travel.ui;
+  const trip = getCurrentTrip();
   const expanded = ui.expandedDays.has(day.id);
   const items = [...(day.items||[])].sort((a,b)=>(a.time||'').localeCompare(b.time||''));
+  const linkedChecklistItems = getLinkedChecklistItems(trip, day.id);
   let html = `<div class="day-card">
     <div class="day-card-head" onclick="toggleDayExpand('${day.id}')">
       <div class="day-card-head-top">
@@ -1049,6 +1340,18 @@ function dayCardHtml(day){
       html += itemFormHtml(day, editItem);
     } else {
       html += `<button class="btn btn-ghost btn-sm" style="margin-top:.6rem;" onclick="openItemForm('${day.id}')">+ 新增行程項目</button>`;
+    }
+    if(linkedChecklistItems.length){
+      html += `<div class="day-checklist-block">
+        <div class="subtab-h" style="margin:.9rem 0 .4rem;">✅ 這天的清單提醒</div>
+        <div class="checklist-items">` + linkedChecklistItems.map(({listId, listName, item}) => `
+          <label class="checklist-item ${item.done?'is-done':''}">
+            <input type="checkbox" ${item.done?'checked':''} onchange="toggleChecklistItemFromDay('${listId}','${item.id}')">
+            ${item.photo ? `<img src="${item.photo}" class="checklist-item-thumb" onclick="event.preventDefault();event.stopPropagation();openImageLightbox(this.src)">` : ''}
+            <span>${esc(item.text)}</span>
+            <span class="day-link-tag">${esc(listName)}</span>
+          </label>`).join('') + `</div>
+      </div>`;
     }
   }
   html += `</div>`;
@@ -1086,10 +1389,18 @@ function renderChecklistsTab(trip){
         <button class="tiny-link tiny-link-danger" onclick="deleteChecklist('${active.id}')">刪除清單</button>
       </div>
       <div class="checklist-items">`;
+    const dayOptions = [...(trip.days||[])].sort((a,b)=>(a.date||'').localeCompare(b.date||''));
     html += active.items.map(it => `
         <label class="checklist-item ${it.done?'is-done':''}">
           <input type="checkbox" ${it.done?'checked':''} onchange="toggleChecklistItem('${active.id}','${it.id}')">
+          ${it.photo ? `<img src="${it.photo}" class="checklist-item-thumb" onclick="event.preventDefault();event.stopPropagation();openImageLightbox(this.src)">` : ''}
           <span>${esc(it.text)}</span>
+          <select class="day-link-select" onchange="setChecklistItemDay('${active.id}','${it.id}', this.value)">
+            <option value="">未指定天數</option>
+            ${dayOptions.map(d=>`<option value="${d.id}" ${it.dayId===d.id?'selected':''}>${esc(fmtDayLabel(d.date))}</option>`).join('')}
+          </select>
+          <input type="file" accept="image/*" id="clphoto-${it.id}" style="display:none" onchange="handleChecklistPhotoChange('${active.id}','${it.id}', this)">
+          <button type="button" class="tiny-icon-btn" onclick="event.preventDefault();document.getElementById('clphoto-${it.id}').click()" title="附上照片">📷</button>
           <button type="button" class="tiny-x" onclick="deleteChecklistItem('${active.id}','${it.id}')">✕</button>
         </label>`).join('');
     html += `</div>
@@ -1137,6 +1448,24 @@ async function toggleChecklistItem(listId, itemId){
   const l = trip.checklists.find(x=>x.id===listId);
   const it = l.items.find(x=>x.id===itemId);
   it.done = !it.done;
+  renderChecklistsTab(trip);
+  await persistTravel();
+}
+async function setChecklistItemDay(listId, itemId, dayId){
+  const trip = getCurrentTrip();
+  const l = trip.checklists.find(x=>x.id===listId);
+  const it = l.items.find(x=>x.id===itemId);
+  it.dayId = dayId || undefined;
+  renderChecklistsTab(trip);
+  await persistTravel();
+}
+async function handleChecklistPhotoChange(listId, itemId, inputEl){
+  if(!inputEl.files || !inputEl.files[0]) return;
+  const dataUrl = await fileToDataURL(inputEl.files[0], 500, 0.7);
+  const trip = getCurrentTrip();
+  const l = trip.checklists.find(x=>x.id===listId);
+  const it = l.items.find(x=>x.id===itemId);
+  it.photo = dataUrl;
   renderChecklistsTab(trip);
   await persistTravel();
 }
@@ -1210,7 +1539,7 @@ function renderMomentsTab(trip){
   html += moments.map(m => `
     <div class="moment-card">
       ${m.date ? `<div class="moment-date">${esc(fmtDate(m.date))}</div>` : ''}
-      ${m.photo ? `<img src="${m.photo}" class="moment-photo" alt="">` : ''}
+      ${m.photo ? `<img src="${m.photo}" class="moment-photo" alt="" onclick="openImageLightbox(this.src)">` : ''}
       <div class="moment-text">${esc(m.text)}</div>
       <button class="tiny-link" onclick="openMomentForm('${m.id}')">編輯</button>
     </div>`).join('');
@@ -1314,26 +1643,45 @@ function formShell(moduleKey, innerFieldsHtml){
       </div>
     </div>`;
 }
-function openForm(moduleKey, entry){
+function openForm(moduleKey, entry, presetDate){
   state[moduleKey].editingId = entry ? entry.id : null;
-  const slot = document.getElementById(moduleKey + '-form-slot');
-  slot.innerHTML = formBuilders[moduleKey](entry || {});
+  const slotId = moduleKey === 'diary' ? 'diary-entry-content' : (moduleKey + '-form-slot');
+  const slot = document.getElementById(slotId);
+  slot.innerHTML = formBuilders[moduleKey](entry || (presetDate ? { date: presetDate } : {}));
   const delBtn = document.getElementById(moduleKey + '-delete-btn');
   if(delBtn && entry) delBtn.classList.remove('hidden');
+  if(moduleKey === 'diary'){ document.getElementById('diary-entry-panel').classList.remove('hidden'); }
   slot.scrollIntoView({behavior:'smooth', block:'start'});
 }
-function closeForm(moduleKey){ state[moduleKey].editingId = null; document.getElementById(moduleKey + '-form-slot').innerHTML = ''; }
+function closeForm(moduleKey){
+  state[moduleKey].editingId = null;
+  if(moduleKey === 'diary'){ renderDiaryEntryPanel(); return; }
+  document.getElementById(moduleKey + '-form-slot').innerHTML = '';
+}
 
 const formBuilders = {
   diary: (e) => formShell('diary', `
     <div class="row-2">
       <div class="field"><label>日期</label><input type="date" id="diary-date" value="${esc(e.date || new Date().toISOString().slice(0,10))}"></div>
-      <div class="field"><label>心情</label>
-        <select id="diary-mood">${['😊','😌','😐','😔','😤','🥱','🤩'].map(m=>`<option value="${m}" ${e.mood===m?'selected':''}>${m}</option>`).join('')}</select>
-      </div>
+      <div class="field"><label>心情符號（自己打）</label><input type="text" id="diary-mood" value="${esc(e.mood)}" placeholder="😊" maxlength="8"></div>
     </div>
-    <div class="field"><label>標題</label><input type="text" id="diary-title" value="${esc(e.title)}" placeholder="今天的一句話標題"></div>
-    <div class="field"><label>內容</label><textarea id="diary-content" style="min-height:8rem;" placeholder="寫下今天發生的事…">${esc(e.content)}</textarea></div>
+    <div class="row-2">
+      <div class="field"><label>天氣</label><input type="text" id="diary-weather" value="${esc(e.weather)}" placeholder="☀️" maxlength="8"></div>
+      <div class="field"><label>標題</label><input type="text" id="diary-title" value="${esc(e.title)}" placeholder="今天的一句話標題"></div>
+    </div>
+    <div class="field">
+      <label>內容</label>
+      <div class="rte-toolbar">
+        <button type="button" class="rte-btn" onmousedown="event.preventDefault()" onclick="richExec('bold')"><b>B</b></button>
+        <button type="button" class="rte-swatch" style="background:#e74c3c" onmousedown="event.preventDefault()" onclick="richExec('foreColor','#e74c3c')" title="紅"></button>
+        <button type="button" class="rte-swatch" style="background:#3498db" onmousedown="event.preventDefault()" onclick="richExec('foreColor','#3498db')" title="藍"></button>
+        <button type="button" class="rte-swatch" style="background:#27ae60" onmousedown="event.preventDefault()" onclick="richExec('foreColor','#27ae60')" title="綠"></button>
+        <button type="button" class="rte-swatch" style="background:#f1c40f" onmousedown="event.preventDefault()" onclick="richExec('foreColor','#f1c40f')" title="黃"></button>
+        <button type="button" class="rte-swatch" style="background:#9b59b6" onmousedown="event.preventDefault()" onclick="richExec('foreColor','#9b59b6')" title="紫"></button>
+        <button type="button" class="rte-swatch rte-swatch-reset" onmousedown="event.preventDefault()" onclick="richExec('removeFormat')">清除</button>
+      </div>
+      <div id="diary-content" class="rte-editor" contenteditable="true" data-placeholder="寫下今天發生的事…">${diaryContentToHtml(e.content)}</div>
+    </div>
   `),
   recipes: (e) => formShell('recipes', `
     <div class="row-2">
@@ -1376,9 +1724,10 @@ async function saveForm(moduleKey){
 
   if(moduleKey==='diary'){
     entry.date = val('diary-date') || new Date().toISOString().slice(0,10);
-    entry.mood = val('diary-mood');
+    entry.mood = val('diary-mood').trim();
+    entry.weather = val('diary-weather').trim();
     entry.title = val('diary-title').trim() || '無題';
-    entry.content = val('diary-content');
+    entry.content = sanitizeHtml(document.getElementById('diary-content').innerHTML);
   } else if(moduleKey==='recipes'){
     entry.name = val('recipe-name').trim() || '未命名料理';
     entry.category = val('recipe-category').trim();
@@ -1415,19 +1764,102 @@ function deleteEntry(moduleKey){
   });
 }
 
-const render = {
-  diary(){
-    const list = [...state.diary.entries].sort((a,b)=>(b.date||'').localeCompare(a.date||''));
-    const el = document.getElementById('diary-list');
-    if(list.length===0){ el.innerHTML = '<div class="empty-state">今天還沒寫下什麼，要不要留一段話給未來的自己？</div>'; return; }
-    el.innerHTML = list.map(e => `
+function jumpToToday(){
+  const t = new Date();
+  state.diary.calYear = t.getFullYear();
+  state.diary.calMonth = t.getMonth();
+  state.diary.selectedDate = t.toISOString().slice(0,10);
+  renderDiaryModule();
+}
+function shiftDiaryMonth(delta){
+  let m = state.diary.calMonth + delta, y = state.diary.calYear;
+  if(m < 0){ m = 11; y--; } else if(m > 11){ m = 0; y++; }
+  state.diary.calMonth = m; state.diary.calYear = y;
+  renderDiaryCalendarGrid();
+}
+function selectDiaryDate(dateStr){
+  state.diary.selectedDate = dateStr;
+  renderDiaryCalendarGrid();
+  renderDiaryEntryPanel();
+  const panel = document.getElementById('diary-entry-panel');
+  if(panel) panel.scrollIntoView({behavior:'smooth', block:'nearest'});
+}
+function diaryEntriesByDate(){
+  const byDate = {};
+  (state.diary.entries||[]).forEach(e => { if(e.date){ (byDate[e.date] = byDate[e.date] || []).push(e); } });
+  return byDate;
+}
+function diaryDetailPanelHtml(byDate){
+  const sel = state.diary.selectedDate;
+  if(!sel) return '';
+  const dayEntries = byDate[sel] || [];
+  let html = `<div class="cal-detail-head">
+      <span class="diary-entry-date-title brush">${esc(fmtDate(sel))}</span>
+      <button class="btn btn-primary btn-sm" onclick='openForm("diary", null, "${sel}")'>+ 新增這天的日記</button>
+    </div>`;
+  if(dayEntries.length===0){
+    html += `<div class="empty-state">這天還沒寫日記。</div>`;
+  } else {
+    html += dayEntries.map(e => `
       <div class="diary-entry">
-        <div class="diary-top"><span class="diary-date">${esc(fmtDate(e.date))}</span><span class="diary-mood">${esc(e.mood||'')}</span></div>
-        <div class="diary-title brush">${esc(e.title)}</div>
-        <div class="diary-content">${esc(e.content)}</div>
+        <div class="diary-view-symbols">${esc(e.mood||'')} ${esc(e.weather||'')}</div>
+        <div class="diary-view-title brush">${esc(e.title)}</div>
+        <div class="diary-view-content">${diaryContentToHtml(e.content)}</div>
         <button class="tiny-link" onclick='openForm("diary", ${attrJson(e)})'>編輯</button>
       </div>`).join('');
-  },
+  }
+  return html;
+}
+function renderDiaryEntryPanel(){
+  const panel = document.getElementById('diary-entry-panel');
+  if(!state.diary.selectedDate){ panel.classList.add('hidden'); return; }
+  panel.classList.remove('hidden');
+  document.getElementById('diary-entry-content').innerHTML = diaryDetailPanelHtml(diaryEntriesByDate());
+}
+function diaryDayBadge(dayEntries){
+  const syms = [];
+  dayEntries.forEach(e => { syms.push(e.mood, e.weather); });
+  const filled = syms.filter(Boolean);
+  return filled.length ? filled.slice(0,3).join('') : (dayEntries.length ? '📝' : '');
+}
+function renderDiaryCalendarGrid(){
+  const byDate = diaryEntriesByDate();
+  const y = state.diary.calYear, m = state.diary.calMonth;
+  const startWeekday = new Date(y, m, 1).getDay();
+  const daysInMonth = new Date(y, m+1, 0).getDate();
+  const todayStr = new Date().toISOString().slice(0,10);
+
+  let cells = '';
+  for(let i=0;i<startWeekday;i++){ cells += `<div class="cal-cell cal-cell-empty"></div>`; }
+  for(let d=1; d<=daysInMonth; d++){
+    const dateStr = `${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    const dayEntries = byDate[dateStr] || [];
+    const badge = diaryDayBadge(dayEntries);
+    const cls = ['cal-cell'];
+    if(dateStr===todayStr) cls.push('is-today');
+    if(dateStr===state.diary.selectedDate) cls.push('is-selected');
+    if(dayEntries.length) cls.push('has-entry');
+    cells += `<button class="${cls.join(' ')}" onclick="selectDiaryDate('${dateStr}')">
+      <span class="cal-daynum">${d}</span>
+      ${badge ? `<span class="cal-day-badge">${esc(badge)}</span>` : ''}
+    </button>`;
+  }
+  document.getElementById('diary-calendar').innerHTML = `
+    <div class="cal-header">
+      <button class="icon-btn" onclick="shiftDiaryMonth(-1)">◀</button>
+      <span class="cal-title brush">${y}年${m+1}月</span>
+      <button class="icon-btn" onclick="shiftDiaryMonth(1)">▶</button>
+    </div>
+    <div class="cal-weekdays">${['日','一','二','三','四','五','六'].map(w=>`<span>${w}</span>`).join('')}</div>
+    <div class="cal-grid">${cells}</div>`;
+}
+function renderDiaryModule(){
+  renderDiaryCalendarGrid();
+  renderDiaryEntryPanel();
+}
+
+const render = {
+  diary(){ renderDiaryModule(); },
   recipes(){
     const list = [...state.recipes.entries].sort((a,b)=>(b.createdAt||0)-(a.createdAt||0));
     const el = document.getElementById('recipes-list');
