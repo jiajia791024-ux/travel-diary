@@ -618,7 +618,7 @@ async function saveEntries(moduleKey, arr){
 
 /* ---- app settings (GitHub sync config) ---- */
 const SETTINGS_KEY = 'app:settings';
-const APP_VERSION = 'v1.0';
+const APP_VERSION = 'v1.1';
 let _appSettings = {};
 let _syncState = 'unset'; // unset | ok | warn | err
 async function getAppSettings(){
@@ -664,7 +664,12 @@ async function githubPutFile(contentStr, sha, message){
     headers: { 'Authorization': 'token ' + _appSettings.githubToken, 'Accept': 'application/vnd.github+json', 'Content-Type': 'application/json' },
     body: JSON.stringify(body)
   });
-  if(!res.ok){ const t = await res.text().catch(()=>''); throw new Error('GitHub 寫入失敗（' + res.status + '）' + t.slice(0,150)); }
+  if(!res.ok){
+    const t = await res.text().catch(()=>'');
+    const err = new Error('GitHub 寫入失敗（' + res.status + '）' + t.slice(0,150));
+    err.status = res.status;
+    throw err;
+  }
   return await res.json();
 }
 
@@ -818,10 +823,20 @@ async function pushToGithub(){
   if(!githubConfigured()) return;
   const snapshot = await buildFullSnapshot();
   const content = JSON.stringify(snapshot, null, 2);
-  let sha = null;
-  const existing = await githubGetFile();
-  if(!existing.notFound) sha = existing.sha;
-  await githubPutFile(content, sha, '更新生活手記資料');
+  let attempt = 0;
+  while(true){
+    attempt++;
+    let sha = null;
+    const existing = await githubGetFile();
+    if(!existing.notFound) sha = existing.sha;
+    try{
+      await githubPutFile(content, sha, '更新生活手記資料');
+      break;
+    }catch(e){
+      if(e.status === 409 && attempt < 3){ continue; }
+      throw e;
+    }
+  }
   _appSettings.lastSyncedAt = Date.now();
   await setAppSettings(_appSettings);
   _syncState = 'ok';
