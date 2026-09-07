@@ -1,0 +1,2643 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>台指交易日誌</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+  :root{
+    --bg:#0d0f14;
+    --card:#171a22;
+    --card2:#1e222c;
+    --line:#2a2f3b;
+    --text:#e8e9ee;
+    --sub:#8b90a0;
+    --gold:#d4a53d;
+    --gold-dim:#3a3220;
+    --red:#e05a5a;
+    --red-dim:#3a2222;
+    --green:#4ac98a;
+    --green-dim:#1f3329;
+    --cyan:#5fc7d9;
+    --mono:'SFMono-Regular',Consolas,'Liberation Mono',Menlo,monospace;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;background:var(--bg);color:var(--text);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang TC","Microsoft JhengHei",sans-serif;
+    padding-bottom:90px;
+    transition:background .2s,color .2s;
+  }
+  body.light{
+    --bg:#f4f5f7;
+    --card:#ffffff;
+    --card2:#f0f1f4;
+    --line:#dde1e8;
+    --text:#1c1f26;
+    --sub:#6b7280;
+    --red-dim:#fbe4e4;
+    --green-dim:#e2f6ec;
+  }
+  header{
+    position:sticky;top:0;z-index:10;background:var(--bg);border-bottom:1px solid var(--line);
+    padding:14px 16px 0 16px;
+  }
+  .headrow{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;}
+  .headrow h1{font-size:16px;margin:0;letter-spacing:.5px;}
+  .ticker{font-family:var(--mono);font-size:11px;color:var(--sub);}
+  .sync-dot{width:8px;height:8px;border-radius:50%;display:inline-block;margin-right:6px;background:var(--sub);}
+  .sync-dot.ok{background:var(--green);}
+  .sync-dot.err{background:var(--red);}
+  .sync-dot.busy{background:var(--gold);animation:pulse 1s infinite;}
+  @keyframes pulse{0%,100%{opacity:1;}50%{opacity:.3;}}
+  nav{display:flex;overflow-x:auto;gap:4px;padding-bottom:8px;-webkit-overflow-scrolling:touch;}
+  #tabOverflowPanel{display:flex;flex-wrap:wrap;gap:6px;padding-bottom:10px;}
+  #tabOverflowPanel .tab{border:1px solid var(--line);border-radius:8px;padding:6px 10px;}
+  nav::-webkit-scrollbar{display:none;}
+  .tab{
+    flex:0 0 auto;padding:8px 12px;font-size:13px;color:var(--sub);
+    border-bottom:2px solid transparent;white-space:nowrap;cursor:pointer;
+  }
+  .tab.active{color:var(--gold);border-bottom-color:var(--gold);}
+  main{padding:16px;max-width:720px;margin:0 auto;}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px;margin-bottom:14px;}
+  .card h2{font-size:14px;margin:0 0 12px 0;color:var(--sub);font-weight:600;letter-spacing:.5px;}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+  .grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;}
+  label{font-size:12px;color:var(--sub);display:block;margin-bottom:4px;}
+  input[type=text],input[type=number],input[type=date],textarea,select{
+    width:100%;background:var(--card2);border:1px solid var(--line);border-radius:8px;
+    color:var(--text);padding:9px 10px;font-size:14px;font-family:inherit;
+  }
+  input::placeholder,textarea::placeholder{ color:#4a4f5c; font-style:italic; }
+  input[type=number]{font-family:var(--mono);}
+  textarea{resize:vertical;min-height:60px;}
+  .field{margin-bottom:10px;}
+  .btnrow{display:flex;flex-wrap:wrap;gap:8px;}
+  .chip{
+    padding:8px 14px;border-radius:20px;border:1px solid var(--line);background:transparent;
+    color:var(--sub);font-size:13px;cursor:pointer;user-select:none;
+  }
+  .chip.gold-on{border-color:var(--gold);color:var(--gold);background:color-mix(in srgb, var(--gold) 18%, transparent);}
+  .chip.red-on{border-color:var(--red);color:var(--red);background:color-mix(in srgb, var(--red) 18%, transparent);}
+  .chip.green-on{border-color:var(--green);color:var(--green);background:color-mix(in srgb, var(--green) 18%, transparent);}
+  .primary-btn{
+    background:var(--gold);color:#1a1400;border:none;border-radius:8px;padding:11px 16px;
+    font-size:14px;font-weight:600;cursor:pointer;width:100%;
+  }
+  .primary-btn:disabled{opacity:.4;}
+  .ghost-btn{
+    background:transparent;color:var(--sub);border:1px solid var(--line);border-radius:8px;
+    padding:8px 12px;font-size:13px;cursor:pointer;
+  }
+  .danger-btn{color:var(--red);border-color:var(--red-dim);}
+  .stat{text-align:center;}
+  .stat .n{font-family:var(--mono);font-size:20px;font-weight:700;}
+  .stat .l{font-size:11px;color:var(--sub);margin-top:2px;}
+  .kv{display:flex;justify-content:space-between;font-size:13px;padding:6px 0;border-bottom:1px solid var(--line);}
+  .kv:last-child{border-bottom:none;}
+  .kv .v{font-family:var(--mono);}
+  .up{color:var(--red);} .down{color:var(--green);}
+  .entry{background:var(--card2);border-radius:10px;padding:12px;margin-bottom:8px;}
+  .entry-top{display:flex;justify-content:space-between;align-items:center;font-size:12px;color:var(--sub);margin-bottom:6px;}
+  .entry-note{font-size:13px;line-height:1.5;color:var(--text);opacity:.85;white-space:pre-wrap;}
+  .entry-actions{display:flex;gap:8px;margin-top:8px;}
+  .empty{color:var(--sub);font-size:13px;text-align:center;padding:20px 0;}
+  .checklist-item{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--line);}
+  .checklist-item:last-child{border-bottom:none;}
+  .checklist-item input[type=checkbox]{width:20px;height:20px;accent-color:var(--gold);}
+  .checklist-item .txt{flex:1;font-size:14px;}
+  .del-x{color:var(--sub);cursor:pointer;font-size:16px;padding:0 6px;}
+  .pill{font-size:11px;padding:2px 8px;border-radius:10px;background:var(--card2);color:var(--sub);}
+  .pill.long{background:var(--red-dim);color:var(--red);}
+  .pill.short{background:var(--green-dim);color:var(--green);}
+  .toast{
+    position:fixed;bottom:20px;left:50%;transform:translateX(-50%);
+    background:var(--card2);border:1px solid var(--line);padding:10px 18px;border-radius:20px;
+    font-size:13px;opacity:0;transition:opacity .3s;pointer-events:none;z-index:99;
+  }
+  .toast.show{opacity:1;}
+  .subtabs{display:flex;gap:6px;margin-bottom:12px;}
+  .subtab{padding:6px 12px;border-radius:8px;font-size:12px;background:var(--card2);color:var(--sub);cursor:pointer;}
+  .subtab.on{background:color-mix(in srgb, var(--gold) 18%, transparent);color:var(--gold);}
+  .hint{font-size:11px;color:var(--sub);margin-top:4px;line-height:1.5;}
+  a{color:var(--cyan);}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="headrow">
+    <h1 id="appTitle">📓 台指交易日誌</h1>
+    <div style="display:flex;align-items:center;gap:10px;">
+      <div class="ticker"><span id="syncDot" class="sync-dot"></span><span id="syncText">未同步</span> <span style="opacity:.4;">v2.21</span></div>
+      <span id="settingsGear" style="cursor:pointer;font-size:18px;" onclick="openSettings()">⚙</span>
+    </div>
+  </div>
+  <nav id="tabs"></nav>
+  <div id="tabOverflowPanel"></div>
+</header>
+
+<main id="main"></main>
+<div class="toast" id="toast"></div>
+<div id="imgViewer" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:200;align-items:center;justify-content:center;padding:20px;" onclick="closeImageViewer()">
+  <img id="imgViewerImg" src="" style="max-width:100%;max-height:100%;border-radius:8px;">
+</div>
+
+<script>
+window.addEventListener('error', function(e){
+  alert('程式錯誤：'+e.message+'\n(在 '+(e.filename||'')+':'+e.lineno+')');
+});
+window.addEventListener('unhandledrejection', function(e){
+  alert('連線/程式錯誤：'+(e.reason && e.reason.message ? e.reason.message : e.reason));
+});
+/* ---------------- state ---------------- */
+const LS_KEY = 'tj_state_v1';
+const defaultState = () => ({
+  meta:{ sha:null, updatedAt:null },
+  settings:{ token:'', owner:'', repo:'', path:'data.json', branch:'main',
+             feePerSide:15, taxPerSide:9, multiplier:10, geminiKey:'', theme:'gold', mode:'dark', appTitle:'台指交易日誌',
+             marginInit:0, marginMaintain:0, futuresGoal:0, futuresCapital:0, tabConfig:null },
+  marketData: [],
+  sentiment: [],
+  plans: [],
+  checklistTemplate: ['確認今日盤前規劃方向','檢查目前部位風險','設定停損點位','確認口數符合資金控管','情緒是否平穩，非報復性交易'],
+  checklistLog: [],
+  trades: [],
+  stockAccounts: ['我','媽媽','爸爸','婆婆','老公','語安','語樂'],
+  stockTrades: [],
+  stockCapital: {},
+  stockCashLedger: [],
+  dividendHoldings: [],
+  dividendRecords: [],
+  dividendGoal: 10000,
+  futuresBalanceLog: [],
+  futuresCashLedger: [],
+  customLinks: [],
+  techTopCategories: ['股票','期貨'],
+  techCategories: ['技術面','產業面','總體經濟','個股筆記'],
+  techNotes: []
+});
+let state = loadLocal();
+let activeTab = 'data';
+let pushTimer = null;
+
+function loadLocal(){
+  try{
+    const raw = localStorage.getItem(LS_KEY);
+    if(raw) return {...defaultState(), ...JSON.parse(raw)};
+  }catch(e){}
+  return defaultState();
+}
+function saveLocal(){
+  localStorage.setItem(LS_KEY, JSON.stringify(state));
+}
+function uid(){ return Date.now().toString(36)+Math.random().toString(36).slice(2,7); }
+function todayStr(){ return new Date().toISOString().slice(0,10); }
+
+function markDirty(){
+  state.meta.updatedAt = new Date().toISOString();
+  saveLocal();
+  scheduleSync();
+  render();
+}
+
+/* ---------------- toast ---------------- */
+function viewImage(src){
+  const viewer = document.getElementById('imgViewer');
+  document.getElementById('imgViewerImg').src = src;
+  viewer.style.display = 'flex';
+}
+function closeImageViewer(){
+  document.getElementById('imgViewer').style.display = 'none';
+}
+function toast(msg){
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  clearTimeout(t._h);
+  t._h = setTimeout(()=>t.classList.remove('show'), 2000);
+}
+
+/* ---------------- github sync ---------------- */
+function setSyncStatus(kind, text){
+  const dot = document.getElementById('syncDot');
+  const txt = document.getElementById('syncText');
+  dot.className = 'sync-dot ' + (kind||'');
+  txt.textContent = text;
+}
+
+function ghConfigured(){
+  const s = state.settings;
+  return s.token && s.owner && s.repo && s.path;
+}
+
+async function ghGet(){
+  const s = state.settings;
+  const url = `https://api.github.com/repos/${s.owner}/${s.repo}/contents/${encodeURIComponent(s.path)}?ref=${encodeURIComponent(s.branch||'main')}`;
+  const res = await fetch(url, { headers:{ 'Authorization':'token '+s.token, 'Accept':'application/vnd.github+json' }});
+  if(res.status === 404) return null;
+  if(!res.ok) throw new Error('讀取失敗 '+res.status);
+  const json = await res.json();
+  const content = decodeURIComponent(escape(atob(json.content.replace(/\n/g,''))));
+  return { data: JSON.parse(content), sha: json.sha };
+}
+
+async function ghPut(dataObj, sha){
+  const s = state.settings;
+  const url = `https://api.github.com/repos/${s.owner}/${s.repo}/contents/${encodeURIComponent(s.path)}`;
+  const body = {
+    message: '同步交易日誌 ' + new Date().toLocaleString('zh-TW'),
+    content: btoa(unescape(encodeURIComponent(JSON.stringify(dataObj, null, 2)))),
+    branch: s.branch || 'main'
+  };
+  if(sha) body.sha = sha;
+  const res = await fetch(url, {
+    method:'PUT',
+    headers:{ 'Authorization':'token '+s.token, 'Accept':'application/vnd.github+json', 'Content-Type':'application/json' },
+    body: JSON.stringify(body)
+  });
+  if(!res.ok){
+    const err = await res.json().catch(()=>({}));
+    throw new Error(err.message || ('寫入失敗 '+res.status));
+  }
+  const json = await res.json();
+  return json.content.sha;
+}
+
+function scheduleSync(){
+  if(!ghConfigured()) { setSyncStatus('', '未設定同步'); return; }
+  clearTimeout(pushTimer);
+  setSyncStatus('busy', '待同步…');
+  pushTimer = setTimeout(pushToGithub, 1500);
+}
+
+const MERGE_ARRAY_KEYS = ['marketData','sentiment','plans','checklistLog','trades','stockTrades','stockCashLedger','futuresCashLedger','customLinks','techNotes','dividendPayouts','dividendHoldings'];
+const MERGE_LIST_KEYS = ['techTopCategories','techCategories','stockAccounts','checklistTemplate'];
+function mergeStateForConflict(localState, remoteState){
+  const merged = { ...remoteState, ...localState };
+  merged.stockCapital = { ...(remoteState.stockCapital||{}), ...(localState.stockCapital||{}) };
+  MERGE_ARRAY_KEYS.forEach(key=>{
+    const localArr = localState[key] || [];
+    const remoteArr = remoteState[key] || [];
+    const map = new Map();
+    remoteArr.forEach(item=> item && item.id && map.set(item.id, item));
+    localArr.forEach(item=> item && item.id && map.set(item.id, item));
+    merged[key] = [...map.values()];
+  });
+  MERGE_LIST_KEYS.forEach(key=>{
+    const localArr = localState[key]||[];
+    const remoteArr = remoteState[key]||[];
+    merged[key] = localArr.length ? localArr : [...new Set([...localArr, ...remoteArr])];
+  });
+  return merged;
+}
+async function pushToGithub(retrying){
+  if(!ghConfigured()){ alert('尚未設定完成：token='+(!!state.settings.token)+' owner='+(!!state.settings.owner)+' repo='+(!!state.settings.repo)+' path='+(!!state.settings.path)); return; }
+  setSyncStatus('busy', retrying? '解決衝突中…' : '同步中…');
+  try{
+    const payload = { ...state };
+    delete payload.settings; // never store token in the synced file
+    const sha = await ghPut(payload, state.meta.sha);
+    state.meta.sha = sha;
+    saveLocal();
+    setSyncStatus('ok', '已同步 '+new Date().toLocaleTimeString('zh-TW'));
+  }catch(e){
+    console.error(e);
+    if(!retrying && /does not match|409|422/i.test(e.message)){
+      try{
+        const remote = await ghGet();
+        if(remote && remote.data){
+          const keepSettings = state.settings;
+          const merged = mergeStateForConflict(state, remote.data);
+          state = { ...defaultState(), ...merged, settings: keepSettings, meta:{ sha: remote.sha, updatedAt: new Date().toISOString() } };
+          saveLocal();
+          render();
+          await pushToGithub(true);
+          return;
+        }
+      }catch(e2){
+        console.error(e2);
+      }
+    }
+    alert('推送失敗：'+e.message);
+    setSyncStatus('err', '同步失敗：'+e.message);
+  }
+}
+
+async function pullFromGithub(silent){
+  if(!ghConfigured()){ if(!silent) toast('請先在「設定」填入 GitHub 資訊'); return; }
+  setSyncStatus('busy', '讀取中…');
+  try{
+    const remote = await ghGet();
+    if(remote && remote.data){
+      const keepSettings = state.settings;
+      state = { ...defaultState(), ...remote.data, settings: keepSettings, meta:{ sha: remote.sha, updatedAt: remote.data.meta?.updatedAt||null } };
+      saveLocal();
+      setSyncStatus('ok', '已從雲端讀取');
+      render();
+      if(!silent) toast('已從 GitHub 讀取最新資料');
+    } else {
+      setSyncStatus('', '雲端尚無資料，將於下次變更時建立');
+      if(!silent) toast('雲端還沒有資料檔，儲存任何一筆記錄後會自動建立');
+    }
+  }catch(e){
+    console.error(e);
+    setSyncStatus('err', '讀取失敗：'+e.message);
+    if(!silent) toast('讀取失敗：'+e.message);
+  }
+}
+
+/* ---------------- render root ---------------- */
+const ALL_TABS = [
+  {id:'data', label:'數據'},
+  {id:'sentiment', label:'市場情緒'},
+  {id:'plan', label:'盤前記錄'},
+  {id:'confirm', label:'交易前確認'},
+  {id:'log', label:'期貨紀錄'},
+  {id:'stock', label:'股票紀錄'},
+  {id:'cash', label:'💰資金管理'},
+  {id:'dividend', label:'📈存股目標'},
+  {id:'analytics', label:'📊損益總覽'},
+  {id:'links', label:'🔗常用網站'},
+  {id:'notes', label:'📚筆記'},
+];
+function getVisibleTabs(){
+  const cfg = state.settings.tabConfig;
+  if(!cfg || !cfg.length) return ALL_TABS;
+  const map = Object.fromEntries(ALL_TABS.map(t=>[t.id,t]));
+  const list = cfg.filter(c=>c.visible!==false && map[c.id]).map(c=>map[c.id]);
+  return list.length ? list : ALL_TABS;
+}
+function openSettings(){ activeTab = 'settings'; render(); }
+
+let showTabOverflow = false;
+const PRIMARY_TAB_COUNT = 5;
+function renderOverflowPanel(list){
+  const panel = document.getElementById('tabOverflowPanel');
+  if(!panel) return;
+  if(!list.length){ panel.innerHTML=''; return; }
+  panel.innerHTML = list.map(t=>`<div class="tab ${t.id===activeTab?'active':''}" data-tab="${t.id}">${t.label}</div>`).join('');
+  panel.querySelectorAll('.tab').forEach(el=>el.onclick=()=>{ activeTab = el.dataset.tab; showTabOverflow=false; render(); });
+}
+function render(){
+  const visibleTabs = getVisibleTabs();
+  if(activeTab!=='settings' && !visibleTabs.find(t=>t.id===activeTab)) activeTab = visibleTabs[0]?.id || 'data';
+  const nav = document.getElementById('tabs');
+  const primary = visibleTabs.slice(0, PRIMARY_TAB_COUNT);
+  const overflow = visibleTabs.slice(PRIMARY_TAB_COUNT);
+  const activeInOverflow = overflow.find(t=>t.id===activeTab);
+  let html = primary.map(t=>`<div class="tab ${t.id===activeTab?'active':''}" data-tab="${t.id}">${t.label}</div>`).join('');
+  if(overflow.length){
+    html += `<div class="tab ${activeInOverflow?'active':''}" id="tabMoreBtn">⋯ 更多${activeInOverflow?`：${activeInOverflow.label}`:''}</div>`;
+  }
+  nav.innerHTML = html;
+  nav.querySelectorAll('.tab[data-tab]').forEach(el=>el.onclick=()=>{ activeTab = el.dataset.tab; showTabOverflow=false; render(); });
+  const moreBtn = document.getElementById('tabMoreBtn');
+  if(moreBtn) moreBtn.onclick = ()=>{ showTabOverflow = !showTabOverflow; renderOverflowPanel(overflow); };
+  renderOverflowPanel(showTabOverflow ? overflow : []);
+
+  const titleEl = document.getElementById('appTitle');
+  if(titleEl) titleEl.textContent = '📓 ' + (state.settings.appTitle || '台指交易日誌');
+
+  const main = document.getElementById('main');
+  if(activeTab==='data') main.innerHTML = renderData();
+  else if(activeTab==='sentiment') main.innerHTML = renderSentiment();
+  else if(activeTab==='plan') main.innerHTML = renderPlan();
+  else if(activeTab==='confirm') main.innerHTML = renderConfirm();
+  else if(activeTab==='log') main.innerHTML = renderLog();
+  else if(activeTab==='stock') main.innerHTML = renderStock();
+  else if(activeTab==='cash') main.innerHTML = renderCash();
+  else if(activeTab==='dividend') main.innerHTML = renderDividend();
+  else if(activeTab==='analytics') main.innerHTML = renderAnalytics();
+  else if(activeTab==='links') main.innerHTML = renderLinks();
+  else if(activeTab==='notes') main.innerHTML = renderNotes();
+  else if(activeTab==='settings') main.innerHTML = renderSettings();
+  bindTabEvents();
+}
+
+/* ---------------- 數據 tab ---------------- */
+let dataHistoryDate = '';
+function renderData(){
+  const list = [...state.marketData].sort((a,b)=>b.date.localeCompare(a.date)||b.session.localeCompare(a.session));
+  const latest = list[0];
+  const shown = limitedHistory(list, dataHistoryDate);
+  return `
+  <div class="card">
+    <h2>新增市場數據</h2>
+    <div class="grid2">
+      <div class="field"><label>日期</label><input type="date" id="d_date" value="${todayStr()}"></div>
+      <div class="field"><label>盤別</label>
+        <div class="btnrow">
+          <div class="chip gold-on" data-f="d_session" data-v="早盤" onclick="pick(this)">早盤</div>
+          <div class="chip" data-f="d_session" data-v="夜盤" onclick="pick(this)">夜盤</div>
+        </div>
+      </div>
+    </div>
+    <div class="field">
+      <label>正逆價差</label><input type="number" id="d_spread" placeholder="-10">
+    </div>
+    <div class="grid2">
+      <div class="field"><label>VIX</label><input type="number" step="0.01" id="d_vix" placeholder="31.09"></div>
+      <div class="field"><label>外資淨口數</label><input type="number" id="d_foreign" placeholder="+380"></div>
+    </div>
+    <div class="grid2">
+      <div class="field"><label>收盤</label><input type="number" id="d_close" placeholder="46005"></div>
+      <div class="field"><label>振幅(pt)</label><input type="number" id="d_range" placeholder="410"></div>
+    </div>
+    <button class="primary-btn" onclick="saveMarketData()">儲存數據</button>
+  </div>
+
+  ${latest ? `
+  <div class="card">
+    <h2>最新摘要（${latest.date} ${latest.session}）</h2>
+    <div class="grid3">
+      <div class="stat"><div class="n">${fmt(latest.spread)}</div><div class="l">正逆價差</div></div>
+      <div class="stat"><div class="n ${latest.vix>=30?'up':'down'}">${fmt(latest.vix)}</div><div class="l">VIX</div></div>
+    </div>
+    <div class="grid3" style="margin-top:10px;">
+      <div class="stat"><div class="n">${fmt(latest.foreign)}</div><div class="l">外資淨口數</div></div>
+      <div class="stat"><div class="n">${fmt(latest.close)}</div><div class="l">收盤</div></div>
+      <div class="stat"><div class="n">${fmt(latest.range)}</div><div class="l">振幅</div></div>
+    </div>
+  </div>` : ''}
+
+  <div class="card">
+    <h2>歷史紀錄</h2>
+    ${dateJumpPicker(list, dataHistoryDate, 'setDataHistoryDate')}
+    ${shown.length? shown.map(d=>`
+      <div class="entry">
+        <div class="entry-top"><span>${d.date} · ${d.session}</span><span class="del-x" onclick="delItem('marketData','${d.id}', this)">✕</span></div>
+        <div class="kv"><span>正逆價差</span><span class="v">${fmt(d.spread)}</span></div>
+        <div class="kv"><span>VIX / 外資淨口數</span><span class="v">${fmt(d.vix)} / ${fmt(d.foreign)}</span></div>
+        <div class="kv"><span>收盤 / 振幅</span><span class="v">${fmt(d.close)} / ${fmt(d.range)}</span></div>
+      </div>
+    `).join('') : '<div class="empty">尚無資料</div>'}
+  </div>`;
+}
+function setDataHistoryDate(v){ dataHistoryDate = v; render(); }
+function fmt(v){ return (v===undefined||v===null||v==='') ? '—' : v; }
+function saveMarketData(){
+  const g=id=>document.getElementById(id).value;
+  const session = document.querySelector('[data-f="d_session"].gold-on')?.dataset.v || '早盤';
+  state.marketData.push({
+    id:uid(), date:g('d_date'), session,
+    spread:num(g('d_spread')), vix:num(g('d_vix')),
+    foreign:num(g('d_foreign')), close:num(g('d_close')), range:num(g('d_range'))
+  });
+  markDirty(); toast('已儲存數據');
+}
+function num(v){ return v===''?null:Number(v); }
+
+/* ---------------- 市場情緒 tab ---------------- */
+let editingSentimentId = null;
+let sentimentHistoryDate = '';
+function renderSentiment(){
+  const list=[...state.sentiment].sort((a,b)=>b.date.localeCompare(a.date));
+  const shown = limitedHistory(list, sentimentHistoryDate);
+  const editing = editingSentimentId ? state.sentiment.find(s=>s.id===editingSentimentId) : null;
+  const ev = editing || { date: todayStr(), note: '' };
+  return `
+  <div class="card">
+    <h2>${editing?'編輯情緒筆記':'新增情緒筆記'}</h2>
+    <div class="field"><label>日期</label><input type="date" id="s_date" value="${ev.date}"></div>
+    <div class="field"><label>觀察 / 判斷</label>
+      ${noteToolbar('s_note')}
+      <textarea id="s_note" placeholder="例：外資轉為淨多、VIX下滑，市場情緒轉穩…">${escapeHtml(ev.note)}</textarea>
+      <div class="hint">選取文字後點上面按鈕套用格式，也可以自己打：**粗體**、{{red:紅字}}、{{green:綠字}}、{{gold:黃字}}、{{blue:藍字}}、{{big:放大}}</div>
+    </div>
+    <div class="btnrow">
+      <button class="primary-btn" style="flex:1;" onclick="saveSentiment()">${editing?'更新筆記':'儲存筆記'}</button>
+      ${editing?`<button class="ghost-btn" onclick="cancelEditSentiment()">取消</button>`:''}
+    </div>
+  </div>
+  <div class="card">
+    <h2>歷史筆記</h2>
+    ${dateJumpPicker(list, sentimentHistoryDate, 'setSentimentHistoryDate')}
+    ${shown.length? shown.map(s=>`
+      <div class="entry">
+        <div class="entry-top"><span>${s.date}</span><span class="del-x" onclick="delItem('sentiment','${s.id}', this)">✕</span></div>
+        <div class="entry-note">${renderNoteText(s.note)}</div>
+        <div class="entry-actions"><span class="ghost-btn" style="cursor:pointer;" onclick="editSentiment('${s.id}')">編輯</span></div>
+      </div>`).join('') : '<div class="empty">尚無筆記</div>'}
+  </div>`;
+}
+function setSentimentHistoryDate(v){ sentimentHistoryDate = v; render(); }
+function saveSentiment(){
+  const note = document.getElementById('s_note').value.trim();
+  if(!note){ toast('請輸入內容'); return; }
+  const date = document.getElementById('s_date').value;
+  if(editingSentimentId){
+    const idx = state.sentiment.findIndex(s=>s.id===editingSentimentId);
+    if(idx>-1) state.sentiment[idx] = {...state.sentiment[idx], date, note};
+    editingSentimentId = null;
+    markDirty(); toast('已更新筆記');
+  } else {
+    state.sentiment.push({id:uid(), date, note});
+    markDirty(); toast('已儲存');
+  }
+}
+function editSentiment(id){
+  editingSentimentId = id;
+  render();
+  document.getElementById('main').scrollIntoView({behavior:'smooth'});
+}
+function cancelEditSentiment(){
+  editingSentimentId = null;
+  render();
+}
+
+/* ---------------- 盤前記錄 tab ---------------- */
+const DIRECTIONS = ['多方','偏多','觀望','偏空','空方','拉高會殺','殺低有反彈'];
+const PATTERNS = ['強趨勢','雙巴','穩趨勢'];
+let planUpLevels = [];
+let planDownLevels = [];
+let planReviewTargetId = null;
+let planImages = [];
+let reviewImages = [];
+let reviewDraft = null;
+function syncReviewDraft(){
+  if(!reviewDraft) reviewDraft = {};
+  const openEl = document.getElementById('rv_open'); if(openEl) reviewDraft.open = openEl.value;
+  const highEl = document.getElementById('rv_high'); if(highEl) reviewDraft.high = highEl.value;
+  const lowEl = document.getElementById('rv_low'); if(lowEl) reviewDraft.low = lowEl.value;
+  const closeEl = document.getElementById('rv_close'); if(closeEl) reviewDraft.close = closeEl.value;
+  const noteEl = document.getElementById('rv_note'); if(noteEl) reviewDraft.note = noteEl.value;
+  if(document.querySelector('[data-multi="rv_match"]')) reviewDraft.matched = [...document.querySelectorAll('[data-multi="rv_match"].gold-on')].map(e=>e.dataset.v);
+  if(document.querySelector('[data-multi="rv_up"]')) reviewDraft.matchedUp = [...document.querySelectorAll('[data-multi="rv_up"].gold-on')].map(e=>Number(e.dataset.v));
+  if(document.querySelector('[data-multi="rv_down"]')) reviewDraft.matchedDown = [...document.querySelectorAll('[data-multi="rv_down"].gold-on')].map(e=>Number(e.dataset.v));
+}
+async function addPlanImages(input){
+  syncPlanDraft(); syncUpLevels(); syncDownLevels();
+  const files = [...input.files];
+  for(const f of files){ planImages.push(await fileToBase64(f)); }
+  input.value = '';
+  render();
+}
+function removePlanImage(idx){
+  syncPlanDraft(); syncUpLevels(); syncDownLevels();
+  planImages.splice(idx,1);
+  render();
+}
+async function addReviewImages(input){
+  syncReviewDraft();
+  const files = [...input.files];
+  for(const f of files){ reviewImages.push(await fileToBase64(f)); }
+  input.value = '';
+  render();
+}
+function removeReviewImage(idx){
+  syncReviewDraft();
+  reviewImages.splice(idx,1);
+  render();
+}
+let planDraft = { date:null, session:'早盤', directions:[], pattern:'', keyLevel:'', note:'' };
+function syncPlanDraft(){
+  const dateEl = document.getElementById('p_date');
+  if(dateEl) planDraft.date = dateEl.value;
+  const sessionEl = document.querySelector('[data-f="p_session"].gold-on');
+  if(sessionEl) planDraft.session = sessionEl.dataset.v;
+  const dirEls = document.querySelectorAll('[data-multi="p_dir"]');
+  if(dirEls.length) planDraft.directions = [...document.querySelectorAll('[data-multi="p_dir"].gold-on')].map(e=>e.dataset.v);
+  const patternEl = document.querySelector('[data-f="p_pattern"].gold-on');
+  planDraft.pattern = patternEl ? patternEl.dataset.v : planDraft.pattern;
+  const keyEl = document.getElementById('p_key');
+  if(keyEl) planDraft.keyLevel = keyEl.value;
+  const noteEl = document.getElementById('p_note');
+  if(noteEl) planDraft.note = noteEl.value;
+}
+let planHistoryDate = '';
+function renderPlan(){
+  const list=[...state.plans].sort((a,b)=>b.date.localeCompare(a.date)||b.session.localeCompare(a.session));
+  const shown = limitedHistory(list, planHistoryDate);
+  return `
+  <div class="card">
+    <h2>今日盤前規劃</h2>
+    <div class="grid2">
+      <div class="field"><label>日期</label><input type="date" id="p_date" value="${planDraft.date || todayStr()}"></div>
+      <div class="field"><label>盤別</label>
+        <div class="btnrow">
+          <div class="chip ${planDraft.session==='早盤'?'gold-on':''}" data-f="p_session" data-v="早盤" onclick="pick(this)">早盤</div>
+          <div class="chip ${planDraft.session==='夜盤'?'gold-on':''}" data-f="p_session" data-v="夜盤" onclick="pick(this)">夜盤</div>
+        </div>
+      </div>
+    </div>
+    <div class="field"><label>操作方向（可複選）</label>
+      <div class="btnrow">${DIRECTIONS.map(d=>`<div class="chip ${planDraft.directions.includes(d)?'gold-on':''}" data-multi="p_dir" data-v="${d}" onclick="toggleChip(this)">${d}</div>`).join('')}</div>
+    </div>
+    <div class="field"><label>前盤形態</label>
+      <div class="btnrow">${PATTERNS.map(p=>`<div class="chip ${planDraft.pattern===p?'gold-on':''}" data-f="p_pattern" data-v="${p}" onclick="pick(this)">${p}</div>`).join('')}</div>
+    </div>
+    <div class="field"><label>關鍵轉折點</label><input type="number" id="p_key" value="${planDraft.keyLevel||''}" placeholder="例：46000（站上偏多、跌破偏空的分界）"></div>
+    <div class="field"><label>上方關卡（突破後看多，由近到遠）</label>
+      ${planUpLevels.map((l,i)=>`
+        <div class="grid2" style="margin-bottom:6px;">
+          <input type="number" id="up_price_${i}" value="${l.price}" placeholder="點位">
+          <div class="btnrow"><input type="text" id="up_note_${i}" value="${escapeHtml(l.note||'')}" placeholder="備註，例：突破轉強" style="flex:1;"><span class="del-x" onclick="removeUpLevel(${i})">✕</span></div>
+        </div>`).join('')}
+      <button class="ghost-btn" onclick="addUpLevel()">＋ 新增上方關卡</button>
+    </div>
+    <div class="field"><label>下方關卡（跌破後看空，由近到遠）</label>
+      ${planDownLevels.map((l,i)=>`
+        <div class="grid2" style="margin-bottom:6px;">
+          <input type="number" id="down_price_${i}" value="${l.price}" placeholder="點位">
+          <div class="btnrow"><input type="text" id="down_note_${i}" value="${escapeHtml(l.note||'')}" placeholder="備註，例：跌破轉弱" style="flex:1;"><span class="del-x" onclick="removeDownLevel(${i})">✕</span></div>
+        </div>`).join('')}
+      <button class="ghost-btn" onclick="addDownLevel()">＋ 新增下方關卡</button>
+    </div>
+    <div class="field"><label>規劃備註</label>${noteToolbar('p_note')}<textarea id="p_note" placeholder="等待新一波強趨勢，方向未知，謹慎觀察…">${escapeHtml(planDraft.note||'')}</textarea></div>
+    <div class="field"><label>附圖（選填）</label>
+      <input type="file" accept="image/*" multiple onchange="addPlanImages(this)">
+      ${planImages.length? `<div class="btnrow" style="margin-top:8px;flex-wrap:wrap;">
+        ${planImages.map((img,i)=>`<div style="position:relative;">
+          <img src="${img}" style="width:70px;height:70px;object-fit:cover;border-radius:8px;border:1px solid var(--line);">
+          <span style="position:absolute;top:-6px;right:-6px;background:var(--red);color:#fff;border-radius:50%;width:18px;height:18px;line-height:18px;text-align:center;font-size:12px;cursor:pointer;" onclick="removePlanImage(${i})">✕</span>
+        </div>`).join('')}
+      </div>` : ''}
+    </div>
+    <button class="primary-btn" onclick="savePlan()">儲存規劃</button>
+  </div>
+
+  <div class="card">
+    <h2>🧠 AI 深度分析（Gemini）</h2>
+    <div class="hint">上傳同一類截圖，這次不是抓數字，而是請 AI 真的讀懂內容、做出「已確認事實／推論／反推論驗證／焦點事件／族群判斷／結論」這種完整分析報告，格式跟你平常看的分析文一樣。需要先在「設定」填入免費的 Gemini API Key。</div>
+    <div class="field" style="margin-top:10px;"><input type="file" id="gm_file" accept="image/*" multiple></div>
+    <button class="ghost-btn" onclick="deepAnalyze()">AI 深度分析</button>
+    <div id="gmPreview"></div>
+  </div>
+  <div class="card">
+    <h2>歷史規劃</h2>
+    ${dateJumpPicker(list, planHistoryDate, 'setPlanHistoryDate')}
+    ${shown.length? shown.map(p=>`
+      <div class="entry">
+        <div class="entry-top"><span>${p.date} · ${p.session}</span><span class="del-x" onclick="delItem('plans','${p.id}', this)">✕</span></div>
+        <div>${(p.directions||[]).map(d=>`<span class="pill">${d}</span>`).join(' ')} ${p.pattern?`<span class="pill">${p.pattern}</span>`:''}</div>
+        ${p.keyLevel? `<div class="kv"><span>關鍵轉折點</span><span class="v">${p.keyLevel}</span></div>`:''}
+        ${(p.upLevels||[]).length? `<div class="kv"><span>上方關卡</span><span class="v">${p.upLevels.map(l=>l.price+(l.note?'('+l.note+')':'')).join(' → ')}</span></div>`:''}
+        ${(p.downLevels||[]).length? `<div class="kv"><span>下方關卡</span><span class="v">${p.downLevels.map(l=>l.price+(l.note?'('+l.note+')':'')).join(' → ')}</span></div>`:''}
+        ${p.note?`<div class="entry-note" style="margin-top:6px;">${renderNoteText(p.note)}</div>`:''}
+        ${p.images && p.images.length? `<div class="btnrow" style="margin-top:8px;flex-wrap:wrap;">${p.images.map(img=>`<img src="${img}" style="width:90px;height:90px;object-fit:cover;border-radius:8px;cursor:pointer;" onclick="viewImage(this.src)">`).join('')}</div>` : ''}
+        ${p.review? `
+        <div class="kv" style="margin-top:8px;"><span>盤後 開/高/低/收</span><span class="v">${p.review.open} / ${p.review.high} / ${p.review.low} / ${p.review.close}</span></div>
+        ${(p.review.matched||[]).length? `<div>${p.review.matched.map(d=>`<span class="pill gold-on" style="border:1px solid var(--gold);">✓ ${d}</span>`).join(' ')}</div>`:''}
+        ${(p.review.matchedUp||[]).length? `<div style="margin-top:4px;">${p.review.matchedUp.map(i=>p.upLevels&&p.upLevels[i]?`<span class="pill gold-on" style="border:1px solid var(--gold);">✓ 上方 ${p.upLevels[i].price}${p.upLevels[i].note?'('+p.upLevels[i].note+')':''}</span>`:'').join(' ')}</div>`:''}
+        ${(p.review.matchedDown||[]).length? `<div style="margin-top:4px;">${p.review.matchedDown.map(i=>p.downLevels&&p.downLevels[i]?`<span class="pill gold-on" style="border:1px solid var(--gold);">✓ 下方 ${p.downLevels[i].price}${p.downLevels[i].note?'('+p.downLevels[i].note+')':''}</span>`:'').join(' ')}</div>`:''}
+        ${p.review.note? `<div class="entry-note" style="margin-top:4px;">${renderNoteText(p.review.note)}</div>`:''}
+        ${p.review.images && p.review.images.length? `<div class="btnrow" style="margin-top:8px;flex-wrap:wrap;">${p.review.images.map(img=>`<img src="${img}" style="width:90px;height:90px;object-fit:cover;border-radius:8px;cursor:pointer;" onclick="viewImage(this.src)">`).join('')}</div>` : ''}
+        ` : ''}
+        <div class="entry-actions">
+          <span class="ghost-btn" style="cursor:pointer;" onclick="toggleReview('${p.id}')">🔍 盤後複盤${p.review?'（編輯）':''}</span>
+        </div>
+        ${planReviewTargetId===p.id? `
+        <div class="entry" style="margin-top:8px;background:var(--card);">
+          <div class="grid2">
+            <div class="field"><label>開盤</label><input type="number" id="rv_open" value="${reviewDraft&&'open' in reviewDraft?reviewDraft.open:(p.review?p.review.open:'')}"></div>
+            <div class="field"><label>最高</label><input type="number" id="rv_high" value="${reviewDraft&&'high' in reviewDraft?reviewDraft.high:(p.review?p.review.high:'')}"></div>
+          </div>
+          <div class="grid2">
+            <div class="field"><label>最低</label><input type="number" id="rv_low" value="${reviewDraft&&'low' in reviewDraft?reviewDraft.low:(p.review?p.review.low:'')}"></div>
+            <div class="field"><label>收盤</label><input type="number" id="rv_close" value="${reviewDraft&&'close' in reviewDraft?reviewDraft.close:(p.review?p.review.close:'')}"></div>
+          </div>
+          <div class="field"><label>最後符合盤前規劃的是哪個（可複選）</label>
+            <div class="btnrow">${DIRECTIONS.map(d=>`<div class="chip ${(reviewDraft&&reviewDraft.matched?reviewDraft.matched:(p.review&&p.review.matched||[])).includes(d)?'gold-on':''}" data-multi="rv_match" data-v="${d}" onclick="toggleChip(this)">${d}</div>`).join('')}</div>
+          </div>
+          ${(p.upLevels||[]).length? `
+          <div class="field"><label>上方關卡是否滿足（可複選）</label>
+            <div class="btnrow">${p.upLevels.map((l,i)=>`<div class="chip ${(reviewDraft&&reviewDraft.matchedUp?reviewDraft.matchedUp:(p.review&&p.review.matchedUp||[])).includes(i)?'gold-on':''}" data-multi="rv_up" data-v="${i}" onclick="toggleChip(this)">${l.price}${l.note?'('+l.note+')':''}</div>`).join('')}</div>
+          </div>` : ''}
+          ${(p.downLevels||[]).length? `
+          <div class="field"><label>下方關卡是否滿足（可複選）</label>
+            <div class="btnrow">${p.downLevels.map((l,i)=>`<div class="chip ${(reviewDraft&&reviewDraft.matchedDown?reviewDraft.matchedDown:(p.review&&p.review.matchedDown||[])).includes(i)?'gold-on':''}" data-multi="rv_down" data-v="${i}" onclick="toggleChip(this)">${l.price}${l.note?'('+l.note+')':''}</div>`).join('')}</div>
+          </div>` : ''}
+          <div class="field"><label>複盤備註</label>${noteToolbar('rv_note')}<textarea id="rv_note">${reviewDraft&&'note' in reviewDraft?escapeHtml(reviewDraft.note):(p.review?escapeHtml(p.review.note||''):'')}</textarea></div>
+          <div class="field"><label>附圖（選填）</label>
+            <input type="file" accept="image/*" multiple onchange="addReviewImages(this)">
+            ${reviewImages.length? `<div class="btnrow" style="margin-top:8px;flex-wrap:wrap;">
+              ${reviewImages.map((img,i)=>`<div style="position:relative;">
+                <img src="${img}" style="width:70px;height:70px;object-fit:cover;border-radius:8px;border:1px solid var(--line);">
+                <span style="position:absolute;top:-6px;right:-6px;background:var(--red);color:#fff;border-radius:50%;width:18px;height:18px;line-height:18px;text-align:center;font-size:12px;cursor:pointer;" onclick="removeReviewImage(${i})">✕</span>
+              </div>`).join('')}
+            </div>` : ''}
+          </div>
+          <button class="primary-btn" onclick="saveReview('${p.id}')">儲存複盤</button>
+        </div>` : ''}
+      </div>`).join('') : '<div class="empty">尚無規劃</div>'}
+  </div>`;
+}
+function setPlanHistoryDate(v){ planHistoryDate = v; render(); }
+function addUpLevel(){ syncPlanDraft(); syncUpLevels(); syncDownLevels(); planUpLevels.push({price:'',note:''}); render(); }
+function removeUpLevel(i){ syncPlanDraft(); syncUpLevels(); syncDownLevels(); planUpLevels.splice(i,1); render(); }
+function addDownLevel(){ syncPlanDraft(); syncUpLevels(); syncDownLevels(); planDownLevels.push({price:'',note:''}); render(); }
+function removeDownLevel(i){ syncPlanDraft(); syncUpLevels(); syncDownLevels(); planDownLevels.splice(i,1); render(); }
+function syncUpLevels(){
+  planUpLevels = planUpLevels.map((_,i)=>({
+    price: document.getElementById('up_price_'+i)?.value ?? '',
+    note: document.getElementById('up_note_'+i)?.value ?? ''
+  }));
+}
+function syncDownLevels(){
+  planDownLevels = planDownLevels.map((_,i)=>({
+    price: document.getElementById('down_price_'+i)?.value ?? '',
+    note: document.getElementById('down_note_'+i)?.value ?? ''
+  }));
+}
+function toggleReview(id){
+  if(planReviewTargetId===id){
+    planReviewTargetId = null;
+  } else {
+    planReviewTargetId = id;
+    const plan = state.plans.find(p=>p.id===id);
+    reviewImages = plan && plan.review && plan.review.images ? [...plan.review.images] : [];
+    reviewDraft = null;
+  }
+  render();
+}
+function saveReview(id){
+  const plan = state.plans.find(p=>p.id===id);
+  if(!plan) return;
+  const open = num(document.getElementById('rv_open').value);
+  const high = num(document.getElementById('rv_high').value);
+  const low = num(document.getElementById('rv_low').value);
+  const close = num(document.getElementById('rv_close').value);
+  const matched = [...document.querySelectorAll('[data-multi="rv_match"].gold-on')].map(e=>e.dataset.v);
+  const matchedUp = [...document.querySelectorAll('[data-multi="rv_up"].gold-on')].map(e=>Number(e.dataset.v));
+  const matchedDown = [...document.querySelectorAll('[data-multi="rv_down"].gold-on')].map(e=>Number(e.dataset.v));
+  const note = document.getElementById('rv_note').value;
+  plan.review = { open, high, low, close, matched, matchedUp, matchedDown, note, images:[...reviewImages] };
+  planReviewTargetId = null;
+  reviewImages = [];
+  reviewDraft = null;
+  markDirty(); toast('已儲存複盤');
+}
+function savePlan(){
+  const g=id=>document.getElementById(id).value;
+  const session = document.querySelector('[data-f="p_session"].gold-on')?.dataset.v || '早盤';
+  const directions = [...document.querySelectorAll('[data-multi="p_dir"].gold-on')].map(e=>e.dataset.v);
+  const pattern = document.querySelector('[data-f="p_pattern"].gold-on')?.dataset.v || '';
+  syncUpLevels(); syncDownLevels();
+  const upLevels = planUpLevels.filter(l=>l.price!=='' && l.price!==null && l.price!==undefined).map(l=>({price:num(l.price), note:l.note}));
+  const downLevels = planDownLevels.filter(l=>l.price!=='' && l.price!==null && l.price!==undefined).map(l=>({price:num(l.price), note:l.note}));
+  state.plans.push({
+    id:uid(), date:g('p_date'), session, directions, pattern,
+    keyLevel: num(g('p_key')), upLevels, downLevels, note:g('p_note'), images:[...planImages]
+  });
+  planUpLevels = []; planDownLevels = []; planImages = [];
+  planDraft = { date:null, session:'早盤', directions:[], pattern:'', keyLevel:'', note:'' };
+  markDirty(); toast('已儲存規劃');
+}
+
+/* ---------------- 圖片分析（免費 OCR，全部在本機執行）---------------- */
+function fileToBase64(file){
+  return new Promise((resolve,reject)=>{
+    const r = new FileReader();
+    r.onload = ()=>resolve(r.result);
+    r.onerror = reject;
+    r.readAsDataURL(file);
+  });
+}
+
+/* ---------------- AI 深度分析（Gemini）---------------- */
+const DEEP_ANALYSIS_PROMPT = `你是一位專業的台股/台指期貨盤前分析師。請仔細閱讀這張截圖裡的所有數據與文字內容（可能包含：夜盤期貨行情、ADR、四大美股指數、外資與自營商期貨籌碼、選擇權籌碼等），然後產出一份完整的繁體中文盤前分析報告，格式和風格必須完全比照下面這個範本的結構（標題、分節、符號都要），但內容要根據圖片裡實際的數字與變化來寫，不可以照抄範本的數字：
+
+⚠️ [時間] [早盤/夜盤]重大更新：[一句話總結今天最重要的市場現象]
+
+一、已確認事實
+（條列圖片中出現的具體數字與現象，例如美股表現、ADR、期貨夜盤點位、籌碼變化等）
+
+二、推論
+（用「因果鏈」的方式寫出你從這些事實推導出的邏輯，可以分成多條因果鏈，例如宏觀因素鏈、類股表現鏈）
+
+三、反推論驗證
+正面反證：（列出支持「不那麼悲觀/樂觀」的證據）
+負面反證：（列出反對前述推論、或值得警惕的證據）
+
+四、焦點事件預告（如果圖片或你的知識中有提到近期重要財經事件、財報、會議，列出來；沒有就寫「無明顯排定事件」）
+
+五、重點族群與個股判斷
+（針對圖片中提到的類股或個股，各給一個 🟢中性偏多／🟡中性偏守／🔴偏空防禦 的判斷，並附一句理由）
+
+六、今日結論
+美股整體：（🟢/🟡/🔴 + 一句話）
+[相關族群]：（🟢/🟡/🔴 + 一句話）
+今日台股預期：（🟢/🟡/🔴 + 一句話）
+
+最後附上「整體[偏多/偏空]可信度：約 XX%」以及一項次要判斷的可信度百分比。
+
+只輸出這份報告本身，不要加任何額外的開場白或說明。`;
+
+async function deepAnalyze(){
+  const key = state.settings.geminiKey;
+  if(!key){ toast('請先到「設定」填入 Gemini API Key'); return; }
+  const fileInput = document.getElementById('gm_file');
+  const files = [...fileInput.files];
+  if(!files.length){ toast('請先選擇圖片'); return; }
+  const preview = document.getElementById('gmPreview');
+  preview.innerHTML = '';
+  const status = document.createElement('div');
+  status.className = 'hint';
+  status.style.marginTop = '10px';
+  status.textContent = `AI 分析中…（共 ${files.length} 張，請稍候）`;
+  preview.appendChild(status);
+
+  for(let i=0;i<files.length;i++){
+    const file = files[i];
+    status.textContent = `AI 分析中…（第 ${i+1}/${files.length} 張）`;
+    try{
+      const dataUrl = await fileToBase64(file);
+      const base64 = dataUrl.split(',')[1];
+      const mediaType = file.type || 'image/jpeg';
+      const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-3.6-flash:generateContent?key=${key}`, {
+        method:'POST',
+        headers:{ 'Content-Type':'application/json' },
+        body: JSON.stringify({
+          contents:[{ parts:[
+            { text: DEEP_ANALYSIS_PROMPT },
+            { inline_data:{ mime_type: mediaType, data: base64 } }
+          ]}]
+        })
+      });
+      if(!res.ok){
+        const errBody = await res.text();
+        throw new Error('API 錯誤 '+res.status+'：'+errBody.slice(0,200));
+      }
+      const json = await res.json();
+      const text = json.candidates?.[0]?.content?.parts?.map(p=>p.text||'').join('') || '（沒有取得內容，請重試）';
+      renderDeepPreview(text, i);
+    }catch(e){
+      console.error(e);
+      const errBox = document.createElement('div');
+      errBox.className = 'hint';
+      errBox.style.color = 'var(--red)';
+      errBox.textContent = `第 ${i+1} 張分析失敗：${e.message}`;
+      preview.appendChild(errBox);
+    }
+  }
+  status.textContent = `分析完成（共 ${files.length} 張），確認內容後可儲存為市場情緒筆記`;
+}
+function renderDeepPreview(text, idx){
+  const preview = document.getElementById('gmPreview');
+  const box = document.createElement('div');
+  box.className = 'entry';
+  box.style.marginTop = '12px';
+  const taId = 'gm_text_'+idx+'_'+uid();
+  box.innerHTML = `
+    <div class="entry-top"><span>AI 深度分析 #${idx+1}（可修改後再儲存）</span></div>
+    <div class="field"><label>日期</label><input type="date" class="gm_date" value="${todayStr()}"></div>
+    <div class="field"><label>分析內容</label>
+      ${noteToolbar(taId)}
+      <textarea class="gm_text" id="${taId}" style="min-height:260px;">${escapeHtml(text)}</textarea>
+    </div>
+    <button class="primary-btn gm_confirm">儲存為市場情緒筆記</button>`;
+  box.querySelector('.gm_confirm').onclick = ()=>{
+    const date = box.querySelector('.gm_date').value || todayStr();
+    const note = box.querySelector('.gm_text').value;
+    state.sentiment.push({ id:uid(), date, note });
+    box.remove();
+    markDirty();
+    toast('已儲存到市場情緒');
+  };
+  preview.appendChild(box);
+}
+
+/* ---------------- 交易前確認 tab ---------------- */
+function renderConfirm(){
+  const log=[...state.checklistLog].sort((a,b)=>b.date.localeCompare(a.date));
+  return `
+  <div class="card">
+    <h2>交易前確認清單</h2>
+    ${state.checklistTemplate.map((item,i)=>`
+      <div class="checklist-item">
+        <input type="checkbox" id="c_${i}">
+        <span class="txt">${escapeHtml(item)}</span>
+        <span class="del-x" onclick="removeChecklistItem(${i})">✕</span>
+      </div>`).join('')}
+    <div class="field" style="margin-top:12px;">
+      <div class="btnrow">
+        <input type="text" id="c_newitem" placeholder="新增確認項目…" style="flex:1;">
+        <button class="ghost-btn" onclick="addChecklistItem()">新增</button>
+      </div>
+    </div>
+    <button class="primary-btn" style="margin-top:6px;" onclick="saveConfirm()">確認完成，記錄本次</button>
+  </div>
+  <div class="card">
+    <h2>確認紀錄</h2>
+    ${log.length? log.map(l=>`
+      <div class="entry">
+        <div class="entry-top"><span>${l.date} ${l.time}</span><span class="del-x" onclick="delItem('checklistLog','${l.id}', this)">✕</span></div>
+        <div class="entry-note">${l.items.map(it=>`✓ ${escapeHtml(it)}`).join('\\n')}</div>
+      </div>`).join('') : '<div class="empty">尚無紀錄</div>'}
+  </div>`;
+}
+function addChecklistItem(){
+  const v=document.getElementById('c_newitem').value.trim();
+  if(!v) return;
+  state.checklistTemplate.push(v);
+  markDirty();
+}
+function removeChecklistItem(i){
+  state.checklistTemplate.splice(i,1);
+  markDirty();
+}
+function saveConfirm(){
+  const checked = state.checklistTemplate.filter((_,i)=>document.getElementById('c_'+i).checked);
+  if(!checked.length){ toast('請至少勾選一項'); return; }
+  const now = new Date();
+  state.checklistLog.push({id:uid(), date:todayStr(), time:now.toLocaleTimeString('zh-TW'), items:checked});
+  markDirty(); toast('已記錄確認');
+}
+
+/* ---------------- 紀錄 tab ---------------- */
+function tradePoints(t){
+  const entryPts = (t.entries||[]).reduce((s,e)=>s+(e.price*e.qty||0),0);
+  const entryQty = (t.entries||[]).reduce((s,e)=>s+(e.qty||0),0);
+  const exitPts = (t.exits||[]).reduce((s,e)=>s+(e.price*e.qty||0),0);
+  const exitQty = (t.exits||[]).reduce((s,e)=>s+(e.qty||0),0);
+  if(!entryQty||!exitQty) return 0;
+  const avgEntry = entryPts/entryQty, avgExit = exitPts/exitQty;
+  const qty = Math.min(entryQty, exitQty);
+  return t.direction==='多' ? (avgExit-avgEntry)*qty : (avgEntry-avgExit)*qty;
+}
+function tradeCost(t){
+  const s = state.settings;
+  const feeSide = s.feePerSide||0, taxSide = s.taxPerSide||0;
+  const entryQty = (t.entries||[]).reduce((sum,e)=>sum+(e.qty||0),0);
+  const exitQty = (t.exits||[]).reduce((sum,e)=>sum+(e.qty||0),0);
+  const qty = Math.min(entryQty, exitQty) || 0;
+  const fee = feeSide * qty * 2; // 進+出兩邊手續費
+  const tax = taxSide * qty * 2; // 進+出兩邊交易稅（固定金額）
+  return fee + tax;
+}
+function tradeNetAmount(t){
+  const mult = state.settings.multiplier||10;
+  return tradePoints(t)*mult - tradeCost(t);
+}
+let editingTradeId = null;
+
+let futuresDateFrom = '';
+let futuresHistoryDate = '';
+let futuresDateTo = '';
+function isTradeOpen(t){
+  return !((t.exits||[]).reduce((s,e)=>s+(e.qty||0),0) > 0);
+}
+function monthlyBreakdown(trades, profitFn, dateField){
+  const map = {};
+  trades.forEach(t=>{
+    const d = t[dateField];
+    if(!d) return;
+    const p = profitFn(t);
+    if(p===null) return;
+    const ym = d.slice(0,7);
+    map[ym] = (map[ym]||0) + p;
+  });
+  return Object.entries(map).sort((a,b)=>b[0].localeCompare(a[0]));
+}
+function yearlyBreakdown(trades, profitFn, dateField){
+  const map = {};
+  trades.forEach(t=>{
+    const d = t[dateField];
+    if(!d) return;
+    const p = profitFn(t);
+    if(p===null) return;
+    const y = d.slice(0,4);
+    map[y] = (map[y]||0) + p;
+  });
+  return Object.entries(map).sort((a,b)=>b[0].localeCompare(a[0]));
+}
+function breakdownCard(title, trades, profitFn, dateField){
+  const months = monthlyBreakdown(trades, profitFn, dateField).slice(0,12);
+  const years = yearlyBreakdown(trades, profitFn, dateField);
+  return `
+  <div class="card">
+    <h2>📅 ${title}</h2>
+    <div class="subtabs">
+      <div class="subtab on" onclick="this.parentElement.querySelectorAll('.subtab').forEach(e=>e.classList.remove('on'));this.classList.add('on');this.parentElement.nextElementSibling.style.display='block';this.parentElement.nextElementSibling.nextElementSibling.style.display='none';">按月</div>
+      <div class="subtab" onclick="this.parentElement.querySelectorAll('.subtab').forEach(e=>e.classList.remove('on'));this.classList.add('on');this.parentElement.nextElementSibling.style.display='none';this.parentElement.nextElementSibling.nextElementSibling.style.display='block';">按年</div>
+    </div>
+    <div>
+      ${months.length? months.map(([ym,v])=>`<div class="kv"><span>${ym}</span><span class="v" style="color:${v>=0?'var(--red)':'var(--green)'}">${v>=0?'+':''}${Math.round(v).toLocaleString()}</span></div>`).join('') : '<div class="empty">尚無資料</div>'}
+    </div>
+    <div style="display:none;">
+      ${years.length? years.map(([y,v])=>`<div class="kv"><span>${y}</span><span class="v" style="color:${v>=0?'var(--red)':'var(--green)'}">${v>=0?'+':''}${Math.round(v).toLocaleString()}</span></div>`).join('') : '<div class="empty">尚無資料</div>'}
+    </div>
+  </div>`;
+}
+let futuresAddFormOpen = false;
+let futuresBreakdownOpen = false;
+let futuresListOpen = false;
+function renderLog(){
+  const today = todayStr();
+  const defaultFrom = today.slice(0,8)+'01';
+  const from = futuresDateFrom || defaultFrom;
+  const to = futuresDateTo || today;
+  const isAll = futuresDateFrom==='__all__';
+  const list=[...state.trades].sort((a,b)=>b.date.localeCompare(a.date)||b.session.localeCompare(a.session));
+  const monthTradesAll = isAll ? state.trades : state.trades.filter(t=>t.date>=from && t.date<=to);
+  const openCount = monthTradesAll.filter(isTradeOpen).length;
+  const monthTrades = monthTradesAll.filter(t=>!isTradeOpen(t));
+  const pts = monthTrades.reduce((s,t)=>s+tradePoints(t),0);
+  const netAmt = monthTrades.reduce((s,t)=>s+tradeNetAmount(t),0);
+  const costAmt = monthTrades.reduce((s,t)=>s+tradeCost(t),0);
+  const profit = monthTrades.filter(t=>tradeNetAmount(t)>0).length;
+  const breakeven = monthTrades.filter(t=>tradeNetAmount(t)===0).length;
+  const loss = monthTrades.filter(t=>tradeNetAmount(t)<0).length;
+  const winRate = monthTrades.length? Math.round(profit/monthTrades.length*100):0;
+  const trendCount = monthTrades.filter(t=>t.trend==='順勢').length;
+  const trendRate = monthTrades.length? Math.round(trendCount/monthTrades.length*100):0;
+
+  const editing = editingTradeId ? state.trades.find(t=>t.id===editingTradeId) : null;
+  const ev = editing || { date:todayStr(), session:'早盤', direction:'多', trend:'', prevState:'', orderType:'',
+    entries:[{price:'',qty:1}], exits:[{price:'',qty:1}], note:'' };
+  const chip=(field,val,cur,onClass)=> `<div class="chip ${cur===val?onClass:''}" data-f="${field}" data-v="${val}" onclick="pick(this)">${val}</div>`;
+
+  const goal = state.settings.futuresGoal||0;
+  const goalPct = goal>0? Math.max(0,Math.min(999,(netAmt/goal*100))) : 0;
+  const openQty = state.trades.filter(isTradeOpen).reduce((s,t)=>s+(t.entries||[]).reduce((a,e)=>a+(e.qty||0),0),0);
+  const marginInit = state.settings.marginInit||0;
+  const yesterday = new Date(Date.now()-86400000).toISOString().slice(0,10);
+  const todayBal = futuresBalanceAsOf(today);
+  const yestBal = futuresBalanceAsOf(yesterday);
+  const requiredMargin = openQty * marginInit;
+  const riskIndex = (todayBal!==null && requiredMargin>0) ? (todayBal/requiredMargin*100) : null;
+  const riskColor = riskIndex===null? 'var(--sub)' : riskIndex>=150? 'var(--red)' : riskIndex>=100? 'var(--gold)' : 'var(--green)';
+
+  return `
+  <div class="card">
+    <h2>績效統計${isAll?'（全部）':`（${from} ~ ${to}）`}</h2>
+    <div class="grid2" style="margin-bottom:10px;align-items:end;">
+      <div class="field" style="margin-bottom:0;"><label>起始日期</label><input type="date" value="${isAll?'':from}" onchange="setFuturesDateFrom(this.value)"></div>
+      <div class="field" style="margin-bottom:0;"><label>結束日期</label><input type="date" value="${isAll?'':to}" onchange="setFuturesDateTo(this.value)"></div>
+    </div>
+    <div class="btnrow" style="margin-bottom:10px;">
+      <div class="chip ${!isAll && !futuresDateFrom?'gold-on':''}" onclick="setFuturesRange('','')">本月</div>
+      <div class="chip ${isAll?'gold-on':''}" onclick="setFuturesRange('__all__','')">全部</div>
+    </div>
+    <div style="font-family:var(--mono);font-size:26px;font-weight:700;color:${pts>=0?'var(--red)':'var(--green)'};margin-bottom:2px;">
+      ${pts>=0?'+':''}${Math.round(pts)} 點
+    </div>
+    <div style="font-family:var(--mono);font-size:15px;color:var(--sub);margin-bottom:10px;">
+      淨損益 ${netAmt>=0?'+':''}${Math.round(netAmt).toLocaleString()} 元（已扣手續費/稅 ${Math.round(costAmt).toLocaleString()} 元）
+    </div>
+    <div class="grid3">
+      <div class="stat"><div class="n" style="color:var(--red)">${profit}</div><div class="l">獲利</div></div>
+      <div class="stat"><div class="n">${breakeven}</div><div class="l">保本</div></div>
+      <div class="stat"><div class="n" style="color:var(--green)">${loss}</div><div class="l">吃損</div></div>
+    </div>
+    <div class="kv" style="margin-top:10px;"><span>勝率（淨損益）</span><span class="v">${winRate}%</span></div>
+    <div class="kv"><span>順勢率</span><span class="v">${trendRate}%</span></div>
+    ${openCount? `<div class="kv"><span>持倉中（不計入上面統計）</span><span class="v">${openCount} 筆</span></div>`:''}
+  </div>
+
+  <div class="card">
+    <h2>🎯 目標與風險</h2>
+    ${goal>0? `
+    <div class="kv"><span>本月目標達成度</span><span class="v">${Math.round(goalPct)}%（目標 ${goal.toLocaleString()} 元）</span></div>
+    ` : `<div class="hint">到「⚙ 設定」填「本月獲利目標」可以看達成度。</div>`}
+    <div class="kv"><span>目前持倉口數</span><span class="v">${openQty} 口</span></div>
+    ${marginInit>0? `
+    <div class="kv"><span>所需原始保證金</span><span class="v">${requiredMargin.toLocaleString()} 元</span></div>
+    <div class="kv"><span>風險指標</span><span class="v" style="color:${riskColor}">${riskIndex===null?'—':Math.round(riskIndex)+'%'}</span></div>
+    <div class="hint">風險指標 ≥150% 較安全、100~150% 留意、<100% 有被追繳風險。</div>
+    ` : `<div class="hint">到「⚙ 設定」填「原始保證金」可以看風險指標。</div>`}
+    <h2 style="margin-top:14px;">帳戶餘額（自動計算：起始資金＋入出金＋已平倉損益）</h2>
+    <div style="font-family:var(--mono);font-size:22px;font-weight:700;margin:10px 0;">
+      今日餘額：${Math.round(todayBal).toLocaleString()} 元
+    </div>
+    <div class="kv"><span>昨日餘額</span><span class="v">${Math.round(yestBal).toLocaleString()}</span></div>
+    <div class="kv"><span>今日變化</span><span class="v" style="color:${(todayBal-yestBal)>=0?'var(--red)':'var(--green)'}">${(todayBal-yestBal)>=0?'+':''}${Math.round(todayBal-yestBal).toLocaleString()}</span></div>
+    <div class="hint" style="margin-top:8px;">起始資金、入金/出金記錄請到「💰資金管理」分頁設定。</div>
+  </div>
+
+  <div class="card">
+    <h2 style="cursor:pointer;" onclick="toggleFuturesAddForm()">${editing? '編輯交易紀錄' : '新增交易紀錄'} <span style="color:var(--gold);font-size:12px;">${futuresAddFormOpen||editing?'▲ 收合':'▼ 展開'}</span></h2>
+    ${futuresAddFormOpen||editing? `
+    <div class="grid2">
+      <div class="field"><label>日期</label><input type="date" id="t_date" value="${ev.date}"></div>
+      <div class="field"><label>盤別</label>
+        <div class="btnrow">
+          ${chip('t_session','早盤',ev.session,'gold-on')}
+          ${chip('t_session','夜盤',ev.session,'gold-on')}
+        </div>
+      </div>
+    </div>
+    <div class="grid2">
+      <div class="field"><label>方向</label>
+        <div class="btnrow">
+          <div class="chip ${ev.direction==='多'?'red-on':''}" data-f="t_dir" data-v="多" onclick="pick(this)">多</div>
+          <div class="chip ${ev.direction==='空'?'green-on':''}" data-f="t_dir" data-v="空" onclick="pick(this)">空</div>
+        </div>
+      </div>
+      <div class="field"><label>順逆勢</label>
+        <div class="btnrow">
+          ${chip('t_trend','順勢',ev.trend,'gold-on')}
+          ${chip('t_trend','逆勢',ev.trend,'gold-on')}
+        </div>
+      </div>
+    </div>
+    <div class="grid2">
+      <div class="field"><label>上一盤狀態</label>
+        <div class="btnrow">${PATTERNS.map(p=>chip('t_prev',p,ev.prevState,'gold-on')).join('')}</div>
+      </div>
+      <div class="field"><label>下單方式</label>
+        <div class="btnrow">
+          ${chip('t_order','手動',ev.orderType,'gold-on')}
+          ${chip('t_order','下單機',ev.orderType,'gold-on')}
+        </div>
+      </div>
+    </div>
+    <div class="grid2">
+      <div class="field"><label>進場點位</label><input type="number" id="t_ein" value="${(ev.entries&&ev.entries[0]&&ev.entries[0].price!==''&&ev.entries[0].price!==undefined)?ev.entries[0].price:''}" placeholder="44459"></div>
+      <div class="field"><label>進場口數</label><input type="number" id="t_eqty" value="${(ev.entries&&ev.entries[0]&&ev.entries[0].qty)||1}"></div>
+    </div>
+    <div class="grid2">
+      <div class="field"><label>出場點位（尚未出場可留空＝持倉中）</label><input type="number" id="t_xin" value="${(ev.exits&&ev.exits[0]&&ev.exits[0].price!==''&&ev.exits[0].price!==undefined)?ev.exits[0].price:''}" placeholder="44239"></div>
+      <div class="field"><label>出場口數</label><input type="number" id="t_xqty" value="${(ev.exits&&ev.exits[0]&&ev.exits[0].qty)||1}"></div>
+    </div>
+    <div class="field"><label>備註</label>${noteToolbar('t_note')}<textarea id="t_note" placeholder="這筆的想法、盤中變化…">${escapeHtml(ev.note||'')}</textarea></div>
+    <div class="btnrow">
+      <button class="primary-btn" style="flex:1;" onclick="saveTrade()">${editing? '更新交易' : '儲存交易'}</button>
+      ${editing? `<button class="ghost-btn" onclick="cancelEditTrade()">取消</button>` : ''}
+    </div>
+    ` : ''}
+  </div>
+
+  <div class="card">
+    <h2 style="cursor:pointer;" onclick="toggleFuturesBreakdown()">📅 每月/每年損益（期貨） <span style="color:var(--gold);font-size:12px;">${futuresBreakdownOpen?'▲ 收合':'▼ 展開'}</span></h2>
+  </div>
+  ${futuresBreakdownOpen? breakdownCard('每月/每年損益（期貨）', state.trades.filter(t=>!isTradeOpen(t)), tradeNetAmount, 'date') : ''}
+
+  <div class="card">
+    <h2 style="cursor:pointer;" onclick="toggleFuturesList()">交易紀錄 <span style="color:var(--gold);font-size:12px;">${futuresListOpen?'▲ 收合':'▼ 展開'}</span></h2>
+    ${futuresListOpen? `
+    ${dateJumpPicker(list, futuresHistoryDate, 'setFuturesHistoryDate')}
+    ${(()=>{ const shown = limitedHistory(list, futuresHistoryDate); return shown.length? shown.map(t=>{
+      const open = isTradeOpen(t);
+      const p = tradePoints(t);
+      const net = tradeNetAmount(t);
+      const cost = tradeCost(t);
+      return `
+      <div class="entry">
+        <div class="entry-top">
+          <span>${t.date} · ${t.session} <span class="pill ${t.direction==='多'?'long':'short'}">${t.direction}</span> ${t.trend?`<span class="pill">${t.trend}</span>`:''} ${t.orderType?`<span class="pill">${t.orderType}</span>`:''}</span>
+          ${open? `<span style="color:var(--sub);font-family:var(--mono);font-weight:700;">持倉中</span>` :
+            `<span style="color:${p>0?'var(--red)':p<0?'var(--green)':'var(--sub)'};font-family:var(--mono);font-weight:700;">${p>=0?'+':''}${Math.round(p)}點</span>`}
+        </div>
+        <div class="kv"><span>進 / 出</span><span class="v">${(t.entries||[]).map(e=>e.price).join(',')} → ${open?'—':(t.exits||[]).map(e=>e.price).join(',')}</span></div>
+        ${!open? `
+        <div class="kv"><span>手續費+稅</span><span class="v">${Math.round(cost).toLocaleString()} 元</span></div>
+        <div class="kv"><span>淨損益</span><span class="v" style="color:${net>0?'var(--red)':net<0?'var(--green)':'var(--sub)'}">${net>=0?'+':''}${Math.round(net).toLocaleString()} 元</span></div>` : ''}
+        ${t.note?`<div class="entry-note" style="margin-top:6px;">${renderNoteText(t.note)}</div>`:''}
+        <div class="entry-actions">
+          <span class="ghost-btn" style="cursor:pointer;" onclick="editTrade('${t.id}')">編輯</span>
+          <span class="del-x" onclick="delItem('trades','${t.id}', this)">刪除 ✕</span>
+        </div>
+      </div>`;
+    }).join('') : '<div class="empty">尚無交易紀錄</div>'; })()}
+    ` : ''}
+  </div>`;
+}
+function setFuturesHistoryDate(v){ futuresHistoryDate = v; render(); }
+function editTrade(id){
+  editingTradeId = id;
+  activeTab = 'log';
+  render();
+  document.getElementById('main').scrollIntoView({behavior:'smooth'});
+}
+function cancelEditTrade(){
+  editingTradeId = null;
+  render();
+}
+function setFuturesDateFrom(v){ futuresDateFrom = v; render(); }
+function setFuturesDateTo(v){ futuresDateTo = v; render(); }
+function toggleFuturesAddForm(){ futuresAddFormOpen = !futuresAddFormOpen; render(); }
+function toggleFuturesBreakdown(){ futuresBreakdownOpen = !futuresBreakdownOpen; render(); }
+function toggleFuturesList(){ futuresListOpen = !futuresListOpen; render(); }
+function setFuturesRange(from,to){ futuresDateFrom = from; futuresDateTo = to; render(); }
+function saveTrade(){
+  const g=id=>document.getElementById(id).value;
+  const session = document.querySelector('[data-f="t_session"].gold-on')?.dataset.v || '早盤';
+  const direction = document.querySelector('[data-f="t_dir"].red-on,[data-f="t_dir"].green-on')?.dataset.v || '多';
+  const trend = document.querySelector('[data-f="t_trend"].gold-on')?.dataset.v || '';
+  const prev = document.querySelector('[data-f="t_prev"].gold-on')?.dataset.v || '';
+  const orderType = document.querySelector('[data-f="t_order"].gold-on')?.dataset.v || '';
+  const ein=num(g('t_ein')), eqty=num(g('t_eqty')), xin=num(g('t_xin')), xqty=num(g('t_xqty'));
+  if(ein===null){ toast('請輸入進場點位'); return; }
+  const record = {
+    date:g('t_date'), session, direction, trend, prevState:prev, orderType,
+    entries:[{price:ein, qty:eqty||1}],
+    exits: xin===null ? [] : [{price:xin, qty:xqty||1}],
+    note:g('t_note')
+  };
+  if(editingTradeId){
+    const idx = state.trades.findIndex(t=>t.id===editingTradeId);
+    if(idx>-1) state.trades[idx] = {...state.trades[idx], ...record};
+    editingTradeId = null;
+    markDirty(); toast('已更新交易');
+  } else {
+    state.trades.push({ id:uid(), ...record });
+
+    markDirty(); toast('已儲存交易');
+  }
+}
+
+/* ---------------- 資金管理 tab ---------------- */
+let cashAccountFilter = null;
+function renderCash(){
+  const accounts = state.stockAccounts;
+  const capAccount = cashAccountFilter || accounts[0];
+  const cashHistory = buildCashHistory(capAccount);
+  return `
+  <div class="card">
+    <h2>💰 資金管理</h2>
+    <div class="hint">跟「股票紀錄」的買賣資料是連動的——每一筆買進賣出都會自動反映在這裡的餘額和流水帳上，不用重複輸入。</div>
+    <div class="btnrow" style="margin-top:10px;">
+      ${accounts.map(a=>`<div class="chip ${capAccount===a?'gold-on':''}" onclick="setCashAccount('${a}')">${a}</div>`).join('')}
+    </div>
+  </div>
+  <div class="card">
+    <h2>${capAccount} 的資金</h2>
+    <div style="font-family:var(--mono);font-size:22px;font-weight:700;margin:10px 0;">
+      目前餘額：${Math.round(stockAccountBalance(capAccount)).toLocaleString()} 元
+    </div>
+    <div class="grid2">
+      <div class="field"><label>起始資金</label><input type="number" id="cap_amount" value="${state.stockCapital[capAccount]||0}"></div>
+      <button class="ghost-btn" style="align-self:end;" onclick="saveStockCapital('${capAccount}')">儲存起始資金</button>
+    </div>
+    <h2 style="margin-top:14px;">新增資金異動</h2>
+    <div class="field"><label>類型</label>
+      <div class="btnrow">
+        <div class="chip gold-on" data-f="ledger_type" data-v="存入" onclick="pick(this)">存入</div>
+        <div class="chip" data-f="ledger_type" data-v="提出" onclick="pick(this)">提出</div>
+        <div class="chip" data-f="ledger_type" data-v="借入" onclick="pick(this)">借入（股票借貸）</div>
+        <div class="chip" data-f="ledger_type" data-v="還款" onclick="pick(this)">還款</div>
+      </div>
+    </div>
+    <div class="grid2">
+      <div class="field"><label>日期</label><input type="date" id="ledger_date" value="${todayStr()}"></div>
+      <div class="field"><label>金額</label><input type="number" id="ledger_amount"></div>
+    </div>
+    <div class="field"><label>備註</label><input type="text" id="ledger_note" placeholder="例：轉入自銀行帳戶"></div>
+    <button class="ghost-btn" onclick="addLedger('${capAccount}')">新增紀錄</button>
+  </div>
+  <div class="card">
+    <h2>流水帳（存摺）</h2>
+    ${cashHistory.length? cashHistory.map(r=>`
+      <div class="entry" style="margin-top:6px;padding:10px 12px;">
+        <div class="entry-top" style="margin-bottom:0;">
+          <span>${r.date==='0000-00-00'?'—':r.date} · ${r.desc}</span>
+          <span style="font-family:var(--mono);color:${r.kind==='in'?'var(--red)':'var(--green)'}">${r.amount>=0?'+':''}${Math.round(r.amount).toLocaleString()}</span>
+        </div>
+        <div class="kv" style="border-bottom:none;padding-top:2px;"><span>餘額</span><span class="v">${Math.round(r.balance).toLocaleString()}</span></div>
+      </div>`).join('') : '<div class="empty">尚無任何資金紀錄</div>'}
+    <div class="hint" style="margin-top:10px;">上面流水帳裡的買賣紀錄要刪除，請到「股票紀錄」分頁刪除該筆交易；這裡只能刪除手動輸入的存入/提出/借入/還款：</div>
+    ${state.stockCashLedger.filter(l=>l.account===capAccount).length? state.stockCashLedger.filter(l=>l.account===capAccount).sort((a,b)=>b.date.localeCompare(a.date)).map(l=>`
+      <div class="entry" style="margin-top:6px;">
+        <div class="entry-top"><span>${l.date} · ${l.type}${l.note?'：'+escapeHtml(l.note):''}</span></div>
+        <div class="entry-actions"><span class="del-x" onclick="delItem('stockCashLedger','${l.id}', this)">刪除 ✕</span></div>
+      </div>`).join('') : ''}
+  </div>
+
+  <div class="card">
+    <h2>🎯 期貨資金</h2>
+    <div class="hint">期貨帳戶餘額＝起始資金＋入金/出金＋所有已平倉損益，自動計算，跟「期貨紀錄」的目標與風險是同一份數字。</div>
+    <div style="font-family:var(--mono);font-size:22px;font-weight:700;margin:10px 0;">
+      今日餘額：${Math.round(futuresBalanceAsOf(todayStr())).toLocaleString()} 元
+    </div>
+    <div class="grid2">
+      <div class="field"><label>起始資金</label><input type="number" id="fc_capital" value="${state.settings.futuresCapital||0}"></div>
+      <button class="ghost-btn" style="align-self:end;" onclick="saveFuturesCapital()">儲存起始資金</button>
+    </div>
+    <h2 style="margin-top:14px;">入金 / 出金</h2>
+    <div class="field"><label>類型</label>
+      <div class="btnrow">
+        <div class="chip gold-on" data-f="fl_type" data-v="入金" onclick="pick(this)">入金</div>
+        <div class="chip" data-f="fl_type" data-v="出金" onclick="pick(this)">出金</div>
+      </div>
+    </div>
+    <div class="grid2">
+      <div class="field"><label>日期</label><input type="date" id="fl_date" value="${todayStr()}"></div>
+      <div class="field"><label>金額</label><input type="number" id="fl_amount"></div>
+    </div>
+    <div class="field"><label>備註</label><input type="text" id="fl_note" placeholder="例：獲利提領到銀行帳戶"></div>
+    <button class="ghost-btn" onclick="addFuturesLedger()">新增紀錄</button>
+    ${state.futuresCashLedger.length? `<div class="hint" style="margin-top:10px;">入出金歷史：</div>${[...state.futuresCashLedger].sort((a,b)=>b.date.localeCompare(a.date)).map(l=>`
+      <div class="kv"><span>${l.date} · ${l.type}${l.note?'：'+escapeHtml(l.note):''}</span><span class="v">${l.type==='入金'?'+':'-'}${Math.round(l.amount).toLocaleString()} <span class="del-x" style="margin-left:8px;" onclick="delItem('futuresCashLedger','${l.id}', this)">✕</span></span></div>`).join('')}`:''}
+  </div>`;
+}
+function setCashAccount(a){ cashAccountFilter = a; render(); }
+
+/* ---------------- 股票紀錄 tab ---------------- */
+let editingStockId = null;
+let addLotTargetId = null;
+function toggleAddLot(id){
+  addLotTargetId = (addLotTargetId===id) ? null : id;
+  render();
+}
+function confirmAddLot(id){
+  const trade = state.stockTrades.find(t=>t.id===id);
+  if(!trade) return;
+  const date = document.getElementById('al_date').value || todayStr();
+  const price = num(document.getElementById('al_price').value);
+  const qty = num(document.getElementById('al_qty').value);
+  const fee = num(document.getElementById('al_fee').value) || 0;
+  if(price===null || qty===null){ toast('請輸入價格與股數'); return; }
+  if(!trade.entryLots || !trade.entryLots.length){
+    trade.entryLots = [{date:trade.entryDate, price:trade.entryPrice, qty:trade.entryQty, fee:trade.entryFee||0}];
+  }
+  trade.entryLots.push({date, price, qty, fee});
+  const totalQty = trade.entryLots.reduce((s,l)=>s+l.qty,0);
+  const totalCost = trade.entryLots.reduce((s,l)=>s+l.price*l.qty,0);
+  trade.entryQty = totalQty;
+  trade.entryPrice = totalCost/totalQty;
+  trade.entryFee = trade.entryLots.reduce((s,l)=>s+(l.fee||0),0);
+  addLotTargetId = null;
+  markDirty();
+  toast('已加碼，均價已更新為 '+trade.entryPrice.toFixed(2));
+}
+let addExitTargetId = null;
+function toggleAddExit(id){
+  addExitTargetId = (addExitTargetId===id) ? null : id;
+  render();
+}
+function confirmAddExit(id){
+  const trade = state.stockTrades.find(t=>t.id===id);
+  if(!trade) return;
+  const date = document.getElementById('ax_date').value || todayStr();
+  const price = num(document.getElementById('ax_price').value);
+  const qty = num(document.getElementById('ax_qty').value);
+  const fee = num(document.getElementById('ax_fee').value) || 0;
+  if(price===null || qty===null){ toast('請輸入價格與股數'); return; }
+  const remaining = stockRemainingQty(trade);
+  if(qty > remaining){ toast('賣出股數不能超過剩餘持股 '+remaining+' 股'); return; }
+  if(!trade.exitLots){
+    trade.exitLots = getExitLots(trade);
+  }
+  trade.exitLots.push({date, price, qty, fee});
+  addExitTargetId = null;
+  markDirty();
+  const left = stockRemainingQty(trade);
+  toast(left>0 ? `已記錄賣出，剩餘 ${left} 股` : '已全部賣出');
+}
+let stockAccountFilter = '全部';
+let stockDateFrom = '';
+let stockDateTo = '';
+let stockStatusFilter = 'all';
+function getExitLots(t){
+  if(t.exitLots && t.exitLots.length) return t.exitLots;
+  if(t.exitPrice!==null && t.exitPrice!==undefined && t.exitPrice!==''){
+    return [{date:t.exitDate, price:t.exitPrice, qty:t.exitQty||t.entryQty, fee:t.exitFee||0}];
+  }
+  return [];
+}
+function stockSoldQty(t){
+  return getExitLots(t).reduce((s,l)=>s+(l.qty||0),0);
+}
+function stockRemainingQty(t){
+  return Math.max(0, (t.entryQty||0) - stockSoldQty(t));
+}
+function stockIsOpen(t){
+  return stockRemainingQty(t) > 0;
+}
+function stockProfit(t){
+  const exits = getExitLots(t);
+  if(!exits.length) return null;
+  const soldQty = exits.reduce((s,l)=>s+(l.qty||0),0);
+  const exitVal = exits.reduce((s,l)=>s+(l.price*l.qty||0),0);
+  const exitFeeTotal = exits.reduce((s,l)=>s+(l.fee||0),0);
+  const entryFeePortion = (t.entryFee||0) * (soldQty / (t.entryQty||soldQty||1));
+  const gross = t.direction==='多' ? (exitVal - t.entryPrice*soldQty) : (t.entryPrice*soldQty - exitVal);
+  return gross - entryFeePortion - exitFeeTotal;
+}
+function stockLatestExitDate(t){
+  const exits = getExitLots(t);
+  if(!exits.length) return null;
+  return exits.map(l=>l.date).filter(Boolean).sort().slice(-1)[0] || null;
+}
+function stockAccountBalance(account){
+  const initial = state.stockCapital[account] || 0;
+  const ledgerNet = state.stockCashLedger.filter(l=>l.account===account)
+    .reduce((s,l)=> s + (['存入','借入'].includes(l.type) ? l.amount : -l.amount), 0);
+  const trades = state.stockTrades.filter(t=>t.account===account);
+  const spent = trades.reduce((s,t)=> s + (t.entryPrice*t.entryQty + (t.entryFee||0)), 0);
+  const returned = trades.reduce((s,t)=>{
+    const exits = getExitLots(t);
+    return s + exits.reduce((sum,l)=> sum + (l.price*l.qty - (l.fee||0)), 0);
+  }, 0);
+  return initial + ledgerNet - spent + returned;
+}
+function buildCashHistory(account){
+  const rows = [];
+  const initial = state.stockCapital[account] || 0;
+  if(initial){
+    rows.push({ date:'0000-00-00', sortKey:'0000-00-00 0', desc:'起始資金', amount:initial, kind:'in' });
+  }
+  state.stockCashLedger.filter(l=>l.account===account).forEach(l=>{
+    const isIn = ['存入','借入'].includes(l.type);
+    rows.push({ date:l.date, sortKey:l.date+' 1', desc:l.type+(l.note?'：'+l.note:''), amount: isIn? l.amount : -l.amount, kind:isIn?'in':'out' });
+  });
+  state.stockTrades.filter(t=>t.account===account).forEach(t=>{
+    rows.push({ date:t.entryDate, sortKey:t.entryDate+' 2',
+      desc:`買進 ${t.code}${t.name?' '+t.name:''} ${t.entryQty}股 @${t.entryPrice}`,
+      amount: -(t.entryPrice*t.entryQty + (t.entryFee||0)), kind:'out' });
+    getExitLots(t).forEach(l=>{
+      const soldQty = l.qty;
+      const entryFeePortion = (t.entryFee||0) * (soldQty / (t.entryQty||soldQty||1));
+      const gross = t.direction==='多' ? (l.price-t.entryPrice)*soldQty : (t.entryPrice-l.price)*soldQty;
+      const p = gross - entryFeePortion - (l.fee||0);
+      rows.push({ date:l.date, sortKey:(l.date||'0000-00-00')+' 3',
+        desc:`賣出 ${t.code}${t.name?' '+t.name:''} ${l.qty}股 @${l.price}（損益 ${p>=0?'+':''}${Math.round(p).toLocaleString()}）`,
+        amount: l.price*l.qty - (l.fee||0), kind:'in' });
+    });
+  });
+  rows.sort((a,b)=>a.sortKey.localeCompare(b.sortKey));
+  let running = 0;
+  rows.forEach(r=>{ running += r.amount; r.balance = running; });
+  return rows.reverse();
+}
+let stockOverviewFiltersOpen = false;
+let stockAddFormOpen = false;
+let stockBreakdownOpen = false;
+let stockListOpen = false;
+function renderStock(){
+  const accounts = state.stockAccounts;
+  const all = state.stockTrades;
+  let filtered = stockAccountFilter==='全部' ? all : all.filter(t=>t.account===stockAccountFilter);
+  if(stockDateFrom || stockDateTo){
+    filtered = filtered.filter(t=> (!stockDateFrom || (t.entryDate||'') >= stockDateFrom) && (!stockDateTo || (t.entryDate||'') <= stockDateTo));
+  }
+  if(stockStatusFilter==='holding') filtered = filtered.filter(t=>stockIsOpen(t));
+  else if(stockStatusFilter==='sold') filtered = filtered.filter(t=>!stockIsOpen(t));
+  const withRealized = filtered.filter(t=>stockProfit(t)!==null);
+  const openTrades = filtered.filter(t=>stockIsOpen(t));
+  const closedTrades = filtered.filter(t=>!stockIsOpen(t));
+  const totalProfit = withRealized.reduce((s,t)=>s+stockProfit(t),0);
+  const totalCost = withRealized.reduce((s,t)=>s+(t.entryPrice*stockSoldQty(t)),0);
+  const returnRate = totalCost? (totalProfit/totalCost*100) : 0;
+
+  const editing = editingStockId ? state.stockTrades.find(t=>t.id===editingStockId) : null;
+  const ev = editing || { account:accounts[0]||'我', code:'', name:'', direction:'多',
+    entryDate:todayStr(), entryPrice:'', entryQty:'', entryFee:'',
+    exitDate:'', exitPrice:'', exitQty:'', exitFee:'', note:'' };
+  const chip=(field,val,cur,onClass)=> `<div class="chip ${cur===val?onClass:''}" data-f="${field}" data-v="${val}" onclick="pick(this)">${val}</div>`;
+
+  const list = [...filtered].sort((a,b)=> (b.entryDate||'').localeCompare(a.entryDate||''));
+
+  return `
+  <div class="card">
+    <h2 style="cursor:pointer;" onclick="toggleStockOverviewFilters()">總覽（股票，與期貨分開計算） <span style="color:var(--gold);font-size:12px;">${stockOverviewFiltersOpen?'▲ 收合篩選':'▼ 篩選帳戶/日期'}</span></h2>
+    ${stockOverviewFiltersOpen? `
+    <div class="btnrow" style="margin-bottom:10px;">
+      <div class="chip ${stockAccountFilter==='全部'?'gold-on':''}" onclick="setStockFilter('全部')">全部</div>
+      ${accounts.map(a=>`<div class="chip ${stockAccountFilter===a?'gold-on':''}" onclick="setStockFilter('${a}')">${a}</div>`).join('')}
+    </div>
+    <div class="grid2" style="margin-bottom:10px;align-items:end;">
+      <div class="field" style="margin-bottom:0;"><label>起始日期</label><input type="date" value="${stockDateFrom}" onchange="setStockDateFrom(this.value)"></div>
+      <div class="field" style="margin-bottom:0;"><label>結束日期</label><input type="date" value="${stockDateTo}" onchange="setStockDateTo(this.value)"></div>
+    </div>
+    <button class="ghost-btn" style="margin-bottom:10px;" onclick="setStockDateFrom('');setStockDateTo('')">清除日期篩選</button>
+    ` : ''}
+    <div style="font-family:var(--mono);font-size:24px;font-weight:700;color:${totalProfit>=0?'var(--red)':'var(--green)'};">
+      ${totalProfit>=0?'+':''}${Math.round(totalProfit).toLocaleString()} 元
+    </div>
+    <div class="grid3" style="margin-top:10px;">
+      <div class="stat"><div class="n">${closedTrades.length}</div><div class="l">已平倉</div></div>
+      <div class="stat"><div class="n">${openTrades.length}</div><div class="l">持有中</div></div>
+      <div class="stat"><div class="n" style="color:${returnRate>=0?'var(--red)':'var(--green)'}">${returnRate>=0?'+':''}${returnRate.toFixed(2)}%</div><div class="l">報酬率</div></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2 style="cursor:pointer;" onclick="toggleStockAddForm()">${editing? '編輯股票交易' : '新增股票交易'} <span style="color:var(--gold);font-size:12px;">${stockAddFormOpen||editing?'▲ 收合':'▼ 展開'}</span></h2>
+    ${stockAddFormOpen||editing? `
+    <div class="field"><label>帳戶</label>
+      <div class="btnrow">${accounts.map(a=>chip('st_account',a,ev.account,'gold-on')).join('')}</div>
+      <div class="btnrow" style="margin-top:6px;">
+        <input type="text" id="st_newaccount" placeholder="新增帳戶名稱…" style="flex:1;">
+        <button class="ghost-btn" onclick="addStockAccount()">新增帳戶</button>
+      </div>
+    </div>
+    <div class="grid2">
+      <div class="field"><label>股票代號</label><input type="text" id="st_code" value="${ev.code}" placeholder="2330"></div>
+      <div class="field"><label>股票名稱（選填）</label><input type="text" id="st_name" value="${ev.name}" placeholder="台積電"></div>
+    </div>
+    <div class="field"><label>方向</label>
+      <div class="btnrow">
+        <div class="chip ${ev.direction==='多'?'red-on':''}" data-f="st_dir" data-v="多" onclick="pick(this)">多（買進）</div>
+        <div class="chip ${ev.direction==='空'?'green-on':''}" data-f="st_dir" data-v="空" onclick="pick(this)">空（融券）</div>
+      </div>
+    </div>
+    <h2 style="margin-top:14px;">建立部位</h2>
+    <div class="grid3">
+      <div class="field"><label>日期</label><input type="date" id="st_edate" value="${ev.entryDate}"></div>
+      <div class="field"><label>價格</label><input type="number" step="0.01" id="st_eprice" value="${ev.entryPrice}"></div>
+      <div class="field"><label>股數</label><input type="number" id="st_eqty" value="${ev.entryQty}"></div>
+    </div>
+    <div class="field"><label>手續費（可先留空，之後再補）</label><input type="number" id="st_efee" value="${ev.entryFee}"></div>
+    <h2 style="margin-top:14px;">了結部位（尚未賣出可留空）</h2>
+    <div class="grid3">
+      <div class="field"><label>日期</label><input type="date" id="st_xdate" value="${ev.exitDate}"></div>
+      <div class="field"><label>價格</label><input type="number" step="0.01" id="st_xprice" value="${ev.exitPrice}"></div>
+      <div class="field"><label>股數</label><input type="number" id="st_xqty" value="${ev.exitQty}"></div>
+    </div>
+    <div class="field"><label>手續費+證交稅（可先留空，之後再補）</label><input type="number" id="st_xfee" value="${ev.exitFee}"></div>
+    <div class="field"><label>備註</label>${noteToolbar('st_note')}<textarea id="st_note">${escapeHtml(ev.note)}</textarea></div>
+    <div class="btnrow">
+      <button class="primary-btn" style="flex:1;" onclick="saveStock()">${editing?'更新交易':'儲存交易'}</button>
+      ${editing? `<button class="ghost-btn" onclick="cancelEditStock()">取消</button>` : ''}
+    </div>
+    ` : ''}
+  </div>
+
+  <div class="card">
+    <h2 style="cursor:pointer;" onclick="toggleStockBreakdown()">📅 每月/每年損益（股票） <span style="color:var(--gold);font-size:12px;">${stockBreakdownOpen?'▲ 收合':'▼ 展開'}</span></h2>
+  </div>
+  ${stockBreakdownOpen? breakdownCard('每月/每年損益（股票）', withRealized.map(t=>({...t, _exitDate:stockLatestExitDate(t)})), stockProfit, '_exitDate') : ''}
+
+  <div class="card">
+    <h2 style="cursor:pointer;" onclick="toggleStockList()">股票交易列表${stockAccountFilter!=='全部'?`（${stockAccountFilter}）`:''} <span style="color:var(--gold);font-size:12px;">${stockListOpen?'▲ 收合':'▼ 展開'}</span></h2>
+    ${stockListOpen? `
+    <div class="btnrow" style="margin-bottom:10px;">
+      <div class="chip ${stockStatusFilter==='all'?'gold-on':''}" onclick="setStockStatus('all')">全部</div>
+      <div class="chip ${stockStatusFilter==='holding'?'gold-on':''}" onclick="setStockStatus('holding')">持有中</div>
+      <div class="chip ${stockStatusFilter==='sold'?'gold-on':''}" onclick="setStockStatus('sold')">已賣出</div>
+    </div>
+    ${list.length? list.map(t=>{
+      const p = stockProfit(t);
+      const isOpen = stockIsOpen(t);
+      const remaining = stockRemainingQty(t);
+      const soldQty = stockSoldQty(t);
+      const exitLots = getExitLots(t);
+      return `
+      <div class="entry">
+        <div class="entry-top">
+          <span><span class="pill">${t.account}</span> ${t.code} ${t.name?`(${t.name})`:''} <span class="pill ${t.direction==='多'?'long':'short'}">${t.direction}</span> ${isOpen?`<span class="pill">持有中 ${remaining}股</span>`:`<span class="pill">已賣出</span>`}</span>
+          <span style="font-family:var(--mono);font-weight:700;color:${p===null?'var(--sub)':p>0?'var(--red)':p<0?'var(--green)':'var(--sub)'}">
+            ${p===null? '尚未賣出' : (p>=0?'+':'')+Math.round(p).toLocaleString()+' 元'}
+          </span>
+        </div>
+        <div class="kv"><span>進場（均價）</span><span class="v">${t.entryDate||'—'} @ ${fmt(t.entryPrice&&t.entryPrice.toFixed?t.entryPrice.toFixed(2):t.entryPrice)} × ${fmt(t.entryQty)}股</span></div>
+        ${t.entryLots && t.entryLots.length>1 ? `
+        <div class="hint" style="margin:4px 0;">分批買進紀錄：${t.entryLots.map(l=>`${l.date} @${l.price}×${l.qty}股`).join('；')}</div>` : ''}
+        ${exitLots.length? `<div class="kv"><span>已賣出</span><span class="v">${soldQty}股（均價 ${(exitLots.reduce((s,l)=>s+l.price*l.qty,0)/soldQty).toFixed(2)}）</span></div>
+        ${exitLots.length>1? `<div class="hint" style="margin:4px 0;">分批賣出紀錄：${exitLots.map(l=>`${l.date} @${l.price}×${l.qty}股`).join('；')}</div>`:''}` : ''}
+        <div class="kv"><span>手續費(進/出)</span><span class="v">${fmt(t.entryFee)} / ${fmt(exitLots.reduce((s,l)=>s+(l.fee||0),0)||null)}</span></div>
+        ${t.note?`<div class="entry-note" style="margin-top:6px;">${renderNoteText(t.note)}</div>`:''}
+        <div class="entry-actions">
+          ${isOpen? `<span class="ghost-btn" style="cursor:pointer;" onclick="toggleAddLot('${t.id}')">➕ 加碼買進</span>`:''}
+          ${isOpen? `<span class="ghost-btn" style="cursor:pointer;" onclick="toggleAddExit('${t.id}')">💰 賣出</span>`:''}
+          <span class="ghost-btn" style="cursor:pointer;" onclick="editStock('${t.id}')">編輯</span>
+          <span class="del-x" onclick="delItem('stockTrades','${t.id}', this)">刪除 ✕</span>
+        </div>
+        ${addLotTargetId===t.id? `
+        <div class="entry" style="margin-top:8px;background:var(--card);">
+          <div class="grid3">
+            <div class="field"><label>日期</label><input type="date" id="al_date" value="${todayStr()}"></div>
+            <div class="field"><label>價格</label><input type="number" step="0.01" id="al_price"></div>
+            <div class="field"><label>股數</label><input type="number" id="al_qty"></div>
+          </div>
+          <div class="field"><label>手續費</label><input type="number" id="al_fee"></div>
+          <button class="primary-btn" onclick="confirmAddLot('${t.id}')">確認加碼（自動算均價）</button>
+        </div>` : ''}
+        ${addExitTargetId===t.id? `
+        <div class="entry" style="margin-top:8px;background:var(--card);">
+          <div class="hint">目前剩 ${remaining} 股可賣</div>
+          <div class="grid3">
+            <div class="field"><label>日期</label><input type="date" id="ax_date" value="${todayStr()}"></div>
+            <div class="field"><label>價格</label><input type="number" step="0.01" id="ax_price"></div>
+            <div class="field"><label>股數</label><input type="number" id="ax_qty" placeholder="最多${remaining}"></div>
+          </div>
+          <div class="field"><label>手續費</label><input type="number" id="ax_fee"></div>
+          <button class="primary-btn" onclick="confirmAddExit('${t.id}')">確認賣出</button>
+        </div>` : ''}
+      </div>`;
+    }).join('') : '<div class="empty">尚無股票交易</div>'}
+    ` : ''}
+  </div>`;
+}
+function toggleStockOverviewFilters(){ stockOverviewFiltersOpen = !stockOverviewFiltersOpen; render(); }
+function toggleStockAddForm(){ stockAddFormOpen = !stockAddFormOpen; render(); }
+function toggleStockBreakdown(){ stockBreakdownOpen = !stockBreakdownOpen; render(); }
+function toggleStockList(){ stockListOpen = !stockListOpen; render(); }
+function setStockFilter(a){ stockAccountFilter = a; render(); }
+function setStockStatus(v){ stockStatusFilter = v; render(); }
+function setStockDateFrom(v){ stockDateFrom = v; render(); }
+function setStockDateTo(v){ stockDateTo = v; render(); }
+function saveStockCapital(account){
+  if(!account) return;
+  const v = num(document.getElementById('cap_amount').value) || 0;
+  state.stockCapital[account] = v;
+  markDirty(); toast('已儲存起始資金');
+}
+function addLedger(account){
+  if(!account){ toast('請先選擇帳戶'); return; }
+  const type = document.querySelector('[data-f="ledger_type"].gold-on')?.dataset.v || '存入';
+  const amount = num(document.getElementById('ledger_amount').value);
+  if(amount===null){ toast('請輸入金額'); return; }
+  state.stockCashLedger.push({
+    id:uid(), account, type,
+    date: document.getElementById('ledger_date').value,
+    amount, note: document.getElementById('ledger_note').value
+  });
+  markDirty(); toast('已新增資金異動');
+}
+function addStockAccount(){
+  const v = document.getElementById('st_newaccount').value.trim();
+  if(!v) return;
+  if(!state.stockAccounts.includes(v)) state.stockAccounts.push(v);
+  markDirty();
+}
+function saveStock(){
+  const g=id=>document.getElementById(id).value;
+  const account = document.querySelector('[data-f="st_account"].gold-on')?.dataset.v || state.stockAccounts[0];
+  const direction = document.querySelector('[data-f="st_dir"].red-on,[data-f="st_dir"].green-on')?.dataset.v || '多';
+  const code = g('st_code').trim();
+  if(!code){ toast('請輸入股票代號'); return; }
+  const entryPrice = num(g('st_eprice'));
+  if(entryPrice===null){ toast('請輸入進場價格'); return; }
+  const record = {
+    account, code, name:g('st_name').trim(), direction,
+    entryDate:g('st_edate'), entryPrice, entryQty:num(g('st_eqty'))||0, entryFee:num(g('st_efee'))||0,
+    exitDate:g('st_xdate')||null, exitPrice:num(g('st_xprice')), exitQty:num(g('st_xqty')), exitFee:num(g('st_xfee'))||0,
+    note:g('st_note')
+  };
+  if(editingStockId){
+    const idx = state.stockTrades.findIndex(t=>t.id===editingStockId);
+    if(idx>-1) state.stockTrades[idx] = {...state.stockTrades[idx], ...record};
+    editingStockId = null;
+    markDirty(); toast('已更新交易');
+  } else {
+    state.stockTrades.push({ id:uid(), ...record });
+    markDirty(); toast('已儲存交易');
+  }
+}
+function editStock(id){
+  editingStockId = id;
+  activeTab = 'stock';
+  render();
+  document.getElementById('main').scrollIntoView({behavior:'smooth'});
+}
+function cancelEditStock(){
+  editingStockId = null;
+  render();
+}
+
+/* ---------------- 存股目標 tab ---------------- */
+function latestDividendPerShare(code){
+  const recs = state.dividendRecords.filter(r=>r.code===code).sort((a,b)=>b.year-a.year);
+  return recs.length? recs[0].perShare : 0;
+}
+function renderDividend(){
+  const holdings = state.dividendHoldings;
+  const totalAnnual = holdings.reduce((s,h)=> s + h.shares * latestDividendPerShare(h.code), 0);
+  const totalMonthly = totalAnnual / 12;
+  const goal = state.dividendGoal || 0;
+  const pct = goal? Math.min(100, Math.round(totalMonthly/goal*100)) : 0;
+  const gap = Math.max(0, goal - totalMonthly);
+
+  const recSorted = [...state.dividendRecords].sort((a,b)=> b.year-a.year || a.code.localeCompare(b.code));
+
+  return `
+  <div class="card">
+    <h2>🎯 配息目標</h2>
+    <div class="field"><label>每月目標配息（元）</label><input type="number" id="div_goal" value="${goal}"></div>
+    <button class="ghost-btn" onclick="saveDividendGoal()">儲存目標</button>
+    <div style="margin-top:16px;">
+      <div class="kv"><span>目前預估年配息</span><span class="v">${Math.round(totalAnnual).toLocaleString()} 元</span></div>
+      <div class="kv"><span>目前預估月配息</span><span class="v" style="color:var(--red);font-weight:700;">${Math.round(totalMonthly).toLocaleString()} 元</span></div>
+      <div class="kv"><span>距離目標還差</span><span class="v" style="color:${gap>0?'var(--green)':'var(--red)'}">${gap>0? Math.round(gap).toLocaleString()+' 元/月' : '已達成！'}</span></div>
+    </div>
+    <div style="background:var(--card2);border-radius:8px;height:16px;margin-top:10px;overflow:hidden;">
+      <div style="background:var(--gold);height:100%;width:${pct}%;transition:width .3s;"></div>
+    </div>
+    <div class="hint" style="text-align:center;margin-top:4px;">${pct}% 達成</div>
+  </div>
+
+  <div class="card">
+    <h2>持股清單</h2>
+    <div class="hint">記錄你目前持有的存股張數（0050、高股息 ETF 等），股利用下面「股利紀錄」登記，會自動抓最新一年配息率計算。</div>
+    <div class="grid3" style="margin-top:10px;">
+      <div class="field"><label>代號</label><input type="text" id="dh_code" placeholder="0050"></div>
+      <div class="field"><label>名稱（選填）</label><input type="text" id="dh_name" placeholder="元大台灣50"></div>
+      <div class="field"><label>股數</label><input type="number" id="dh_shares" placeholder="1000"></div>
+    </div>
+    <div class="field"><label>帳戶（選填）</label>
+      <div class="btnrow">${state.stockAccounts.map(a=>`<div class="chip" data-f="dh_account" data-v="${a}" onclick="pick(this)">${a}</div>`).join('')}</div>
+    </div>
+    <button class="primary-btn" onclick="addHolding()">新增/更新持股</button>
+    ${holdings.length? holdings.map(h=>{
+      const perShare = latestDividendPerShare(h.code);
+      const annual = h.shares * perShare;
+      return `
+      <div class="entry" style="margin-top:8px;">
+        <div class="entry-top">
+          <span>${h.code}${h.name?' '+h.name:''} ${h.account?`<span class="pill">${h.account}</span>`:''}</span>
+          <span style="font-family:var(--mono);">${h.shares.toLocaleString()} 股</span>
+        </div>
+        <div class="kv"><span>最新股利/股</span><span class="v">${perShare? perShare.toFixed(2) : '尚無紀錄'}</span></div>
+        <div class="kv"><span>預估年配息</span><span class="v" style="color:var(--red)">${Math.round(annual).toLocaleString()} 元</span></div>
+        <div class="entry-actions"><span class="del-x" onclick="delItem('dividendHoldings','${h.id}', this)">刪除 ✕</span></div>
+      </div>`;
+    }).join('') : '<div class="empty">尚無持股</div>'}
+  </div>
+
+  <div class="card">
+    <h2>股利紀錄</h2>
+    <div class="grid3">
+      <div class="field"><label>代號</label><input type="text" id="dr_code" placeholder="0050"></div>
+      <div class="field"><label>年度</label><input type="number" id="dr_year" value="${new Date().getFullYear()}"></div>
+      <div class="field"><label>每股股利</label><input type="number" step="0.01" id="dr_pershare" placeholder="3.2"></div>
+    </div>
+    <div class="field"><label>備註</label><input type="text" id="dr_note" placeholder="例：分兩次配發"></div>
+    <button class="ghost-btn" onclick="addDividendRecord()">新增股利紀錄</button>
+    ${recSorted.length? recSorted.map(r=>`
+      <div class="entry" style="margin-top:8px;">
+        <div class="entry-top"><span>${r.code} · ${r.year}年</span><span style="font-family:var(--mono);">${r.perShare} 元/股</span></div>
+        ${r.note?`<div class="entry-note">${escapeHtml(r.note)}</div>`:''}
+        <div class="entry-actions"><span class="del-x" onclick="delItem('dividendRecords','${r.id}', this)">刪除 ✕</span></div>
+      </div>`).join('') : '<div class="empty">尚無股利紀錄</div>'}
+  </div>`;
+}
+function saveDividendGoal(){
+  state.dividendGoal = num(document.getElementById('div_goal').value) || 0;
+  markDirty(); toast('目標已儲存');
+}
+function addHolding(){
+  const code = document.getElementById('dh_code').value.trim();
+  if(!code){ toast('請輸入代號'); return; }
+  const shares = num(document.getElementById('dh_shares').value) || 0;
+  const name = document.getElementById('dh_name').value.trim();
+  const account = document.querySelector('[data-f="dh_account"].gold-on')?.dataset.v || '';
+  const existing = state.dividendHoldings.find(h=>h.code===code && h.account===account);
+  if(existing){
+    existing.shares = shares; existing.name = name || existing.name;
+  } else {
+    state.dividendHoldings.push({ id:uid(), code, name, shares, account });
+  }
+  markDirty(); toast('已儲存持股');
+}
+function addDividendRecord(){
+  const code = document.getElementById('dr_code').value.trim();
+  if(!code){ toast('請輸入代號'); return; }
+  const year = num(document.getElementById('dr_year').value) || new Date().getFullYear();
+  const perShare = num(document.getElementById('dr_pershare').value);
+  if(perShare===null){ toast('請輸入每股股利'); return; }
+  state.dividendRecords.push({ id:uid(), code, year, perShare, note:document.getElementById('dr_note').value });
+  markDirty(); toast('已新增股利紀錄');
+}
+
+/* ---------------- 常用網站 tab ---------------- */
+let editingLinkId = null;
+function renderLinks(){
+  const list = [...state.customLinks];
+  return `
+  <div class="card">
+    <h2>🔗 常用網站</h2>
+    <div class="hint">點名稱直接開新分頁查看。要新增/編輯網站，請到「⚙ 設定」→「常用網站」分類。</div>
+    ${list.length? list.map(l=>`
+      <div class="entry">
+        <div class="entry-top"><span><a href="${escapeHtml(l.url)}" target="_blank" rel="noopener" style="font-weight:600;font-size:15px;">${escapeHtml(l.name)}</a></span></div>
+        ${l.note?`<div class="entry-note">${escapeHtml(l.note)}</div>`:''}
+      </div>`).join('') : '<div class="empty">尚未加入任何網站，到「⚙ 設定」→「常用網站」新增</div>'}
+  </div>`;
+}
+function renderLinksSettingsSection(){
+  const list = [...state.customLinks];
+  const editing = editingLinkId ? state.customLinks.find(l=>l.id===editingLinkId) : null;
+  const ev = editing || {name:'', url:'', note:''};
+  return `
+  <div class="card">
+    <h2>${editing?'編輯網站':'新增常用網站'}</h2>
+    <div class="grid2">
+      <div class="field"><label>名稱</label><input type="text" id="lk_name" value="${escapeHtml(ev.name)}" placeholder="例：公開資訊觀測站"></div>
+      <div class="field"><label>網址</label><input type="text" id="lk_url" value="${escapeHtml(ev.url)}" placeholder="https://..."></div>
+    </div>
+    <div class="field"><label>備註（選填）</label><input type="text" id="lk_note" value="${escapeHtml(ev.note||'')}" placeholder="用途或提醒"></div>
+    <div class="btnrow">
+      <button class="primary-btn" style="flex:1;" onclick="saveLink()">${editing?'更新':'新增'}</button>
+      ${editing?`<button class="ghost-btn" onclick="cancelEditLink()">取消</button>`:''}
+    </div>
+  </div>
+  <div class="card">
+    <h2>我的常用網站</h2>
+    ${list.length? list.map((l,i)=>`
+      <div class="entry">
+        <div class="entry-top"><span><a href="${escapeHtml(l.url)}" target="_blank" rel="noopener" style="font-weight:600;">${escapeHtml(l.name)}</a></span></div>
+        ${l.note?`<div class="entry-note">${escapeHtml(l.note)}</div>`:''}
+        <div class="entry-actions">
+          <span style="cursor:pointer;padding:4px 8px;opacity:${i===0?0.3:1};" onclick="${i===0?'':`moveLink('${l.id}',-1)`}">↑</span>
+          <span style="cursor:pointer;padding:4px 8px;opacity:${i===list.length-1?0.3:1};" onclick="${i===list.length-1?'':`moveLink('${l.id}',1)`}">↓</span>
+          <span class="ghost-btn" style="cursor:pointer;" onclick="editLink('${l.id}')">編輯</span>
+          <span class="del-x" onclick="delItem('customLinks','${l.id}', this)">刪除 ✕</span>
+        </div>
+      </div>`).join('') : '<div class="empty">尚未加入任何網站</div>'}
+  </div>`;
+}
+function moveLink(id, dir){
+  const idx = state.customLinks.findIndex(l=>l.id===id);
+  const newIdx = idx+dir;
+  if(idx<0 || newIdx<0 || newIdx>=state.customLinks.length) return;
+  [state.customLinks[idx], state.customLinks[newIdx]] = [state.customLinks[newIdx], state.customLinks[idx]];
+  markDirty();
+}
+function saveLink(){
+  const name = document.getElementById('lk_name').value.trim();
+  let url = document.getElementById('lk_url').value.trim();
+  const note = document.getElementById('lk_note').value.trim();
+  if(!name || !url){ toast('請輸入名稱與網址'); return; }
+  if(!/^https?:\/\//i.test(url)) url = 'https://' + url;
+  if(editingLinkId){
+    const idx = state.customLinks.findIndex(l=>l.id===editingLinkId);
+    if(idx>-1) state.customLinks[idx] = {...state.customLinks[idx], name, url, note};
+    editingLinkId = null;
+    markDirty(); toast('已更新');
+  } else {
+    state.customLinks.push({id:uid(), name, url, note});
+    markDirty(); toast('已新增');
+  }
+}
+function editLink(id){ editingLinkId = id; render(); }
+function cancelEditLink(){ editingLinkId = null; render(); }
+
+/* ---------------- 筆記 tab ---------------- */
+let editingNoteId = null;
+let notesFormOpen = false;
+let notesCategoryMgmtOpen = false;
+let editingNoteImages = [];
+let noteDraft = null;
+function syncNoteDraft(){
+  if(!noteDraft) noteDraft = {};
+  const topEl = document.querySelector('[data-f="nt_top"].gold-on');
+  if(topEl) noteDraft.topCategory = topEl.dataset.v;
+  const catEl = document.querySelector('[data-f="nt_cat"].gold-on');
+  if(catEl) noteDraft.category = catEl.dataset.v;
+  const dateEl = document.getElementById('nt_date');
+  if(dateEl) noteDraft.date = dateEl.value;
+  const titleEl = document.getElementById('nt_title');
+  if(titleEl) noteDraft.title = titleEl.value;
+  const contentEl = document.getElementById('nt_content');
+  if(contentEl) noteDraft.content = contentEl.value;
+}
+let notesTopFilter = ['全部'];
+let notesCategoryFilter = ['全部'];
+let notesTopPanelOpen = false;
+let notesCatPanelOpen = false;
+let notesSearchQuery = '';
+function moveArrayItem(arr, idx, dir){
+  const newIdx = idx+dir;
+  if(newIdx<0||newIdx>=arr.length) return;
+  [arr[idx],arr[newIdx]] = [arr[newIdx],arr[idx]];
+}
+function renderNotes(){
+  const tops = state.techTopCategories;
+  const cats = state.techCategories;
+  const q = notesSearchQuery.trim().toLowerCase();
+  const list = [...state.techNotes]
+    .filter(n=>(notesTopFilter.includes('全部') || notesTopFilter.includes(n.topCategory)) && (notesCategoryFilter.includes('全部') || notesCategoryFilter.includes(n.category)))
+    .filter(n=> !q || (n.title||'').toLowerCase().includes(q) || (n.content||'').toLowerCase().includes(q))
+    .sort((a,b)=>b.date.localeCompare(a.date));
+  const editing = editingNoteId ? state.techNotes.find(n=>n.id===editingNoteId) : null;
+  const base = editing || {date:todayStr(), topCategory:tops[0]||'', category:cats[0]||'', title:'', content:''};
+  const ev = noteDraft ? {...base, ...noteDraft} : base;
+  return `
+  <div class="card">
+    <h2 style="cursor:pointer;" onclick="toggleNoteFormOpen()">${editing?'編輯筆記':'新增筆記'} <span style="color:var(--gold);font-size:12px;">${notesFormOpen||editing?'▲ 收合':'▼ 展開'}</span></h2>
+    ${notesFormOpen||editing? `
+    <div class="field"><label>大分類</label>
+      <div class="btnrow">${tops.map(c=>`<div class="chip ${ev.topCategory===c?'gold-on':''}" data-f="nt_top" data-v="${c}" onclick="pick(this)">${c}</div>`).join('')}</div>
+    </div>
+    <div class="field"><label>次分類</label>
+      <div class="btnrow">${cats.map(c=>`<div class="chip ${ev.category===c?'gold-on':''}" data-f="nt_cat" data-v="${c}" onclick="pick(this)">${c}</div>`).join('')}</div>
+    </div>
+    <div class="grid2">
+      <div class="field"><label>日期</label><input type="date" id="nt_date" value="${ev.date}"></div>
+      <div class="field"><label>標題</label><input type="text" id="nt_title" value="${escapeHtml(ev.title)}" placeholder="例：半導體庫存週期觀察"></div>
+    </div>
+    <div class="field"><label>內容</label>
+      ${noteToolbar('nt_content')}
+      <textarea id="nt_content" style="min-height:160px;">${escapeHtml(ev.content)}</textarea>
+    </div>
+    <div class="field"><label>附圖（選填）</label>
+      <div class="hint">圖片會直接存進你的雲端資料檔，建議每篇筆記別放太多張、太大張的圖，不然同步會變慢。</div>
+      <input type="file" accept="image/*" multiple onchange="addNoteImages(this)">
+      ${editingNoteImages.length? `<div class="btnrow" style="margin-top:8px;flex-wrap:wrap;">
+        ${editingNoteImages.map((img,i)=>`<div style="position:relative;">
+          <img src="${img}" style="width:70px;height:70px;object-fit:cover;border-radius:8px;border:1px solid var(--line);">
+          <span style="position:absolute;top:-6px;right:-6px;background:var(--red);color:#fff;border-radius:50%;width:18px;height:18px;line-height:18px;text-align:center;font-size:12px;cursor:pointer;" onclick="removeNoteImage(${i})">✕</span>
+        </div>`).join('')}
+      </div>` : ''}
+    </div>
+    <div class="btnrow">
+      <button class="primary-btn" style="flex:1;" onclick="saveNote()">${editing?'更新筆記':'儲存筆記'}</button>
+      ${editing?`<button class="ghost-btn" onclick="cancelEditNote()">取消</button>`:''}
+    </div>
+    ` : ''}
+  </div>
+
+  <div class="card">
+    <h2 style="cursor:pointer;" onclick="toggleNoteCategoryMgmtOpen()">分類管理 <span style="color:var(--gold);font-size:12px;">${notesCategoryMgmtOpen?'▲ 收合':'▼ 展開'}</span></h2>
+    ${notesCategoryMgmtOpen? `
+    <div class="hint">新增、排序、改名大分類與次分類，上面新增筆記的選項會跟著這裡調整。</div>
+    <h2 style="margin-top:12px;font-size:13px;">大分類</h2>
+    ${tops.map((c,i)=>`
+      <div class="checklist-item">
+        <input type="text" value="${escapeHtml(c)}" style="flex:1;background:transparent;border:1px solid var(--line);border-radius:6px;color:var(--text);padding:4px 8px;" onchange="renameTopCategory(${i}, this.value)">
+        <span style="cursor:pointer;padding:4px 8px;opacity:${i===0?0.3:1};" onclick="${i===0?'':`moveTop(${i},-1)`}">↑</span>
+        <span style="cursor:pointer;padding:4px 8px;opacity:${i===tops.length-1?0.3:1};" onclick="${i===tops.length-1?'':`moveTop(${i},1)`}">↓</span>
+        <span class="del-x" onclick="delTopCategory(${i})">✕</span>
+      </div>`).join('')}
+    <div class="btnrow" style="margin-top:8px;">
+      <input type="text" id="nt_newtop" placeholder="新增大分類…" style="flex:1;">
+      <button class="ghost-btn" onclick="addTopCategory()">新增</button>
+    </div>
+    <h2 style="margin-top:16px;font-size:13px;">次分類</h2>
+    ${cats.map((c,i)=>`
+      <div class="checklist-item">
+        <input type="text" value="${escapeHtml(c)}" style="flex:1;background:transparent;border:1px solid var(--line);border-radius:6px;color:var(--text);padding:4px 8px;" onchange="renameSubCategory(${i}, this.value)">
+        <span style="cursor:pointer;padding:4px 8px;opacity:${i===0?0.3:1};" onclick="${i===0?'':`moveSub(${i},-1)`}">↑</span>
+        <span style="cursor:pointer;padding:4px 8px;opacity:${i===cats.length-1?0.3:1};" onclick="${i===cats.length-1?'':`moveSub(${i},1)`}">↓</span>
+        <span class="del-x" onclick="delSubCategory(${i})">✕</span>
+      </div>`).join('')}
+    <div class="btnrow" style="margin-top:8px;">
+      <input type="text" id="nt_newcat" placeholder="新增次分類…" style="flex:1;">
+      <button class="ghost-btn" onclick="addNoteCategory()">新增</button>
+    </div>
+    ` : ''}
+  </div>
+
+  <div class="card">
+    <h2>我的筆記</h2>
+    <div class="field"><label>🔍 搜尋關鍵字</label><input type="text" id="nt_search" value="${escapeHtml(notesSearchQuery)}" placeholder="搜尋標題或內容…"
+      oninput="setNotesSearch(this.value)"></div>
+    <div class="field">
+      <label style="cursor:pointer;" onclick="toggleNotesTopPanel()">大分類篩選：<span style="color:var(--gold);">${notesTopFilter.includes('全部')?'全部':notesTopFilter.join('、')||'（未選）'}</span> ${notesTopPanelOpen?'▲':'▼'}</label>
+      ${notesTopPanelOpen? `<div class="btnrow" style="margin-top:6px;">
+        <div class="chip ${notesTopFilter.includes('全部')?'gold-on':''}" onclick="toggleNotesTop('全部')">全部</div>
+        ${tops.map(c=>`<div class="chip ${notesTopFilter.includes(c)?'gold-on':''}" onclick="toggleNotesTop('${c}')">${c}</div>`).join('')}
+      </div>` : ''}
+    </div>
+    <div class="field">
+      <label style="cursor:pointer;" onclick="toggleNotesCatPanel()">次分類篩選：<span style="color:var(--gold);">${notesCategoryFilter.includes('全部')?'全部':notesCategoryFilter.join('、')||'（未選）'}</span> ${notesCatPanelOpen?'▲':'▼'}</label>
+      ${notesCatPanelOpen? `<div class="btnrow" style="margin-top:6px;">
+        <div class="chip ${notesCategoryFilter.includes('全部')?'gold-on':''}" onclick="toggleNotesCat('全部')">全部</div>
+        ${cats.map(c=>`<div class="chip ${notesCategoryFilter.includes(c)?'gold-on':''}" onclick="toggleNotesCat('${c}')">${c}</div>`).join('')}
+      </div>` : ''}
+    </div>
+    ${list.length? list.map(n=>`
+      <div class="entry">
+        <div class="entry-top"><span><span class="pill">${n.topCategory||'未分類'}</span> <span class="pill">${n.category||'未分類'}</span> ${n.date} ${n.title?'· '+escapeHtml(n.title):''}</span></div>
+        <div class="entry-note">${renderNoteText(n.content)}</div>
+        ${n.images && n.images.length? `<div class="btnrow" style="margin-top:8px;flex-wrap:wrap;">${n.images.map(img=>`<img src="${img}" style="width:90px;height:90px;object-fit:cover;border-radius:8px;cursor:pointer;" onclick="viewImage(this.src)">`).join('')}</div>` : ''}
+        <div class="entry-actions">
+          <span class="ghost-btn" style="cursor:pointer;" onclick="editNote('${n.id}')">編輯</span>
+          <span class="del-x" onclick="delItem('techNotes','${n.id}', this)">刪除 ✕</span>
+        </div>
+      </div>`).join('') : '<div class="empty">尚無筆記</div>'}
+  </div>`;
+}
+function toggleNotesTopPanel(){ notesTopPanelOpen = !notesTopPanelOpen; render(); }
+function toggleNotesCatPanel(){ notesCatPanelOpen = !notesCatPanelOpen; render(); }
+function toggleNotesTop(c){
+  if(c==='全部'){ notesTopFilter = ['全部']; render(); return; }
+  notesTopFilter = notesTopFilter.filter(x=>x!=='全部');
+  if(notesTopFilter.includes(c)) notesTopFilter = notesTopFilter.filter(x=>x!==c);
+  else notesTopFilter.push(c);
+  if(!notesTopFilter.length) notesTopFilter = ['全部'];
+  render();
+}
+function toggleNotesCat(c){
+  if(c==='全部'){ notesCategoryFilter = ['全部']; render(); return; }
+  notesCategoryFilter = notesCategoryFilter.filter(x=>x!=='全部');
+  if(notesCategoryFilter.includes(c)) notesCategoryFilter = notesCategoryFilter.filter(x=>x!==c);
+  else notesCategoryFilter.push(c);
+  if(!notesCategoryFilter.length) notesCategoryFilter = ['全部'];
+  render();
+}
+let notesSearchTimer = null;
+function setNotesSearch(v){
+  notesSearchQuery = v;
+  clearTimeout(notesSearchTimer);
+  notesSearchTimer = setTimeout(()=>{
+    const el = document.getElementById('nt_search');
+    const pos = el ? el.selectionStart : null;
+    render();
+    const el2 = document.getElementById('nt_search');
+    if(el2){ el2.focus(); if(pos!==null) el2.setSelectionRange(pos,pos); }
+  }, 400);
+}
+function addTopCategory(){
+  const v = document.getElementById('nt_newtop').value.trim();
+  if(!v) return;
+  if(!state.techTopCategories.includes(v)) state.techTopCategories.push(v);
+  markDirty();
+}
+function delTopCategory(i){
+  state.techTopCategories.splice(i,1);
+  markDirty();
+}
+function moveTop(i,dir){ moveArrayItem(state.techTopCategories, i, dir); markDirty(); }
+function addNoteCategory(){
+  const v = document.getElementById('nt_newcat').value.trim();
+  if(!v) return;
+  if(!state.techCategories.includes(v)) state.techCategories.push(v);
+  markDirty();
+}
+function delSubCategory(i){
+  state.techCategories.splice(i,1);
+  markDirty();
+}
+function moveSub(i,dir){ moveArrayItem(state.techCategories, i, dir); markDirty(); }
+function renameTopCategory(i, newName){
+  newName = newName.trim();
+  if(!newName) return;
+  const oldName = state.techTopCategories[i];
+  if(oldName === newName) return;
+  state.techTopCategories[i] = newName;
+  state.techNotes.forEach(n=>{ if(n.topCategory===oldName) n.topCategory = newName; });
+  markDirty();
+}
+function renameSubCategory(i, newName){
+  newName = newName.trim();
+  if(!newName) return;
+  const oldName = state.techCategories[i];
+  if(oldName === newName) return;
+  state.techCategories[i] = newName;
+  state.techNotes.forEach(n=>{ if(n.category===oldName) n.category = newName; });
+  markDirty();
+}
+function toggleNoteFormOpen(){ notesFormOpen = !notesFormOpen; render(); }
+function toggleNoteCategoryMgmtOpen(){ notesCategoryMgmtOpen = !notesCategoryMgmtOpen; render(); }
+async function addNoteImages(input){
+  syncNoteDraft();
+  const files = [...input.files];
+  for(const f of files){
+    const dataUrl = await fileToBase64(f);
+    editingNoteImages.push(dataUrl);
+  }
+  input.value = '';
+  render();
+}
+function removeNoteImage(idx){
+  syncNoteDraft();
+  editingNoteImages.splice(idx,1);
+  render();
+}
+function saveNote(){
+  const topCategory = document.querySelector('[data-f="nt_top"].gold-on')?.dataset.v || state.techTopCategories[0] || '';
+  const category = document.querySelector('[data-f="nt_cat"].gold-on')?.dataset.v || state.techCategories[0] || '';
+  const date = document.getElementById('nt_date').value || todayStr();
+  const title = document.getElementById('nt_title').value.trim();
+  const content = document.getElementById('nt_content').value;
+  if(!content.trim()){ toast('請輸入內容'); return; }
+  const images = [...editingNoteImages];
+  if(editingNoteId){
+    const idx = state.techNotes.findIndex(n=>n.id===editingNoteId);
+    if(idx>-1) state.techNotes[idx] = {...state.techNotes[idx], date, topCategory, category, title, content, images};
+    editingNoteId = null;
+    editingNoteImages = [];
+    noteDraft = null;
+    markDirty(); toast('已更新筆記');
+  } else {
+    state.techNotes.push({id:uid(), date, topCategory, category, title, content, images});
+    editingNoteImages = [];
+    noteDraft = null;
+    markDirty(); toast('已儲存筆記');
+  }
+}
+function editNote(id){
+  editingNoteId = id;
+  const n = state.techNotes.find(x=>x.id===id);
+  editingNoteImages = n && n.images ? [...n.images] : [];
+  noteDraft = null;
+  render();
+  document.getElementById('main').scrollIntoView({behavior:'smooth'});
+}
+function cancelEditNote(){ editingNoteId = null; editingNoteImages = []; noteDraft = null; render(); }
+
+/* ---------------- 損益總覽 tab ---------------- */
+let analyticsSrc = { futures:true, stock:true };
+let analyticsAccounts = ['全部'];
+let analyticsFrom = '';
+let analyticsTo = '';
+function renderAnalytics(){
+  const accounts = state.stockAccounts;
+  const from = analyticsFrom, to = analyticsTo;
+  const inRange = d => (!from || d>=from) && (!to || d<=to);
+
+  let rows = [];
+  if(analyticsSrc.futures){
+    state.trades.filter(t=>!isTradeOpen(t) && inRange(t.date)).forEach(t=>{
+      rows.push({date:t.date, amount:tradeNetAmount(t), src:'期貨'});
+    });
+  }
+  if(analyticsSrc.stock){
+    const useAccounts = analyticsAccounts.includes('全部') ? accounts : analyticsAccounts;
+    state.stockTrades.filter(t=>useAccounts.includes(t.account)).forEach(t=>{
+      const p = stockProfit(t);
+      if(p===null) return;
+      const d = stockLatestExitDate(t);
+      if(!d || !inRange(d)) return;
+      rows.push({date:d, amount:p, src:'股票'});
+    });
+  }
+  const total = rows.reduce((s,r)=>s+r.amount,0);
+  const monthMap = {}, yearMap = {};
+  rows.forEach(r=>{
+    const ym = r.date.slice(0,7), y = r.date.slice(0,4);
+    monthMap[ym] = (monthMap[ym]||0) + r.amount;
+    yearMap[y] = (yearMap[y]||0) + r.amount;
+  });
+  const months = Object.entries(monthMap).sort((a,b)=>b[0].localeCompare(a[0]));
+  const years = Object.entries(yearMap).sort((a,b)=>b[0].localeCompare(a[0]));
+
+  return `
+  <div class="card">
+    <h2>📊 損益總覽</h2>
+    <div class="field"><label>資料來源</label>
+      <div class="btnrow">
+        <div class="chip ${analyticsSrc.futures?'gold-on':''}" onclick="toggleAnalyticsSrc('futures')">期貨</div>
+        <div class="chip ${analyticsSrc.stock?'gold-on':''}" onclick="toggleAnalyticsSrc('stock')">股票</div>
+      </div>
+    </div>
+    ${analyticsSrc.stock? `
+    <div class="field"><label>股票帳戶（可複選）</label>
+      <div class="btnrow">
+        <div class="chip ${analyticsAccounts.includes('全部')?'gold-on':''}" onclick="toggleAnalyticsAccount('全部')">全部</div>
+        ${accounts.map(a=>`<div class="chip ${analyticsAccounts.includes(a)?'gold-on':''}" onclick="toggleAnalyticsAccount('${a}')">${a}</div>`).join('')}
+      </div>
+    </div>` : ''}
+    <div class="grid2">
+      <div class="field"><label>起始日期</label><input type="date" value="${from}" onchange="setAnalyticsFrom(this.value)"></div>
+      <div class="field"><label>結束日期</label><input type="date" value="${to}" onchange="setAnalyticsTo(this.value)"></div>
+    </div>
+    <div style="font-family:var(--mono);font-size:26px;font-weight:700;color:${total>=0?'var(--red)':'var(--green)'};margin-top:10px;">
+      ${total>=0?'+':''}${Math.round(total).toLocaleString()} 元
+    </div>
+  </div>
+  <div class="card">
+    <h2>明細</h2>
+    <div class="subtabs">
+      <div class="subtab on" onclick="this.parentElement.querySelectorAll('.subtab').forEach(e=>e.classList.remove('on'));this.classList.add('on');this.parentElement.nextElementSibling.style.display='block';this.parentElement.nextElementSibling.nextElementSibling.style.display='none';">按月</div>
+      <div class="subtab" onclick="this.parentElement.querySelectorAll('.subtab').forEach(e=>e.classList.remove('on'));this.classList.add('on');this.parentElement.nextElementSibling.style.display='none';this.parentElement.nextElementSibling.nextElementSibling.style.display='block';">按年</div>
+    </div>
+    <div>
+      ${months.length? months.map(([ym,v])=>`<div class="kv"><span>${ym}</span><span class="v" style="color:${v>=0?'var(--red)':'var(--green)'}">${v>=0?'+':''}${Math.round(v).toLocaleString()}</span></div>`).join('') : '<div class="empty">尚無資料</div>'}
+    </div>
+    <div style="display:none;">
+      ${years.length? years.map(([y,v])=>`<div class="kv"><span>${y}</span><span class="v" style="color:${v>=0?'var(--red)':'var(--green)'}">${v>=0?'+':''}${Math.round(v).toLocaleString()}</span></div>`).join('') : '<div class="empty">尚無資料</div>'}
+    </div>
+  </div>`;
+}
+function toggleAnalyticsSrc(k){
+  analyticsSrc[k] = !analyticsSrc[k];
+  if(!analyticsSrc.futures && !analyticsSrc.stock) analyticsSrc[k] = true;
+  render();
+}
+function toggleAnalyticsAccount(a){
+  if(a==='全部'){ analyticsAccounts = ['全部']; render(); return; }
+  analyticsAccounts = analyticsAccounts.filter(x=>x!=='全部');
+  if(analyticsAccounts.includes(a)) analyticsAccounts = analyticsAccounts.filter(x=>x!==a);
+  else analyticsAccounts.push(a);
+  if(!analyticsAccounts.length) analyticsAccounts = ['全部'];
+  render();
+}
+function setAnalyticsFrom(v){ analyticsFrom = v; render(); }
+function setAnalyticsTo(v){ analyticsTo = v; render(); }
+
+/* ---------------- 設定 tab ---------------- */
+function getTabConfigFull(){
+  const cfg = state.settings.tabConfig;
+  if(cfg && cfg.length){
+    const existingIds = cfg.map(c=>c.id);
+    const missing = ALL_TABS.filter(t=>!existingIds.includes(t.id)).map(t=>({id:t.id, visible:true}));
+    return [...cfg, ...missing];
+  }
+  return ALL_TABS.map(t=>({id:t.id, visible:true}));
+}
+function toggleTabVisible(id){
+  let cfg = getTabConfigFull();
+  cfg = cfg.map(c=> c.id===id ? {...c, visible: c.visible===false} : c);
+  state.settings.tabConfig = cfg;
+  markDirty();
+}
+function moveTab(id, dir){
+  let cfg = getTabConfigFull();
+  const idx = cfg.findIndex(c=>c.id===id);
+  const newIdx = idx+dir;
+  if(newIdx<0 || newIdx>=cfg.length) return;
+  [cfg[idx], cfg[newIdx]] = [cfg[newIdx], cfg[idx]];
+  state.settings.tabConfig = cfg;
+  markDirty();
+}
+let settingsSection = 'general';
+function setSettingsSection(sec){ settingsSection = sec; render(); }
+function renderSettings(){
+  const s = state.settings;
+  const tabMap = Object.fromEntries(ALL_TABS.map(t=>[t.id,t]));
+  const tabCfg = getTabConfigFull();
+
+  const sectionTabs = `
+  <div class="card">
+    <div class="subtabs" style="flex-wrap:wrap;">
+      <div class="subtab ${settingsSection==='general'?'on':''}" onclick="setSettingsSection('general')">一般</div>
+      <div class="subtab ${settingsSection==='sync'?'on':''}" onclick="setSettingsSection('sync')">同步</div>
+      <div class="subtab ${settingsSection==='ai'?'on':''}" onclick="setSettingsSection('ai')">AI</div>
+      <div class="subtab ${settingsSection==='fees'?'on':''}" onclick="setSettingsSection('fees')">費用/保證金</div>
+      <div class="subtab ${settingsSection==='links'?'on':''}" onclick="setSettingsSection('links')">常用網站</div>
+      <div class="subtab ${settingsSection==='backup'?'on':''}" onclick="setSettingsSection('backup')">備份</div>
+    </div>
+  </div>`;
+
+  let body = '';
+  if(settingsSection==='general'){
+    body = `
+    <div class="card">
+      <h2>📝 標題</h2>
+      <div class="field"><label>App 名稱</label><input type="text" id="g_apptitle" value="${s.appTitle||'台指交易日誌'}"></div>
+      <button class="ghost-btn" onclick="saveAppTitle()">儲存名稱</button>
+    </div>
+    <div class="card">
+      <h2>📑 分頁顯示與排序</h2>
+      <div class="hint">關閉不常用的分頁、用上下箭頭調整順序，這是裝置本機的顯示偏好。</div>
+      ${tabCfg.map((c,i)=>`
+        <div class="checklist-item">
+          <span class="txt">${tabMap[c.id]?.label || c.id}</span>
+          <span class="chip ${c.visible!==false?'gold-on':''}" style="cursor:pointer;" onclick="toggleTabVisible('${c.id}')">${c.visible!==false?'顯示':'隱藏'}</span>
+          <span style="cursor:pointer;padding:4px 8px;opacity:${i===0?0.3:1};" onclick="${i===0?'':`moveTab('${c.id}',-1)`}">↑</span>
+          <span style="cursor:pointer;padding:4px 8px;opacity:${i===tabCfg.length-1?0.3:1};" onclick="${i===tabCfg.length-1?'':`moveTab('${c.id}',1)`}">↓</span>
+        </div>`).join('')}
+    </div>
+    <div class="card">
+      <h2>🎨 版面顏色</h2>
+      <div class="hint">選一個喜歡的主題色，馬上套用（這是裝置本機的顯示偏好，不會跟其他裝置同步）。</div>
+      <div class="field" style="margin-top:10px;"><label>底色</label>
+        <div class="btnrow">
+          <div class="chip ${(s.mode||'dark')==='dark'?'gold-on':''}" onclick="setMode('dark')">🌙 深色</div>
+          <div class="chip ${s.mode==='light'?'gold-on':''}" onclick="setMode('light')">☀️ 淺色</div>
+        </div>
+      </div>
+      <div class="field" style="margin-top:10px;"><label>主題色</label>
+      <div class="btnrow">
+        ${Object.entries(THEMES).map(([key,t])=>`
+          <div class="chip ${s.theme===key?'gold-on':''}" onclick="setTheme('${key}')" style="border-color:${t.gold};${s.theme===key?`background:color-mix(in srgb, ${t.gold} 18%, transparent);color:${t.gold};`:''}">
+            <span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:${t.gold};margin-right:6px;"></span>${t.name}
+          </div>`).join('')}
+      </div>
+      </div>
+    </div>`;
+  } else if(settingsSection==='sync'){
+    body = `
+    <div class="card">
+      <h2>GitHub 雲端同步</h2>
+      <div class="hint">建議建立一個「私有」repo 專門存放資料檔（例如 trading-data），並用只限該 repo 權限的 Fine-grained token。App 本身可以放在另一個公開 repo 上用 GitHub Pages 開啟。</div>
+      <div class="field" style="margin-top:12px;"><label>Personal Access Token</label><input type="text" id="g_token" value="${s.token}" placeholder="github_pat_xxx"></div>
+      <div class="grid2">
+        <div class="field"><label>帳號 (owner)</label><input type="text" id="g_owner" value="${s.owner}" placeholder="你的github帳號"></div>
+        <div class="field"><label>資料 repo 名稱</label><input type="text" id="g_repo" value="${s.repo}" placeholder="trading-data"></div>
+      </div>
+      <div class="grid2">
+        <div class="field"><label>檔案路徑</label><input type="text" id="g_path" value="${s.path}" placeholder="data.json"></div>
+        <div class="field"><label>分支</label><input type="text" id="g_branch" value="${s.branch}" placeholder="main"></div>
+      </div>
+      <div class="btnrow">
+        <button class="ghost-btn" onclick="saveSettings()">儲存設定</button>
+        <button class="ghost-btn" onclick="pullFromGithub(false)">⬇ 從雲端讀取</button>
+        <button class="ghost-btn" onclick="pushToGithub()">⬆ 立即同步</button>
+      </div>
+    </div>`;
+  } else if(settingsSection==='ai'){
+    body = `
+    <div class="card">
+      <h2>🧠 AI 深度分析設定（Gemini，免費）</h2>
+      <div class="hint">到 <a href="https://aistudio.google.com/apikey" target="_blank">aistudio.google.com/apikey</a> 用 Google 帳號登入，點「Create API key」即可免費取得，不需綁信用卡。免費額度有每分鐘/每日的請求數限制，個人使用通常足夠。Key 只存在這台裝置本機。</div>
+      <div class="field" style="margin-top:10px;"><label>Gemini API Key</label><input type="text" id="g_gemini" value="${s.geminiKey||''}" placeholder="AIzaSy..."></div>
+      <button class="ghost-btn" onclick="saveGeminiKey()">儲存 Gemini Key</button>
+    </div>`;
+  } else if(settingsSection==='fees'){
+    body = `
+    <div class="card">
+      <h2>手續費 / 稅金設定</h2>
+      <div class="hint">直接填你來回一趟實際會扣的「單邊」金額就好，不用算比例。例如來回總共扣 30 元手續費、18 元交易稅，這裡就填單邊手續費 15、單邊交易稅 9（程式會自動 ×2 算進出兩邊）。</div>
+      <div class="grid3" style="margin-top:12px;">
+        <div class="field"><label>手續費(每口/單邊,元)</label><input type="number" id="g_fee" value="${s.feePerSide}"></div>
+        <div class="field"><label>交易稅(每口/單邊,元)</label><input type="number" id="g_tax" value="${s.taxPerSide}"></div>
+        <div class="field"><label>每點金額(元)</label><input type="number" id="g_mult" value="${s.multiplier}"></div>
+      </div>
+      <div class="hint">每點金額：微型台指 10 元；小型台指 50 元；台指期 200 元。</div>
+      <button class="ghost-btn" onclick="saveFeeSettings()">儲存費用設定</button>
+    </div>
+    <div class="card">
+      <h2>🎯 期貨保證金 / 目標</h2>
+      <div class="hint">用來在「期貨紀錄」算風險指標和目標達成度。原始/維持保證金請填「每口」的金額（可到期交所或你的券商查詢當月數字）。</div>
+      <div class="grid3" style="margin-top:10px;">
+        <div class="field"><label>原始保證金(每口)</label><input type="number" id="g_margin_init" value="${s.marginInit||0}"></div>
+        <div class="field"><label>維持保證金(每口)</label><input type="number" id="g_margin_maintain" value="${s.marginMaintain||0}"></div>
+        <div class="field"><label>本月獲利目標(元)</label><input type="number" id="g_futures_goal" value="${s.futuresGoal||0}"></div>
+      </div>
+      <button class="ghost-btn" onclick="saveMarginSettings()">儲存保證金/目標設定</button>
+    </div>`;
+  } else if(settingsSection==='links'){
+    body = renderLinksSettingsSection();
+  } else if(settingsSection==='backup'){
+    body = `
+    <div class="card">
+      <h2>資料備份</h2>
+      <div class="btnrow">
+        <button class="ghost-btn" onclick="exportExcel()">📊 匯出 Excel 報表</button>
+        <button class="ghost-btn" onclick="exportJson()">匯出 JSON</button>
+        <button class="ghost-btn danger-btn" onclick="clearAll()">清空所有資料</button>
+      </div>
+    </div>`;
+  }
+  return sectionTabs + body;
+}
+function hasLocalData(){
+  return (state.trades.length + state.stockTrades.length + state.marketData.length +
+          state.plans.length + state.sentiment.length + state.checklistLog.length +
+          state.stockCashLedger.length) > 0;
+}
+function remoteHasData(remoteData){
+  if(!remoteData) return false;
+  const c = k => (remoteData[k]||[]).length;
+  return (c('trades')+c('stockTrades')+c('marketData')+c('plans')+c('sentiment')+c('checklistLog')+c('stockCashLedger')) > 0;
+}
+async function saveSettings(){
+  state.settings = {
+    ...state.settings,
+    token: document.getElementById('g_token').value.trim(),
+    owner: document.getElementById('g_owner').value.trim(),
+    repo: document.getElementById('g_repo').value.trim(),
+    path: document.getElementById('g_path').value.trim() || 'data.json',
+    branch: document.getElementById('g_branch').value.trim() || 'main'
+  };
+  saveLocal();
+  toast('設定已儲存');
+
+  if(!ghConfigured()) return;
+  setSyncStatus('busy', '檢查雲端資料中…');
+  try{
+    const remote = await ghGet();
+    const remoteFull = remote && remoteHasData(remote.data);
+    const localFull = hasLocalData();
+    if(remoteFull){
+      // 雲端已經有資料：以雲端為準（多裝置情境，雲端是最新的共同資料）
+      await pullFromGithub(true);
+    } else if(localFull){
+      // 雲端是空的，但這台裝置本機有資料：把本機資料推上去，不要被空資料蓋掉
+      state.meta.sha = remote ? remote.sha : null;
+      await pushToGithub();
+      toast('已把本機資料上傳到雲端');
+    } else {
+      setSyncStatus('', '雲端尚無資料');
+    }
+  }catch(e){
+    console.error(e);
+    setSyncStatus('err', '檢查失敗：'+e.message);
+  }
+}
+function saveAppTitle(){
+  state.settings.appTitle = document.getElementById('g_apptitle').value.trim() || '台指交易日誌';
+  markDirty();
+  toast('名稱已儲存');
+}
+function saveGeminiKey(){
+  state.settings.geminiKey = document.getElementById('g_gemini').value.trim();
+  saveLocal();
+  toast('Gemini Key 已儲存');
+}
+function saveFeeSettings(){
+  state.settings.feePerSide = num(document.getElementById('g_fee').value) || 0;
+  state.settings.taxPerSide = num(document.getElementById('g_tax').value) || 0;
+  state.settings.multiplier = num(document.getElementById('g_mult').value) || 10;
+  markDirty(); toast('費用設定已儲存');
+}
+function saveMarginSettings(){
+  state.settings.marginInit = num(document.getElementById('g_margin_init').value) || 0;
+  state.settings.marginMaintain = num(document.getElementById('g_margin_maintain').value) || 0;
+  state.settings.futuresGoal = num(document.getElementById('g_futures_goal').value) || 0;
+  markDirty(); toast('保證金/目標設定已儲存');
+}
+function futuresBalanceAsOf(dateStr){
+  const initial = state.settings.futuresCapital || 0;
+  const ledgerNet = state.futuresCashLedger.filter(l=>l.date<=dateStr)
+    .reduce((s,l)=> s + (l.type==='入金'?l.amount:-l.amount), 0);
+  const tradesNet = state.trades.filter(t=>!isTradeOpen(t) && t.date<=dateStr)
+    .reduce((s,t)=>s+tradeNetAmount(t),0);
+  return initial + ledgerNet + tradesNet;
+}
+function saveFuturesCapital(){
+  state.settings.futuresCapital = num(document.getElementById('fc_capital').value) || 0;
+  markDirty(); toast('已儲存起始資金');
+}
+function addFuturesLedger(){
+  const type = document.querySelector('[data-f="fl_type"].gold-on')?.dataset.v || '入金';
+  const amount = num(document.getElementById('fl_amount').value);
+  if(amount===null){ toast('請輸入金額'); return; }
+  state.futuresCashLedger.push({
+    id:uid(), type, date: document.getElementById('fl_date').value,
+    amount, note: document.getElementById('fl_note').value
+  });
+  markDirty(); toast('已新增紀錄');
+}
+function exportExcel(){
+  if(typeof XLSX === 'undefined'){ toast('Excel 元件載入失敗，請檢查網路連線'); return; }
+  const wb = XLSX.utils.book_new();
+
+  const futuresRows = state.trades.map(t=>({
+    日期:t.date, 盤別:t.session, 方向:t.direction, 順逆勢:t.trend, 上一盤狀態:t.prevState, 下單方式:t.orderType,
+    進場點位:(t.entries||[]).map(e=>e.price).join(','), 進場口數:(t.entries||[]).map(e=>e.qty).join(','),
+    出場點位:(t.exits||[]).map(e=>e.price).join(','), 出場口數:(t.exits||[]).map(e=>e.qty).join(','),
+    毛利點數:Math.round(tradePoints(t)), 手續費稅金:Math.round(tradeCost(t)), 淨損益:Math.round(tradeNetAmount(t)),
+    備註:t.note
+  }));
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(futuresRows), '期貨紀錄');
+
+  const stockRows = state.stockTrades.map(t=>{
+    const exits = getExitLots(t);
+    const soldQty = stockSoldQty(t);
+    const avgExit = soldQty? (exits.reduce((s,l)=>s+l.price*l.qty,0)/soldQty) : null;
+    return {
+      帳戶:t.account, 代號:t.code, 名稱:t.name, 方向:t.direction,
+      進場日期:t.entryDate, 進場均價:t.entryPrice, 進場股數:t.entryQty, 進場手續費:t.entryFee,
+      已賣出股數:soldQty||0, 賣出均價:avgExit, 剩餘股數:stockRemainingQty(t),
+      狀態: stockIsOpen(t)?'持有中':'已賣出',
+      損益:stockProfit(t)===null?'':Math.round(stockProfit(t)), 備註:t.note
+    };
+  });
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(stockRows), '股票紀錄');
+
+  const ledgerRows = state.stockCashLedger.map(l=>({ 帳戶:l.account, 日期:l.date, 類型:l.type, 金額:l.amount, 備註:l.note }));
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(ledgerRows), '股票資金異動');
+
+  const dataRows = state.marketData.map(d=>({
+    日期:d.date, 盤別:d.session, 正逆價差:d.spread, VIX:d.vix, 外資淨口數:d.foreign, 收盤:d.close, 振幅:d.range
+  }));
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(dataRows), '市場數據');
+
+  const planRows = state.plans.map(p=>({
+    日期:p.date, 盤別:p.session, 操作方向:(p.directions||[]).join('、'), 前盤形態:p.pattern,
+    關鍵轉折點:p.keyLevel, 上方關卡:(p.upLevels||[]).map(l=>l.price).join('、'), 下方關卡:(p.downLevels||[]).map(l=>l.price).join('、'),
+    備註:p.note, 盤後開高低收: p.review?`${p.review.open}/${p.review.high}/${p.review.low}/${p.review.close}`:'',
+    複盤符合:(p.review&&p.review.matched||[]).join('、')
+  }));
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(planRows), '盤前規劃');
+
+  XLSX.writeFile(wb, `交易日誌_${todayStr()}.xlsx`);
+  toast('已匯出 Excel');
+}
+function exportJson(){
+  const blob = new Blob([JSON.stringify(state,null,2)], {type:'application/json'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'trading-journal-backup.json';
+  a.click();
+}
+let clearArmed = false;
+function clearAll(){
+  const btn = event.target;
+  if(!clearArmed){
+    clearArmed = true;
+    btn.textContent = '再按一次確認清空';
+    setTimeout(()=>{ clearArmed=false; btn.textContent='清空所有資料'; }, 3000);
+    return;
+  }
+  clearArmed = false;
+  const settings = state.settings, sha = state.meta.sha;
+  state = defaultState();
+  state.settings = settings; state.meta.sha = sha;
+  saveLocal(); render(); toast('已清空');
+}
+
+/* ---------------- shared helpers ---------------- */
+function pick(el){
+  const field = el.dataset.f;
+  document.querySelectorAll(`[data-f="${field}"]`).forEach(e=>e.classList.remove('gold-on','red-on','green-on'));
+  el.classList.add(el.dataset.v==='多' ? 'red-on' : el.dataset.v==='空' ? 'green-on' : 'gold-on');
+}
+function toggleChip(el){ el.classList.toggle('gold-on'); }
+function delItem(coll, id, el){
+  if(el && el.dataset.armed==='1'){
+    state[coll] = state[coll].filter(x=>x.id!==id);
+    markDirty();
+    toast('已刪除');
+    return;
+  }
+  if(el){
+    el.dataset.armed='1';
+    el.dataset.orig = el.textContent;
+    el.textContent = '再點一次刪除';
+    el.style.color = '#fff';
+    el.style.background = 'var(--red)';
+    el.style.borderRadius = '6px';
+    el.style.padding = '2px 8px';
+    clearTimeout(el._t);
+    el._t = setTimeout(()=>{
+      if(!el.isConnected) return;
+      el.dataset.armed='';
+      el.textContent = el.dataset.orig;
+      el.style.color=''; el.style.background=''; el.style.padding='';
+    }, 3000);
+  } else {
+    state[coll] = state[coll].filter(x=>x.id!==id);
+    markDirty();
+    toast('已刪除');
+  }
+}
+function historyDates(list){
+  return [...new Set(list.map(e=>e.date))].filter(Boolean).sort((a,b)=>b.localeCompare(a));
+}
+function limitedHistory(list, dateFilter){
+  if(dateFilter) return list.filter(e=>e.date===dateFilter);
+  return list.slice(0,3);
+}
+function dateJumpPicker(list, currentValue, onChangeFnName){
+  const dates = historyDates(list);
+  if(!dates.length) return '';
+  return `<div class="field"><label>選擇日期查看</label>
+    <select onchange="${onChangeFnName}(this.value)">
+      <option value="">最近 3 筆</option>
+      ${dates.map(d=>`<option value="${d}" ${currentValue===d?'selected':''}>${d}</option>`).join('')}
+    </select>
+  </div>`;
+}
+function showImageModal(src){
+  let modal = document.getElementById('imgModal');
+  if(!modal){
+    modal = document.createElement('div');
+    modal.id = 'imgModal';
+    modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.88);z-index:999;display:flex;align-items:center;justify-content:center;padding:24px;';
+    modal.onclick = ()=>{ modal.style.display='none'; };
+    document.body.appendChild(modal);
+  }
+  modal.innerHTML = `<img src="${src}" style="max-width:100%;max-height:100%;border-radius:8px;">`;
+  modal.style.display = 'flex';
+}
+function escapeHtml(s){
+  return (s||'').replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+function renderNoteText(raw){
+  let html = escapeHtml(raw);
+  html = html.replace(/\*\*(.+?)\*\*/g, '<b>$1</b>');
+  html = html.replace(/\{\{(red|green|gold|blue|big):(.+?)\}\}/g, (m,c,t)=>{
+    if(c==='big') return `<span style="font-size:1.25em;font-weight:700;">${t}</span>`;
+    const colorMap = {red:'var(--red)', green:'var(--green)', gold:'var(--gold)', blue:'var(--cyan)'};
+    return `<span style="color:${colorMap[c]}">${t}</span>`;
+  });
+  return html;
+}
+function wrapSelection(id, before, after){
+  const el = document.getElementById(id);
+  if(!el) return;
+  const start = el.selectionStart, end = el.selectionEnd;
+  const val = el.value;
+  const selected = val.slice(start,end) || '文字';
+  el.value = val.slice(0,start) + before + selected + after + val.slice(end);
+  el.focus();
+  el.selectionStart = start + before.length;
+  el.selectionEnd = start + before.length + selected.length;
+}
+function noteToolbar(targetId){
+  return `<div class="btnrow" style="margin-bottom:6px;">
+    <div class="chip" onclick="wrapSelection('${targetId}','**','**')" style="font-weight:700;">B 粗體</div>
+    <div class="chip" onclick="wrapSelection('${targetId}','{{red:','}}')" style="color:var(--red);">🔴 紅</div>
+    <div class="chip" onclick="wrapSelection('${targetId}','{{green:','}}')" style="color:var(--green);">🟢 綠</div>
+    <div class="chip" onclick="wrapSelection('${targetId}','{{gold:','}}')" style="color:var(--gold);">🟡 黃</div>
+    <div class="chip" onclick="wrapSelection('${targetId}','{{blue:','}}')" style="color:var(--cyan);">🔵 藍</div>
+    <div class="chip" onclick="wrapSelection('${targetId}','{{big:','}}')">🔠 放大</div>
+  </div>`;
+}
+/* ---------------- 主題色 ---------------- */
+const THEMES = {
+  gold:   { name:'金色（預設）', gold:'#d4a53d', dim:'#3a3220' },
+  blue:   { name:'藍色',         gold:'#4a90d9', dim:'#1c2b3a' },
+  green:  { name:'綠色',         gold:'#3fae6a', dim:'#173325' },
+  purple: { name:'紫色',         gold:'#9b6fd1', dim:'#2a2038' },
+  red:    { name:'紅色',         gold:'#d1595f', dim:'#3a2020' },
+  teal:   { name:'青色',         gold:'#3fb8b0', dim:'#173432' },
+};
+function applyTheme(key){
+  const t = THEMES[key] || THEMES.gold;
+  document.documentElement.style.setProperty('--gold', t.gold);
+  document.documentElement.style.setProperty('--gold-dim', t.dim);
+}
+function setTheme(key){
+  state.settings.theme = key;
+  applyTheme(key);
+  markDirty();
+}
+function applyMode(mode){
+  document.body.classList.toggle('light', mode==='light');
+}
+function setMode(mode){
+  state.settings.mode = mode;
+  applyMode(mode);
+  markDirty();
+}
+function bindTabEvents(){}
+
+/* ---------------- init ---------------- */
+applyTheme(state.settings.theme);
+applyMode(state.settings.mode);
+render();
+if(ghConfigured()) pullFromGithub(true);
+</script>
+</body>
+</html>
