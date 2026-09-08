@@ -192,6 +192,11 @@ a{color:inherit;}
 .checklist-pills{ display:flex; gap:.5rem; flex-wrap:wrap; margin-bottom:1rem; }
 .pill{ border:2px solid var(--travel-accent); background:var(--white); color:var(--travel-accent-dark); border-radius:999px; padding:.4rem .9rem; font-size:.85rem; font-weight:600; }
 .pill-active{ background:var(--travel-accent); color:#fff; }
+#view-books .pill{ border-color:var(--book-accent); color:var(--book-accent-dark); }
+#view-books .pill-active{ background:var(--book-accent); color:#fff; }
+#view-recipes .pill{ border-color:var(--recipe-accent); color:var(--recipe-accent-dark); }
+#view-recipes .pill-active{ background:var(--recipe-accent); color:#fff; }
+.recipe-badges{ display:flex; gap:.5rem; align-items:center; flex-wrap:wrap; margin-top:.3rem; }
 .pill-add{ border-style:dashed; }
 .checklist-panel{ background:var(--white); border-radius:18px; padding:1.1rem 1.2rem; box-shadow:0 4px 12px var(--shadow); }
 .checklist-panel-head{ display:flex; align-items:center; gap:.7rem; flex-wrap:wrap; margin-bottom:.5rem; }
@@ -289,7 +294,9 @@ a{color:inherit;}
 .book-author{ font-size:.8rem; color:var(--ink-soft); }
 .book-status{ font-size:.72rem; font-weight:700; padding:.15rem .55rem; border-radius:999px; background:var(--book-bg); color:var(--book-accent-dark); }
 .book-stars{ color:#E0A32E; font-size:.88rem; margin-top:.2rem;}
-.book-notes{ margin-top:.4rem; font-size:.9rem; line-height:1.7; white-space:pre-wrap;}
+.book-section-label{ font-size:.78rem; color:var(--book-accent-dark); font-weight:700; margin-top:.6rem; }
+.book-notes{ margin-top:.2rem; font-size:.9rem; line-height:1.7; }
+.book-category-tag{ display:inline-block; font-size:.72rem; font-weight:600; background:var(--book-bg); color:var(--book-accent-dark); border-radius:999px; padding:.1rem .55rem; margin-top:.3rem; }
 
 @media (max-width:480px){ .desk-item{ width:44%; min-width:150px; } }
 </style>
@@ -421,9 +428,20 @@ function diaryContentToHtml(raw){
   if(String(raw).indexOf('<') === -1) return esc(raw).replace(/\n/g, '<br>');
   return sanitizeHtml(raw);
 }
-function richExec(cmd, value){
-  document.getElementById('diary-content').focus();
+function richExec(targetId, cmd, value){
+  document.getElementById(targetId).focus();
   document.execCommand(cmd, false, value || null);
+}
+function richToolbarHtml(targetId){
+  return `<div class="rte-toolbar">
+    <button type="button" class="rte-btn" onmousedown="event.preventDefault()" onclick="richExec('${targetId}','bold')"><b>B</b></button>
+    <button type="button" class="rte-swatch" style="background:#e74c3c" onmousedown="event.preventDefault()" onclick="richExec('${targetId}','foreColor','#e74c3c')" title="紅"></button>
+    <button type="button" class="rte-swatch" style="background:#3498db" onmousedown="event.preventDefault()" onclick="richExec('${targetId}','foreColor','#3498db')" title="藍"></button>
+    <button type="button" class="rte-swatch" style="background:#27ae60" onmousedown="event.preventDefault()" onclick="richExec('${targetId}','foreColor','#27ae60')" title="綠"></button>
+    <button type="button" class="rte-swatch" style="background:#f1c40f" onmousedown="event.preventDefault()" onclick="richExec('${targetId}','foreColor','#f1c40f')" title="黃"></button>
+    <button type="button" class="rte-swatch" style="background:#9b59b6" onmousedown="event.preventDefault()" onclick="richExec('${targetId}','foreColor','#9b59b6')" title="紫"></button>
+    <button type="button" class="rte-swatch rte-swatch-reset" onmousedown="event.preventDefault()" onclick="richExec('${targetId}','removeFormat')">清除</button>
+  </div>`;
 }
 function attrJson(obj){ return JSON.stringify(obj).replace(/&/g,'&amp;').replace(/'/g,'&#39;'); }
 function val(id){ const el=document.getElementById(id); return el ? el.value : ''; }
@@ -624,7 +642,7 @@ async function saveEntries(moduleKey, arr){
 
 /* ---- app settings (GitHub sync config) ---- */
 const SETTINGS_KEY = 'app:settings';
-const APP_VERSION = 'v1.6';
+const APP_VERSION = 'v1.8';
 let _appSettings = {};
 let _syncState = 'unset'; // unset | ok | warn | err
 async function getAppSettings(){
@@ -955,8 +973,8 @@ const appReadyPromise = (async function initApp(){
 const state = {
   travel: { entries: null, ui: { view:'list', tripId:null, subTab:'flights', dayForm:null, itemForm:null, momentForm:null, expenseForm:null, activeChecklist:null, tripMetaEditId:null, expandedDays:new Set() } },
   diary: { entries: null, editingId: null, calYear: new Date().getFullYear(), calMonth: new Date().getMonth(), selectedDate: new Date().toISOString().slice(0,10) },
-  recipes: { entries: null, editingId: null },
-  books: { entries: null, editingId: null },
+  recipes: { entries: null, editingId: null, activeCategory: null, madeFilter: 'all', minRating: 0 },
+  books: { entries: null, editingId: null, activeCategory: null },
 };
 
 /* ===================== navigation ===================== */
@@ -1741,26 +1759,25 @@ const formBuilders = {
     </div>
     <div class="field">
       <label>內容</label>
-      <div class="rte-toolbar">
-        <button type="button" class="rte-btn" onmousedown="event.preventDefault()" onclick="richExec('bold')"><b>B</b></button>
-        <button type="button" class="rte-swatch" style="background:#e74c3c" onmousedown="event.preventDefault()" onclick="richExec('foreColor','#e74c3c')" title="紅"></button>
-        <button type="button" class="rte-swatch" style="background:#3498db" onmousedown="event.preventDefault()" onclick="richExec('foreColor','#3498db')" title="藍"></button>
-        <button type="button" class="rte-swatch" style="background:#27ae60" onmousedown="event.preventDefault()" onclick="richExec('foreColor','#27ae60')" title="綠"></button>
-        <button type="button" class="rte-swatch" style="background:#f1c40f" onmousedown="event.preventDefault()" onclick="richExec('foreColor','#f1c40f')" title="黃"></button>
-        <button type="button" class="rte-swatch" style="background:#9b59b6" onmousedown="event.preventDefault()" onclick="richExec('foreColor','#9b59b6')" title="紫"></button>
-        <button type="button" class="rte-swatch rte-swatch-reset" onmousedown="event.preventDefault()" onclick="richExec('removeFormat')">清除</button>
-      </div>
+      ${richToolbarHtml('diary-content')}
       <div id="diary-content" class="rte-editor" contenteditable="true" data-placeholder="寫下今天發生的事…">${diaryContentToHtml(e.content)}</div>
     </div>
   `),
   recipes: (e) => formShell('recipes', `
     <div class="row-2">
       <div class="field"><label>菜名</label><input type="text" id="recipe-name" value="${esc(e.name)}" placeholder="蔥油拌麵"></div>
-      <div class="field"><label>分類</label><input type="text" id="recipe-category" value="${esc(e.category)}" placeholder="家常菜／烘焙…"></div>
+      <div class="field"><label>分類（自己打）</label>
+        <input type="text" id="recipe-category" list="recipe-category-list" value="${esc(e.category)}" placeholder="家常菜／烘焙…">
+        <datalist id="recipe-category-list">${recipeCategories().map(c=>`<option value="${esc(c)}">`).join('')}</datalist>
+      </div>
     </div>
     <div class="row-2">
       <div class="field"><label>份量</label><input type="text" id="recipe-servings" value="${esc(e.servings)}" placeholder="2人份"></div>
       <div class="field"><label>評分（0-5）</label><input type="number" id="recipe-rating" min="0" max="5" value="${e.rating!==undefined?e.rating:''}"></div>
+    </div>
+    <div class="field checkbox-field"><label><input type="checkbox" id="recipe-made" ${e.made?'checked':''}> 已經實際做過</label></div>
+    <div class="field"><label>照片</label><input type="file" id="recipe-image" accept="image/*">
+      ${e.image ? `<img src="${e.image}" class="img-preview">` : ''}
     </div>
     <div class="field"><label>食材（一行一項）</label><textarea id="recipe-ingredients" placeholder="麵條 200g&#10;蔥 3根&#10;醬油 1大匙">${esc((e.ingredients||[]).join('\\n'))}</textarea></div>
     <div class="field"><label>做法（一行一步）</label><textarea id="recipe-steps" style="min-height:6rem;" placeholder="1. 蔥切段爆香&#10;2. 拌入麵條">${esc((e.steps||[]).join('\\n'))}</textarea></div>
@@ -1772,6 +1789,10 @@ const formBuilders = {
       <div class="field"><label>作者</label><input type="text" id="book-author" value="${esc(e.author)}" placeholder="安東尼·聖修伯里"></div>
     </div>
     <div class="row-2">
+      <div class="field"><label>分類（自己打，例如財經／育兒／小說）</label>
+        <input type="text" id="book-category" list="book-category-list" value="${esc(e.category)}" placeholder="財經">
+        <datalist id="book-category-list">${bookCategories().map(c=>`<option value="${esc(c)}">`).join('')}</datalist>
+      </div>
       <div class="field"><label>狀態</label>
         <select id="book-status">
           <option value="想讀" ${e.status==='想讀'?'selected':''}>想讀</option>
@@ -1779,10 +1800,21 @@ const formBuilders = {
           <option value="讀完" ${e.status==='讀完'?'selected':''}>讀完</option>
         </select>
       </div>
-      <div class="field"><label>評分（0-5）</label><input type="number" id="book-rating" min="0" max="5" value="${e.rating!==undefined?e.rating:''}"></div>
     </div>
-    <div class="field"><label>完成日期（選填）</label><input type="date" id="book-date" value="${esc(e.dateFinished)}"></div>
-    <div class="field"><label>心得</label><textarea id="book-notes" style="min-height:7rem;" placeholder="這本書帶給你的想法…">${esc(e.notes)}</textarea></div>
+    <div class="row-2">
+      <div class="field"><label>評分（0-5）</label><input type="number" id="book-rating" min="0" max="5" value="${e.rating!==undefined?e.rating:''}"></div>
+      <div class="field"><label>完成日期（選填）</label><input type="date" id="book-date" value="${esc(e.dateFinished)}"></div>
+    </div>
+    <div class="field">
+      <label>心得內容</label>
+      ${richToolbarHtml('book-notes-rich')}
+      <div id="book-notes-rich" class="rte-editor" contenteditable="true" data-placeholder="這本書帶給你的想法…">${diaryContentToHtml(e.notes)}</div>
+    </div>
+    <div class="field">
+      <label>喜歡的句子</label>
+      ${richToolbarHtml('book-quotes-rich')}
+      <div id="book-quotes-rich" class="rte-editor" contenteditable="true" data-placeholder="摘錄書裡打動你的句子…">${diaryContentToHtml(e.quotes)}</div>
+    </div>
   `),
 };
 
@@ -1804,17 +1836,22 @@ async function saveForm(moduleKey){
     entry.servings = val('recipe-servings').trim();
     const ratingVal = val('recipe-rating');
     entry.rating = ratingVal === '' ? undefined : Math.max(0, Math.min(5, parseInt(ratingVal,10)));
+    entry.made = document.getElementById('recipe-made').checked;
+    const recipeFileInput = document.getElementById('recipe-image');
+    if(recipeFileInput && recipeFileInput.files[0]){ entry.image = await fileToDataURL(recipeFileInput.files[0]); }
     entry.ingredients = val('recipe-ingredients').split('\n').map(s=>s.trim()).filter(Boolean);
     entry.steps = val('recipe-steps').split('\n').map(s=>s.trim()).filter(Boolean);
     entry.notes = val('recipe-notes');
   } else if(moduleKey==='books'){
     entry.title = val('book-title').trim() || '未命名書籍';
     entry.author = val('book-author').trim();
+    entry.category = val('book-category').trim();
     entry.status = val('book-status');
     const ratingVal = val('book-rating');
     entry.rating = ratingVal === '' ? undefined : Math.max(0, Math.min(5, parseInt(ratingVal,10)));
     entry.dateFinished = val('book-date');
-    entry.notes = val('book-notes');
+    entry.notes = sanitizeHtml(document.getElementById('book-notes-rich').innerHTML);
+    entry.quotes = sanitizeHtml(document.getElementById('book-quotes-rich').innerHTML);
   }
 
   if(!editingId) list.push(entry);
@@ -1931,25 +1968,75 @@ function renderDiaryModule(){
 const render = {
   diary(){ renderDiaryModule(); },
   recipes(){
-    const list = [...state.recipes.entries].sort((a,b)=>(b.createdAt||0)-(a.createdAt||0));
+    const all = state.recipes.entries;
+    const cats = recipeCategories();
+    const st = state.recipes;
+    const list = all
+      .filter(e => !st.activeCategory || e.category===st.activeCategory)
+      .filter(e => st.madeFilter==='made' ? !!e.made : (st.madeFilter==='notmade' ? !e.made : true))
+      .filter(e => !st.minRating || (e.rating||0) >= st.minRating)
+      .sort((a,b)=>(b.createdAt||0)-(a.createdAt||0));
     const el = document.getElementById('recipes-list');
-    if(list.length===0){ el.innerHTML = '<div class="empty-state">食譜盒是空的，把第一道拿手菜記下來吧。</div>'; return; }
-    el.innerHTML = list.map(e => `
+    let html = '';
+    if(cats.length){
+      html += `<div class="checklist-pills" style="margin-bottom:.5rem;">` +
+        `<button class="pill ${!st.activeCategory?'pill-active':''}" onclick="setRecipeCategoryFilter(null)">全部分類</button>` +
+        cats.map(c => `<button class="pill ${st.activeCategory===c?'pill-active':''}" onclick="setRecipeCategoryFilter('${esc(c)}')">${esc(c)}</button>`).join('') +
+        `</div>`;
+    }
+    html += `<div class="checklist-pills" style="margin-bottom:1rem;">
+      <button class="pill ${st.madeFilter==='all'?'pill-active':''}" onclick="setRecipeMadeFilter('all')">全部</button>
+      <button class="pill ${st.madeFilter==='made'?'pill-active':''}" onclick="setRecipeMadeFilter('made')">✅ 做過</button>
+      <button class="pill ${st.madeFilter==='notmade'?'pill-active':''}" onclick="setRecipeMadeFilter('notmade')">還沒做</button>
+      <select class="day-link-select" style="max-width:130px;" onchange="setRecipeMinRating(this.value)">
+        <option value="0" ${!st.minRating?'selected':''}>評分不限</option>
+        <option value="5" ${st.minRating===5?'selected':''}>5★</option>
+        <option value="4" ${st.minRating===4?'selected':''}>4★以上</option>
+        <option value="3" ${st.minRating===3?'selected':''}>3★以上</option>
+      </select>
+    </div>`;
+    if(list.length===0){
+      html += `<div class="empty-state">${all.length===0 ? '食譜盒是空的，把第一道拿手菜記下來吧。' : '這個條件下還沒有食譜。'}</div>`;
+      el.innerHTML = html;
+      return;
+    }
+    html += list.map(e => `
       <div class="recipe-card">
         <div class="recipe-top"><span class="recipe-name brush">${esc(e.name)}</span><span class="recipe-meta">${esc(e.category||'')}${e.servings?`・${esc(e.servings)}`:''}</span></div>
-        ${e.rating!==undefined?`<div class="recipe-stars">${stars(e.rating)}</div>`:''}
+        <div class="recipe-badges">
+          ${e.made?'<span class="item-badge" style="background:var(--status-done-bg);color:var(--status-done-fg);">✅ 做過</span>':''}
+          ${e.rating!==undefined?`<span class="recipe-stars">${stars(e.rating)}</span>`:''}
+        </div>
+        ${e.image?`<img src="${e.image}" class="item-thumb-sq" style="margin:.5rem 0;" onclick="openImageLightbox(this.src)">`:''}
         ${(e.ingredients&&e.ingredients.length)?`<div class="recipe-section-label">食材</div><ul class="recipe-list">${e.ingredients.map(i=>`<li>${esc(i)}</li>`).join('')}</ul>`:''}
         ${(e.steps&&e.steps.length)?`<div class="recipe-section-label">做法</div><ol class="recipe-list">${e.steps.map(i=>`<li>${esc(i)}</li>`).join('')}</ol>`:''}
         ${e.notes?`<div class="recipe-notes">${esc(e.notes)}</div>`:''}
         <button class="tiny-link" onclick='openForm("recipes", ${attrJson(e)})'>編輯</button>
       </div>`).join('');
+    el.innerHTML = html;
   },
   books(){
     const order = {'在讀':0,'想讀':1,'讀完':2};
-    const list = [...state.books.entries].sort((a,b)=>(order[a.status]??3)-(order[b.status]??3) || (b.createdAt||0)-(a.createdAt||0));
+    const all = state.books.entries;
+    const cats = bookCategories();
+    const active = state.books.activeCategory;
+    const list = all
+      .filter(e => !active || e.category===active)
+      .sort((a,b)=>(order[a.status]??3)-(order[b.status]??3) || (b.createdAt||0)-(a.createdAt||0));
     const el = document.getElementById('books-list');
-    if(list.length===0){ el.innerHTML = '<div class="empty-state">書架還空著，寫下正在讀或想讀的第一本書。</div>'; return; }
-    el.innerHTML = list.map(e => `
+    let html = '';
+    if(cats.length){
+      html += `<div class="checklist-pills" style="margin-bottom:1rem;">` +
+        `<button class="pill ${!active?'pill-active':''}" onclick="setBookCategoryFilter(null)">全部</button>` +
+        cats.map(c => `<button class="pill ${active===c?'pill-active':''}" onclick="setBookCategoryFilter('${esc(c)}')">${esc(c)}</button>`).join('') +
+        `</div>`;
+    }
+    if(list.length===0){
+      html += `<div class="empty-state">${active ? '這個分類還沒有書。' : '書架還空著，寫下正在讀或想讀的第一本書。'}</div>`;
+      el.innerHTML = html;
+      return;
+    }
+    html += list.map(e => `
       <div class="book-card">
         <div class="book-spine"></div>
         <div class="book-main">
@@ -1957,14 +2044,34 @@ const render = {
             <div><span class="book-title brush">${esc(e.title)}</span>${e.author?`<div class="book-author">${esc(e.author)}</div>`:''}</div>
             <span class="book-status">${esc(e.status||'想讀')}</span>
           </div>
+          ${e.category?`<span class="book-category-tag">${esc(e.category)}</span>`:''}
           ${e.rating!==undefined?`<div class="book-stars">${stars(e.rating)}</div>`:''}
           ${e.dateFinished?`<div class="book-author">完成於 ${esc(fmtDate(e.dateFinished))}</div>`:''}
-          ${e.notes?`<div class="book-notes">${esc(e.notes)}</div>`:''}
+          ${e.notes?`<div class="book-section-label">心得內容</div><div class="book-notes">${diaryContentToHtml(e.notes)}</div>`:''}
+          ${e.quotes?`<div class="book-section-label">喜歡的句子</div><div class="book-notes">${diaryContentToHtml(e.quotes)}</div>`:''}
           <button class="tiny-link" onclick='openForm("books", ${attrJson(e)})'>編輯</button>
         </div>
       </div>`).join('');
+    el.innerHTML = html;
   }
 };
+function recipeCategories(){
+  const set = new Set();
+  (state.recipes.entries||[]).forEach(e => { if(e.category) set.add(e.category); });
+  return [...set].sort();
+}
+function setRecipeCategoryFilter(cat){ state.recipes.activeCategory = cat; render.recipes(); }
+function setRecipeMadeFilter(f){ state.recipes.madeFilter = f; render.recipes(); }
+function setRecipeMinRating(v){ state.recipes.minRating = parseInt(v,10) || 0; render.recipes(); }
+function bookCategories(){
+  const set = new Set();
+  (state.books.entries||[]).forEach(e => { if(e.category) set.add(e.category); });
+  return [...set].sort();
+}
+function setBookCategoryFilter(cat){
+  state.books.activeCategory = cat;
+  render.books();
+}
 </script>
 </body>
 </html>
