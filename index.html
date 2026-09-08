@@ -624,7 +624,7 @@ async function saveEntries(moduleKey, arr){
 
 /* ---- app settings (GitHub sync config) ---- */
 const SETTINGS_KEY = 'app:settings';
-const APP_VERSION = 'v1.5';
+const APP_VERSION = 'v1.6';
 let _appSettings = {};
 let _syncState = 'unset'; // unset | ok | warn | err
 async function getAppSettings(){
@@ -655,7 +655,8 @@ function githubApiUrl(){
 }
 async function githubGetFile(){
   const res = await fetch(githubApiUrl() + '?ref=' + encodeURIComponent(githubBranch()), {
-    headers: { 'Authorization': 'token ' + _appSettings.githubToken, 'Accept': 'application/vnd.github+json' }
+    headers: { 'Authorization': 'token ' + _appSettings.githubToken, 'Accept': 'application/vnd.github+json' },
+    cache: 'no-store'
   });
   if(res.status === 404) return { notFound: true };
   if(!res.ok) throw new Error('GitHub 讀取失敗（' + res.status + '）');
@@ -689,7 +690,7 @@ function currentRepoFromLocation(){
 }
 async function githubGetFileAtRepoPath(owner, repo, path){
   const url = `https://api.github.com/repos/${owner}/${repo}/contents/${path.split('/').map(encodeURIComponent).join('/')}`;
-  const res = await fetch(url, { headers: { 'Authorization': 'token ' + _appSettings.githubToken, 'Accept': 'application/vnd.github+json' } });
+  const res = await fetch(url, { headers: { 'Authorization': 'token ' + _appSettings.githubToken, 'Accept': 'application/vnd.github+json' }, cache: 'no-store' });
   if(res.status === 404) return { notFound: true };
   if(!res.ok) throw new Error('讀取失敗（' + res.status + '）');
   const json = await res.json();
