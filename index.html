@@ -305,7 +305,7 @@ a{color:inherit;}
 <button class="sync-status-badge" onclick="openSettingsModal()" title="設定" aria-label="設定">
   <span id="sync-dot" class="sync-dot"></span>
   <span id="sync-status-text">尚未設定同步</span>
-  <span class="sync-version">v1.0</span>
+  <span id="sync-version-badge" class="sync-version"></span>
   <span>⚙️</span>
 </button>
 <div id="sync-banner" class="sync-banner hidden"></div>
@@ -642,7 +642,7 @@ async function saveEntries(moduleKey, arr){
 
 /* ---- app settings (GitHub sync config) ---- */
 const SETTINGS_KEY = 'app:settings';
-const APP_VERSION = 'v1.8';
+const APP_VERSION = 'v2.0';
 let _appSettings = {};
 let _syncState = 'unset'; // unset | ok | warn | err
 async function getAppSettings(){
@@ -941,6 +941,8 @@ async function pullFromGithub(){
 function updateSyncStatusBadge(){
   const dot = document.getElementById('sync-dot');
   const text = document.getElementById('sync-status-text');
+  const versionEl = document.getElementById('sync-version-badge');
+  if(versionEl) versionEl.textContent = APP_VERSION;
   if(!dot || !text) return;
   dot.classList.remove('ok','warn','err');
   if(!githubConfigured()){ dot.classList.add('warn'); text.textContent = '尚未設定同步'; return; }
@@ -1781,6 +1783,7 @@ const formBuilders = {
     </div>
     <div class="field"><label>食材（一行一項）</label><textarea id="recipe-ingredients" placeholder="麵條 200g&#10;蔥 3根&#10;醬油 1大匙">${esc((e.ingredients||[]).join('\\n'))}</textarea></div>
     <div class="field"><label>做法（一行一步）</label><textarea id="recipe-steps" style="min-height:6rem;" placeholder="1. 蔥切段爆香&#10;2. 拌入麵條">${esc((e.steps||[]).join('\\n'))}</textarea></div>
+    <div class="field"><label>參考連結</label><input type="text" id="recipe-link" value="${esc(e.refLink)}" placeholder="貼上食譜來源網址或影片連結"></div>
     <div class="field"><label>備註</label><textarea id="recipe-notes" placeholder="下次想調整的地方…">${esc(e.notes)}</textarea></div>
   `),
   books: (e) => formShell('books', `
@@ -1841,6 +1844,7 @@ async function saveForm(moduleKey){
     if(recipeFileInput && recipeFileInput.files[0]){ entry.image = await fileToDataURL(recipeFileInput.files[0]); }
     entry.ingredients = val('recipe-ingredients').split('\n').map(s=>s.trim()).filter(Boolean);
     entry.steps = val('recipe-steps').split('\n').map(s=>s.trim()).filter(Boolean);
+    entry.refLink = val('recipe-link').trim();
     entry.notes = val('recipe-notes');
   } else if(moduleKey==='books'){
     entry.title = val('book-title').trim() || '未命名書籍';
@@ -2011,6 +2015,7 @@ const render = {
         ${(e.ingredients&&e.ingredients.length)?`<div class="recipe-section-label">食材</div><ul class="recipe-list">${e.ingredients.map(i=>`<li>${esc(i)}</li>`).join('')}</ul>`:''}
         ${(e.steps&&e.steps.length)?`<div class="recipe-section-label">做法</div><ol class="recipe-list">${e.steps.map(i=>`<li>${esc(i)}</li>`).join('')}</ol>`:''}
         ${e.notes?`<div class="recipe-notes">${esc(e.notes)}</div>`:''}
+        ${e.refLink?`<div class="recipe-notes"><a href="${esc(e.refLink)}" target="_blank" rel="noopener">🔗 參考連結</a></div>`:''}
         <button class="tiny-link" onclick='openForm("recipes", ${attrJson(e)})'>編輯</button>
       </div>`).join('');
     el.innerHTML = html;
