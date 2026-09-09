@@ -642,7 +642,7 @@ async function saveEntries(moduleKey, arr){
 
 /* ---- app settings (GitHub sync config) ---- */
 const SETTINGS_KEY = 'app:settings';
-const APP_VERSION = 'v2.0';
+const APP_VERSION = 'v2.1';
 let _appSettings = {};
 let _syncState = 'unset'; // unset | ok | warn | err
 async function getAppSettings(){
@@ -1781,8 +1781,8 @@ const formBuilders = {
     <div class="field"><label>照片</label><input type="file" id="recipe-image" accept="image/*">
       ${e.image ? `<img src="${e.image}" class="img-preview">` : ''}
     </div>
-    <div class="field"><label>食材（一行一項）</label><textarea id="recipe-ingredients" placeholder="麵條 200g&#10;蔥 3根&#10;醬油 1大匙">${esc((e.ingredients||[]).join('\\n'))}</textarea></div>
-    <div class="field"><label>做法（一行一步）</label><textarea id="recipe-steps" style="min-height:6rem;" placeholder="1. 蔥切段爆香&#10;2. 拌入麵條">${esc((e.steps||[]).join('\\n'))}</textarea></div>
+    <div class="field"><label>食材（一行一項）</label><textarea id="recipe-ingredients" placeholder="麵條 200g&#10;蔥 3根&#10;醬油 1大匙">${esc((e.ingredients||[]).join('\n'))}</textarea></div>
+    <div class="field"><label>做法（一行一步）</label><textarea id="recipe-steps" style="min-height:6rem;" placeholder="1. 蔥切段爆香&#10;2. 拌入麵條">${esc((e.steps||[]).join('\n'))}</textarea></div>
     <div class="field"><label>參考連結</label><input type="text" id="recipe-link" value="${esc(e.refLink)}" placeholder="貼上食譜來源網址或影片連結"></div>
     <div class="field"><label>備註</label><textarea id="recipe-notes" placeholder="下次想調整的地方…">${esc(e.notes)}</textarea></div>
   `),
