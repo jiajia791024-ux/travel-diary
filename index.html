@@ -20,6 +20,7 @@
   --diary-accent:#6FA8DC;  --diary-accent-dark:#4A85BB;  --diary-bg:#E8F2FC;  --diary-bg-2:#F3F9FE;
   --recipe-accent:#8FC17E; --recipe-accent-dark:#5F9C4E; --recipe-bg:#EAF7E4; --recipe-bg-2:#F4FBF0;
   --book-accent:#C98BC9;   --book-accent-dark:#A15FA1;   --book-bg:#F6EAF8;   --book-bg-2:#FBF2FC;
+  --fitness-accent:#4FB6A8; --fitness-accent-dark:#33897D; --fitness-bg:#E1F5F1; --fitness-bg-2:#F0FBF9;
 
   --status-planning-bg:#FFE3C2; --status-planning-fg:#B5651D;
   --status-soon-bg:#FFD6D6;     --status-soon-fg:#C0392B;
@@ -89,6 +90,8 @@ a{color:inherit;}
 .desk-item.i-recipes .badge{ background:var(--recipe-bg); }
 .desk-item.i-books{ border-color:var(--book-accent); }
 .desk-item.i-books .badge{ background:var(--book-bg); }
+.desk-item.i-fitness{ border-color:var(--fitness-accent); }
+.desk-item.i-fitness .badge{ background:var(--fitness-bg); }
 
 /* ============ shared module chrome ============ */
 .module-view{ min-height:100vh; padding-bottom:4rem; }
@@ -135,6 +138,9 @@ a{color:inherit;}
 #view-recipes{background:var(--recipe-bg-2);}  #view-recipes.module-title{}
 #view-recipes .module-title, #view-recipes .back-link{ color:var(--recipe-accent-dark); } #view-recipes .btn-primary{ background:var(--recipe-accent); }
 #view-books{  background:var(--book-bg-2); }   #view-books  .module-title, #view-books  .back-link{ color:var(--book-accent-dark); }  #view-books  .btn-primary{ background:var(--book-accent); }
+#view-fitness{ background:var(--fitness-bg-2); } #view-fitness .module-title, #view-fitness .back-link{ color:var(--fitness-accent-dark); } #view-fitness .btn-primary{ background:var(--fitness-accent); }
+#view-fitness .pill{ border-color:var(--fitness-accent); color:var(--fitness-accent-dark); }
+#view-fitness .pill-active{ background:var(--fitness-accent); color:#fff; }
 
 /* ---------- Travel: trip list ---------- */
 .trip-card{ background:var(--white); border-radius:20px; padding:1.1rem 1.2rem; margin-bottom:1rem; box-shadow:0 4px 12px var(--shadow); cursor:pointer; transition:transform .15s ease; }
@@ -298,6 +304,22 @@ a{color:inherit;}
 .book-notes{ margin-top:.2rem; font-size:.9rem; line-height:1.7; }
 .book-category-tag{ display:inline-block; font-size:.72rem; font-weight:600; background:var(--book-bg); color:var(--book-accent-dark); border-radius:999px; padding:.1rem .55rem; margin-top:.3rem; }
 
+/* ---------- Fitness ---------- */
+.fitness-people-row{ display:flex; gap:.5rem; flex-wrap:wrap; align-items:center; margin-bottom:1.1rem; }
+.goals-card{ background:var(--white); border-radius:18px; padding:1.1rem 1.2rem; margin-bottom:1.2rem; box-shadow:0 4px 12px var(--shadow); }
+.goals-card-head{ display:flex; justify-content:space-between; align-items:center; margin-bottom:.5rem; }
+.goals-grid{ display:grid; grid-template-columns:repeat(2,1fr); gap:.5rem .9rem; font-size:.88rem; }
+.goals-grid div{ display:flex; justify-content:space-between; border-bottom:1px dashed #eee0cc; padding:.3rem 0; }
+.goals-grid span:last-child{ font-weight:700; color:var(--fitness-accent-dark); }
+.fitness-log-card{ background:var(--white); border-radius:18px; padding:1.1rem 1.2rem; margin-bottom:1rem; box-shadow:0 4px 12px var(--shadow); }
+.fitness-log-top{ display:flex; justify-content:space-between; align-items:baseline; flex-wrap:wrap; gap:.5rem; }
+.fitness-log-date{ font-family:'ZCOOL KuaiLe',cursive; font-size:1.2rem; color:var(--fitness-accent-dark); }
+.fitness-metrics{ display:flex; gap:.7rem; flex-wrap:wrap; font-size:.82rem; color:var(--ink-soft); margin-top:.4rem; }
+.fitness-metrics span{ background:var(--fitness-bg); border-radius:999px; padding:.15rem .6rem; }
+.fitness-exercise-block{ margin-top:.5rem; font-size:.88rem; background:var(--fitness-bg); border-radius:12px; padding:.6rem .8rem; }
+.ai-feedback-block{ margin-top:.7rem; background:#fff8ea; border:1px dashed #e6cf8f; border-radius:12px; padding:.7rem .9rem; font-size:.86rem; line-height:1.6; white-space:pre-wrap; }
+.ai-feedback-label{ font-size:.76rem; font-weight:700; color:#b5901c; margin-bottom:.3rem; }
+
 @media (max-width:480px){ .desk-item{ width:44%; min-width:150px; } }
 </style>
 </head>
@@ -322,6 +344,7 @@ a{color:inherit;}
     <button class="desk-item i-diary" onclick="goTo('diary')"><span class="badge">📔</span><span class="d-title brush">生活日記</span><span class="d-tag">今天過得如何？</span></button>
     <button class="desk-item i-recipes" onclick="goTo('recipes')"><span class="badge">🍲</span><span class="d-title brush">食譜卡</span><span class="d-tag">來記一道好菜</span></button>
     <button class="desk-item i-books" onclick="goTo('books')"><span class="badge">📚</span><span class="d-title brush">讀書心得</span><span class="d-tag">最近在讀什麼？</span></button>
+    <button class="desk-item i-fitness" onclick="goTo('fitness')"><span class="badge">🏃</span><span class="d-title brush">運動規劃</span><span class="d-tag">今天動了嗎？</span></button>
   </div>
 </section>
 
@@ -412,6 +435,23 @@ a{color:inherit;}
   <div class="module-body">
     <div id="books-form-slot"></div>
     <div id="books-list"></div>
+  </div>
+</section>
+
+<!-- ================= FITNESS ================= -->
+<section id="view-fitness" class="module-view hidden">
+  <div class="module-header">
+    <div>
+      <button class="back-link" onclick="goTo('home')">← 回到桌面</button>
+      <h2 class="module-title brush">運動規劃</h2>
+      <p class="module-sub">目標、飲食、運動與每日狀態</p>
+    </div>
+    <button class="btn btn-primary" onclick="openFitnessLogForm()">+ 新增今日紀錄</button>
+  </div>
+  <div class="module-body">
+    <div id="fitness-people-bar"></div>
+    <div id="fitness-form-slot"></div>
+    <div id="fitness-content"></div>
   </div>
 </section>
 
@@ -548,10 +588,31 @@ function settingsModalHtml(msg){
       ${msg ? `<div class="settings-status settings-status-msg">${esc(msg)}</div>` : ''}
     </div>
     <div class="settings-section">
+      <div class="settings-section-title">🤖 AI 教練</div>
+      <p class="settings-hint">運動規劃裡每筆紀錄都能按「請教練給建議」，會用你填的 API Key 直接呼叫 Gemini 或 GPT。Key 一樣是存在這台裝置的瀏覽器裡，不會經過任何伺服器；建議申請有額度限制的 Key。</p>
+      <div class="field"><label>使用哪一個</label>
+        <select id="set-ai-provider">
+          <option value="" ${!_appSettings.aiProvider?'selected':''}>尚未選擇</option>
+          <option value="gemini" ${_appSettings.aiProvider==='gemini'?'selected':''}>Google Gemini</option>
+          <option value="openai" ${_appSettings.aiProvider==='openai'?'selected':''}>OpenAI GPT</option>
+        </select>
+      </div>
+      <div class="field"><label>API Key</label><input type="password" id="set-ai-key" value="${esc(_appSettings.aiApiKey)}" placeholder="貼上你的 API Key"></div>
+      <div class="field"><label>模型（選填，留空用預設）</label><input type="text" id="set-ai-model" value="${esc(_appSettings.aiModel)}" placeholder="例如 gemini-2.0-flash 或 gpt-4o-mini"></div>
+      <div class="form-actions"><button class="btn btn-primary btn-sm" onclick="saveAiSettings()">儲存 AI 設定</button></div>
+    </div>
+    <div class="settings-section">
       <div class="settings-section-title">📊 匯出 Excel</div>
       <p class="settings-hint">即將推出。</p>
     </div>
     <div class="form-actions"><button class="btn btn-ghost" onclick="closeSettingsModal()">關閉</button></div>`;
+}
+async function saveAiSettings(){
+  _appSettings.aiProvider = val('set-ai-provider');
+  _appSettings.aiApiKey = val('set-ai-key').trim();
+  _appSettings.aiModel = val('set-ai-model').trim();
+  await setAppSettings(_appSettings);
+  document.getElementById('settings-modal-content').innerHTML = settingsModalHtml('AI 設定已儲存。');
 }
 async function saveGithubSettings(){
   _appSettings.githubToken = val('set-gh-token').trim();
@@ -611,7 +672,7 @@ function fileToDataURL(file, maxDim, quality){
 }
 
 /* ===================== storage (window.storage when available, else localStorage; optional GitHub sync layer) ===================== */
-const STORAGE_KEYS = { travel:'travel:entries', diary:'diary:entries', recipes:'recipes:entries', books:'books:entries' };
+const STORAGE_KEYS = { travel:'travel:entries', diary:'diary:entries', recipes:'recipes:entries', books:'books:entries', fitness:'fitness:entries' };
 const HAS_CLAUDE_STORAGE = (typeof window.storage !== 'undefined' && window.storage !== null);
 
 async function localGet(key){
@@ -642,7 +703,7 @@ async function saveEntries(moduleKey, arr){
 
 /* ---- app settings (GitHub sync config) ---- */
 const SETTINGS_KEY = 'app:settings';
-const APP_VERSION = 'v2.1';
+const APP_VERSION = 'v3.0';
 let _appSettings = {};
 let _syncState = 'unset'; // unset | ok | warn | err
 async function getAppSettings(){
@@ -890,7 +951,8 @@ async function buildFullSnapshot(){
   const diary = state.diary.entries !== null ? state.diary.entries : await loadEntries('diary');
   const recipes = state.recipes.entries !== null ? state.recipes.entries : await loadEntries('recipes');
   const books = state.books.entries !== null ? state.books.entries : await loadEntries('books');
-  return { travel, diary, recipes, books, updatedAt: Date.now() };
+  const fitness = state.fitness.entries !== null ? state.fitness.entries : await loadEntries('fitness');
+  return { travel, diary, recipes, books, fitness, updatedAt: Date.now() };
 }
 async function pushToGithub(){
   if(!githubConfigured()) return;
@@ -933,6 +995,7 @@ async function pullFromGithub(){
   await saveEntriesRaw('diary', data.diary || []);
   await saveEntriesRaw('recipes', data.recipes || []);
   await saveEntriesRaw('books', data.books || []);
+  await saveEntriesRaw('fitness', data.fitness || []);
   _appSettings.lastSyncedAt = Date.now();
   await setAppSettings(_appSettings);
   _syncState = 'ok';
@@ -977,6 +1040,7 @@ const state = {
   diary: { entries: null, editingId: null, calYear: new Date().getFullYear(), calMonth: new Date().getMonth(), selectedDate: new Date().toISOString().slice(0,10) },
   recipes: { entries: null, editingId: null, activeCategory: null, madeFilter: 'all', minRating: 0 },
   books: { entries: null, editingId: null, activeCategory: null },
+  fitness: { entries: null, activePersonId: null, editingLogId: null, logFormOpen: false, personFormOpen: false },
 };
 
 /* ===================== navigation ===================== */
@@ -1014,6 +1078,19 @@ async function initModule(moduleKey){
     const entries = await loadEntries('diary');
     state.diary.entries = entries;
     renderDiaryModule();
+    return;
+  }
+  if(moduleKey === 'fitness'){
+    document.getElementById('fitness-content').innerHTML = '<div class="loading-msg">翻頁中…</div>';
+    const entries = await loadEntries('fitness');
+    entries.forEach(p => { if(!p.logs) p.logs = []; if(!p.goals) p.goals = {}; });
+    state.fitness.entries = entries;
+    if(entries.length===0){
+      entries.push({ id: uid(), name: '我', goals: {}, logs: [] });
+      await saveEntriesRaw('fitness', entries);
+    }
+    if(!state.fitness.activePersonId) state.fitness.activePersonId = entries[0].id;
+    renderFitnessModule();
     return;
   }
   const listEl = document.getElementById(moduleKey + '-list');
@@ -1747,6 +1824,264 @@ function closeForm(moduleKey){
   state[moduleKey].editingId = null;
   if(moduleKey === 'diary'){ renderDiaryEntryPanel(); return; }
   document.getElementById(moduleKey + '-form-slot').innerHTML = '';
+}
+
+/* ===================== FITNESS module ===================== */
+function getActivePerson(){ return (state.fitness.entries||[]).find(p=>p.id===state.fitness.activePersonId); }
+async function persistFitness(){ await saveEntries('fitness', state.fitness.entries); }
+
+function renderFitnessModule(){
+  const people = state.fitness.entries || [];
+  document.getElementById('fitness-people-bar').innerHTML = `<div class="fitness-people-row">` +
+    people.map(p => `<button class="pill ${p.id===state.fitness.activePersonId?'pill-active':''}" onclick="selectFitnessPerson('${p.id}')">${esc(p.name)}</button>`).join('') +
+    `<button class="pill pill-add" onclick="addFitnessPerson()">＋ 新增家人</button></div>`;
+  renderFitnessContent();
+}
+function addFitnessPerson(){
+  showPromptModal('家人的稱呼？例如：媽媽、老公、女兒', '', async (name) => {
+    const p = { id: uid(), name, goals: {}, logs: [] };
+    state.fitness.entries.push(p);
+    state.fitness.activePersonId = p.id;
+    await persistFitness();
+    renderFitnessModule();
+  });
+}
+function deleteFitnessPerson(id){
+  if((state.fitness.entries||[]).length <= 1){ showInfoModal('至少要保留一位，沒辦法刪除最後一位。'); return; }
+  showConfirmModal('確定要刪除這個人的所有目標與紀錄嗎？無法復原。', async () => {
+    state.fitness.entries = state.fitness.entries.filter(p=>p.id!==id);
+    if(state.fitness.activePersonId===id) state.fitness.activePersonId = state.fitness.entries[0].id;
+    await persistFitness();
+    renderFitnessModule();
+  });
+}
+function selectFitnessPerson(id){
+  state.fitness.activePersonId = id;
+  state.fitness.logFormOpen = false; state.fitness.personFormOpen = false; state.fitness.editingLogId = null;
+  document.getElementById('fitness-form-slot').innerHTML = '';
+  renderFitnessModule();
+}
+
+function goalsCardHtml(person){
+  const g = person.goals || {};
+  const rows = [
+    ['目標體重', g.weight, 'kg'], ['目標體脂', g.bodyFat, '%'], ['目標 BMI', g.bmi, ''],
+    ['目標腰圍', g.waist, 'cm'], ['目標臀圍', g.hip, 'cm'],
+  ].filter(r => r[1]!==undefined && r[1]!=='');
+  return `<div class="goals-card">
+    <div class="goals-card-head">
+      <span class="brush" style="font-size:1.15rem;">🎯 ${esc(person.name)}的目標</span>
+      <button class="tiny-link" onclick="openGoalsForm()">編輯目標</button>
+    </div>
+    ${rows.length ? `<div class="goals-grid">${rows.map(r=>`<div><span>${r[0]}</span><span>${esc(String(r[1]))}${r[2]}</span></div>`).join('')}</div>` : `<div class="empty-state" style="padding:1rem;">還沒設定目標，點「編輯目標」開始吧。</div>`}
+    ${g.extra ? `<div style="margin-top:.6rem;font-size:.85rem;color:var(--ink-soft);">📌 ${esc(g.extra)}</div>` : ''}
+    ${(state.fitness.entries||[]).length>1 ? `<button class="tiny-link tiny-link-danger" style="margin-top:.6rem;" onclick="deleteFitnessPerson('${person.id}')">刪除${esc(person.name)}</button>` : ''}
+  </div>`;
+}
+function openGoalsForm(){
+  const p = getActivePerson();
+  const g = p.goals || {};
+  document.getElementById('fitness-form-slot').innerHTML = `<div class="form-panel">
+    <div class="row-2">
+      <div class="field"><label>目標體重（kg）</label><input type="number" step="0.1" id="goal-weight" value="${g.weight!==undefined?g.weight:''}"></div>
+      <div class="field"><label>目標體脂（%）</label><input type="number" step="0.1" id="goal-bodyfat" value="${g.bodyFat!==undefined?g.bodyFat:''}"></div>
+    </div>
+    <div class="row-2">
+      <div class="field"><label>目標 BMI</label><input type="number" step="0.1" id="goal-bmi" value="${g.bmi!==undefined?g.bmi:''}"></div>
+      <div class="field"><label>目標腰圍（cm）</label><input type="number" step="0.1" id="goal-waist" value="${g.waist!==undefined?g.waist:''}"></div>
+    </div>
+    <div class="field"><label>目標臀圍（cm）</label><input type="number" step="0.1" id="goal-hip" value="${g.hip!==undefined?g.hip:''}"></div>
+    <div class="field"><label>其他目標（自由填寫）</label><textarea id="goal-extra" placeholder="例如：每週運動 4 次、戒糖…">${esc(g.extra)}</textarea></div>
+    <div class="form-actions">
+      <button class="btn btn-primary" onclick="saveGoalsForm()">儲存</button>
+      <button class="btn btn-ghost" onclick="closeGoalsForm()">取消</button>
+    </div>
+  </div>`;
+}
+function closeGoalsForm(){ document.getElementById('fitness-form-slot').innerHTML = ''; renderFitnessContent(); }
+async function saveGoalsForm(){
+  const p = getActivePerson();
+  p.goals = {
+    weight: val('goal-weight')===''?undefined:parseFloat(val('goal-weight')),
+    bodyFat: val('goal-bodyfat')===''?undefined:parseFloat(val('goal-bodyfat')),
+    bmi: val('goal-bmi')===''?undefined:parseFloat(val('goal-bmi')),
+    waist: val('goal-waist')===''?undefined:parseFloat(val('goal-waist')),
+    hip: val('goal-hip')===''?undefined:parseFloat(val('goal-hip')),
+    extra: val('goal-extra').trim(),
+  };
+  document.getElementById('fitness-form-slot').innerHTML = '';
+  await persistFitness();
+  renderFitnessContent();
+}
+
+function fitnessLogFormHtml(log){
+  const l = log || {};
+  return `<div class="form-panel">
+    <div class="field"><label>日期</label><input type="date" id="log-date" value="${esc(l.date || new Date().toISOString().slice(0,10))}"></div>
+    <div class="row-2">
+      <div class="field"><label>體重（kg）</label><input type="number" step="0.1" id="log-weight" value="${l.weight!==undefined?l.weight:''}"></div>
+      <div class="field"><label>體脂（%）</label><input type="number" step="0.1" id="log-bodyfat" value="${l.bodyFat!==undefined?l.bodyFat:''}"></div>
+    </div>
+    <div class="row-2">
+      <div class="field"><label>腰圍（cm）</label><input type="number" step="0.1" id="log-waist" value="${l.waist!==undefined?l.waist:''}"></div>
+      <div class="field"><label>臀圍（cm）</label><input type="number" step="0.1" id="log-hip" value="${l.hip!==undefined?l.hip:''}"></div>
+    </div>
+    <div class="row-2">
+      <div class="field"><label>攝取熱量（大卡）</label><input type="number" id="log-calories" value="${l.calorieIntake!==undefined?l.calorieIntake:''}"></div>
+      <div class="field"><label>飲水量（ml）</label><input type="number" id="log-water" value="${l.water!==undefined?l.water:''}"></div>
+    </div>
+    <div class="field"><label>飲食內容（選填）</label><textarea id="log-meals" placeholder="早餐、午餐、晚餐吃了什麼…">${esc(l.mealNotes)}</textarea></div>
+    <div class="field checkbox-field"><label><input type="checkbox" id="log-bowel" ${l.bowel?'checked':''}> 今天有排便</label></div>
+    <div class="subtab-h" style="margin-top:.8rem;">🏋️ 運動</div>
+    <div class="row-2">
+      <div class="field"><label>訓練項目／部位</label><input type="text" id="log-ex-type" value="${esc(l.exerciseType)}" placeholder="跑步／胸背／瑜伽…"></div>
+      <div class="field"><label>時間（分鐘）</label><input type="number" id="log-ex-duration" value="${l.exerciseDuration!==undefined?l.exerciseDuration:''}"></div>
+    </div>
+    <div class="field"><label>估計消耗熱量（大卡）</label><input type="number" id="log-ex-calories" value="${l.caloriesBurned!==undefined?l.caloriesBurned:''}"></div>
+    <div class="form-actions">
+      <button class="btn btn-primary" onclick="saveFitnessLogForm()">儲存</button>
+      <button class="btn btn-ghost" onclick="closeFitnessLogForm()">取消</button>
+      ${log ? `<button class="btn btn-danger" onclick="deleteFitnessLog('${log.id}')">刪除</button>` : ''}
+    </div>
+  </div>`;
+}
+function openFitnessLogForm(editId){
+  state.fitness.editingLogId = editId || null;
+  const p = getActivePerson();
+  const log = editId ? p.logs.find(l=>l.id===editId) : null;
+  document.getElementById('fitness-form-slot').innerHTML = fitnessLogFormHtml(log);
+  document.getElementById('fitness-form-slot').scrollIntoView({behavior:'smooth', block:'start'});
+}
+function closeFitnessLogForm(){ state.fitness.editingLogId = null; document.getElementById('fitness-form-slot').innerHTML = ''; renderFitnessContent(); }
+async function saveFitnessLogForm(){
+  const p = getActivePerson();
+  const editId = state.fitness.editingLogId;
+  let log = editId ? p.logs.find(l=>l.id===editId) : { id: uid(), createdAt: Date.now() };
+  log.date = val('log-date') || new Date().toISOString().slice(0,10);
+  log.weight = val('log-weight')===''?undefined:parseFloat(val('log-weight'));
+  log.bodyFat = val('log-bodyfat')===''?undefined:parseFloat(val('log-bodyfat'));
+  log.waist = val('log-waist')===''?undefined:parseFloat(val('log-waist'));
+  log.hip = val('log-hip')===''?undefined:parseFloat(val('log-hip'));
+  log.calorieIntake = val('log-calories')===''?undefined:parseFloat(val('log-calories'));
+  log.water = val('log-water')===''?undefined:parseFloat(val('log-water'));
+  log.mealNotes = val('log-meals').trim();
+  log.bowel = document.getElementById('log-bowel').checked;
+  log.exerciseType = val('log-ex-type').trim();
+  log.exerciseDuration = val('log-ex-duration')===''?undefined:parseFloat(val('log-ex-duration'));
+  log.caloriesBurned = val('log-ex-calories')===''?undefined:parseFloat(val('log-ex-calories'));
+  if(!editId) p.logs.push(log);
+  state.fitness.editingLogId = null;
+  document.getElementById('fitness-form-slot').innerHTML = '';
+  await persistFitness();
+  renderFitnessContent();
+}
+function deleteFitnessLog(id){
+  showConfirmModal('確定要刪除這筆紀錄嗎？', async () => {
+    const p = getActivePerson();
+    p.logs = p.logs.filter(l=>l.id!==id);
+    state.fitness.editingLogId = null;
+    document.getElementById('fitness-form-slot').innerHTML = '';
+    await persistFitness();
+    renderFitnessContent();
+  });
+}
+
+function fitnessLogCardHtml(log){
+  const metrics = [];
+  if(log.weight!==undefined) metrics.push('⚖️ ' + log.weight + 'kg');
+  if(log.bodyFat!==undefined) metrics.push('体脂 ' + log.bodyFat + '%');
+  if(log.waist!==undefined) metrics.push('腰 ' + log.waist + 'cm');
+  if(log.hip!==undefined) metrics.push('臀 ' + log.hip + 'cm');
+  if(log.calorieIntake!==undefined) metrics.push('🍽️ ' + log.calorieIntake + '大卡');
+  if(log.water!==undefined) metrics.push('💧 ' + log.water + 'ml');
+  metrics.push(log.bowel ? '💩 有排便' : '💩 未排便');
+  return `<div class="fitness-log-card">
+    <div class="fitness-log-top">
+      <span class="fitness-log-date brush">${esc(fmtDate(log.date))}</span>
+      <button class="tiny-link" onclick="openFitnessLogForm('${log.id}')">編輯</button>
+    </div>
+    <div class="fitness-metrics">${metrics.map(m=>`<span>${esc(m)}</span>`).join('')}</div>
+    ${log.mealNotes?`<div class="fitness-exercise-block" style="background:var(--white);border:1px dashed #eee0cc;">🍽️ ${esc(log.mealNotes)}</div>`:''}
+    ${(log.exerciseType||log.exerciseDuration||log.caloriesBurned)?`<div class="fitness-exercise-block">🏋️ ${esc(log.exerciseType||'運動')}${log.exerciseDuration?`・${esc(String(log.exerciseDuration))}分鐘`:''}${log.caloriesBurned?`・約消耗 ${esc(String(log.caloriesBurned))}大卡`:''}</div>`:''}
+    ${log.aiFeedback ? `<div class="ai-feedback-block"><div class="ai-feedback-label">🤖 教練建議</div>${esc(log.aiFeedback)}</div>` : ''}
+    <div class="form-actions" style="margin-top:.6rem;">
+      <button class="btn btn-ghost btn-sm" onclick="askAiCoach('${log.id}')">🤖 請教練給建議</button>
+    </div>
+  </div>`;
+}
+function renderFitnessContent(){
+  const p = getActivePerson();
+  if(!p){ document.getElementById('fitness-content').innerHTML = ''; return; }
+  const logs = [...(p.logs||[])].sort((a,b)=>(b.date||'').localeCompare(a.date||'') || (b.createdAt||0)-(a.createdAt||0));
+  let html = goalsCardHtml(p);
+  if(logs.length===0){
+    html += `<div class="empty-state">還沒有紀錄，點右上角「+ 新增今日紀錄」開始吧。</div>`;
+  } else {
+    html += logs.map(fitnessLogCardHtml).join('');
+  }
+  document.getElementById('fitness-content').innerHTML = html;
+}
+
+/* ---- AI coach (Gemini / GPT) ---- */
+function buildCoachPrompt(person, log){
+  const g = person.goals || {};
+  const goalLines = [];
+  if(g.weight!==undefined) goalLines.push(`目標體重 ${g.weight}kg`);
+  if(g.bodyFat!==undefined) goalLines.push(`目標體脂 ${g.bodyFat}%`);
+  if(g.bmi!==undefined) goalLines.push(`目標BMI ${g.bmi}`);
+  if(g.waist!==undefined) goalLines.push(`目標腰圍 ${g.waist}cm`);
+  if(g.hip!==undefined) goalLines.push(`目標臀圍 ${g.hip}cm`);
+  if(g.extra) goalLines.push(g.extra);
+  const logLines = [];
+  if(log.weight!==undefined) logLines.push(`體重 ${log.weight}kg`);
+  if(log.bodyFat!==undefined) logLines.push(`體脂 ${log.bodyFat}%`);
+  if(log.waist!==undefined) logLines.push(`腰圍 ${log.waist}cm`);
+  if(log.hip!==undefined) logLines.push(`臀圍 ${log.hip}cm`);
+  if(log.calorieIntake!==undefined) logLines.push(`攝取熱量 ${log.calorieIntake}大卡`);
+  if(log.mealNotes) logLines.push(`飲食內容：${log.mealNotes}`);
+  if(log.water!==undefined) logLines.push(`飲水 ${log.water}ml`);
+  logLines.push(log.bowel ? '今天有排便' : '今天沒有排便');
+  if(log.exerciseType) logLines.push(`運動：${log.exerciseType}，${log.exerciseDuration||'?'}分鐘，約消耗${log.caloriesBurned||'?'}大卡`);
+  return `你是一位親切、專業的健身與飲食教練。這是「${person.name}」的目標：\n${goalLines.join('、') || '（尚未設定目標）'}\n\n這是${log.date}當天的紀錄：\n${logLines.join('\n')}\n\n請用繁體中文給予簡短具體的回饋與建議（200字以內），可以包含飲食調整、運動安排、生活習慣的建議。`;
+}
+async function callAiCoach(prompt){
+  const provider = _appSettings.aiProvider;
+  if(!provider || !_appSettings.aiApiKey) throw new Error('尚未設定 AI 教練，請到 ⚙️ 設定裡填入 API Key。');
+  if(provider === 'gemini'){
+    const model = _appSettings.aiModel || 'gemini-2.0-flash';
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${encodeURIComponent(_appSettings.aiApiKey)}`;
+    const res = await fetch(url, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ contents:[{ parts:[{ text: prompt }] }] }) });
+    if(!res.ok){ const t = await res.text().catch(()=>''); throw new Error('AI 回應失敗（'+res.status+'）'+t.slice(0,150)); }
+    const json = await res.json();
+    return (json.candidates && json.candidates[0] && json.candidates[0].content && json.candidates[0].content.parts && json.candidates[0].content.parts[0] && json.candidates[0].content.parts[0].text) || '（沒有收到回應內容）';
+  } else {
+    const model = _appSettings.aiModel || 'gpt-4o-mini';
+    const res = await fetch('https://api.openai.com/v1/chat/completions', {
+      method:'POST',
+      headers:{ 'Content-Type':'application/json', 'Authorization':'Bearer ' + _appSettings.aiApiKey },
+      body: JSON.stringify({ model, messages:[{ role:'user', content: prompt }] })
+    });
+    if(!res.ok){ const t = await res.text().catch(()=>''); throw new Error('AI 回應失敗（'+res.status+'）'+t.slice(0,150)); }
+    const json = await res.json();
+    return (json.choices && json.choices[0] && json.choices[0].message && json.choices[0].message.content) || '（沒有收到回應內容）';
+  }
+}
+async function askAiCoach(logId){
+  const p = getActivePerson();
+  const log = p.logs.find(l=>l.id===logId);
+  if(!log) return;
+  showSyncBanner('🤖 教練思考中…');
+  try{
+    const prompt = buildCoachPrompt(p, log);
+    const feedback = await callAiCoach(prompt);
+    log.aiFeedback = feedback.trim();
+    await persistFitness();
+    renderFitnessContent();
+    showSyncBanner('✅ 教練建議已產生', true);
+  }catch(e){
+    document.getElementById('sync-banner').classList.add('hidden');
+    showInfoModal('請教練失敗：' + e.message);
+  }
 }
 
 const formBuilders = {
