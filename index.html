@@ -604,7 +604,7 @@ function settingsModalHtml(msg){
     </div>
     <div class="settings-section">
       <div class="settings-section-title">🤖 AI 教練</div>
-      <p class="settings-hint">運動規劃裡每筆紀錄都能按「請教練給建議」，會用你填的 API Key 直接呼叫 Gemini 或 GPT。Key 一樣是存在這台裝置的瀏覽器裡，不會經過任何伺服器；建議申請有額度限制的 Key。</p>
+      <p class="settings-hint">運動規劃裡每筆紀錄都能按「請教練給建議」，會用你填的 API Key 直接呼叫 Gemini 或 GPT。Key 一樣是存在這台裝置的瀏覽器裡，不會經過任何伺服器；建議申請有額度限制的 Key。模型名稱 Google／OpenAI 偶爾會更新或下架舊版本，如果出現「model not found」之類的錯誤，可以到 ai.google.dev 或 platform.openai.com 查目前可用的模型名稱，填到下面「模型」欄位裡覆蓋預設值。</p>
       <div class="field"><label>使用哪一個</label>
         <select id="set-ai-provider">
           <option value="" ${!_appSettings.aiProvider?'selected':''}>尚未選擇</option>
@@ -613,7 +613,7 @@ function settingsModalHtml(msg){
         </select>
       </div>
       <div class="field"><label>API Key</label><input type="password" id="set-ai-key" value="${esc(_appSettings.aiApiKey)}" placeholder="貼上你的 API Key"></div>
-      <div class="field"><label>模型（選填，留空用預設）</label><input type="text" id="set-ai-model" value="${esc(_appSettings.aiModel)}" placeholder="例如 gemini-2.0-flash 或 gpt-4o-mini"></div>
+      <div class="field"><label>模型（選填，留空用預設）</label><input type="text" id="set-ai-model" value="${esc(_appSettings.aiModel)}" placeholder="例如 gemini-3.8-flash 或 gpt-4o-mini"></div>
       <div class="form-actions"><button class="btn btn-primary btn-sm" onclick="saveAiSettings()">儲存 AI 設定</button></div>
     </div>
     <div class="settings-section">
@@ -718,7 +718,7 @@ async function saveEntries(moduleKey, arr){
 
 /* ---- app settings (GitHub sync config) ---- */
 const SETTINGS_KEY = 'app:settings';
-const APP_VERSION = 'v3.1';
+const APP_VERSION = 'v3.2';
 let _appSettings = {};
 let _syncState = 'unset'; // unset | ok | warn | err
 async function getAppSettings(){
@@ -2066,7 +2066,7 @@ async function callAiChat(messages){
   const provider = _appSettings.aiProvider;
   if(!provider || !_appSettings.aiApiKey) throw new Error('尚未設定 AI 教練，請到 ⚙️ 設定裡填入 API Key。');
   if(provider === 'gemini'){
-    const model = _appSettings.aiModel || 'gemini-2.0-flash';
+    const model = _appSettings.aiModel || 'gemini-3.8-flash';
     const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${encodeURIComponent(_appSettings.aiApiKey)}`;
     const contents = messages.map(m => ({ role: m.role==='model'?'model':'user', parts:[{ text: m.text }] }));
     const res = await fetch(url, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ contents }) });
