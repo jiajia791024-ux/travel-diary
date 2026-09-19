@@ -319,6 +319,16 @@ a{color:inherit;}
 .fitness-exercise-block{ margin-top:.5rem; font-size:.88rem; background:var(--fitness-bg); border-radius:12px; padding:.6rem .8rem; }
 .ai-feedback-block{ margin-top:.7rem; background:#fff8ea; border:1px dashed #e6cf8f; border-radius:12px; padding:.7rem .9rem; font-size:.86rem; line-height:1.6; white-space:pre-wrap; }
 .ai-feedback-label{ font-size:.76rem; font-weight:700; color:#b5901c; margin-bottom:.3rem; }
+.chat-modal-box{ max-width:520px; height:82vh; max-height:82vh; display:flex; flex-direction:column; overflow:hidden; }
+.chat-header{ display:flex; justify-content:space-between; align-items:center; margin-bottom:.3rem; flex-shrink:0; }
+.chat-hint{ font-size:.78rem; color:var(--ink-soft); margin:0 0 .6rem; line-height:1.5; flex-shrink:0; }
+.chat-messages{ flex:1; overflow-y:auto; display:flex; flex-direction:column; gap:.5rem; padding:.3rem 2px; }
+.chat-bubble{ max-width:85%; padding:.55rem .8rem; border-radius:14px; font-size:.88rem; line-height:1.55; white-space:pre-wrap; }
+.chat-user{ align-self:flex-end; background:var(--fitness-accent); color:#fff; border-bottom-right-radius:4px; }
+.chat-coach{ align-self:flex-start; background:var(--fitness-bg); color:var(--ink); border-bottom-left-radius:4px; }
+.chat-loading{ opacity:.6; font-style:italic; }
+.chat-input-row{ display:flex; gap:.5rem; margin-top:.6rem; align-items:flex-end; flex-shrink:0; }
+.chat-input-row textarea{ flex:1; min-height:2.6rem; max-height:6rem; border:2px solid #ecdfc9; border-radius:12px; padding:.5rem .7rem; font-size:.9rem; resize:vertical; font-family:'Noto Sans TC',sans-serif; }
 
 @media (max-width:480px){ .desk-item{ width:44%; min-width:150px; } }
 </style>
@@ -388,6 +398,11 @@ a{color:inherit;}
 <!-- image lightbox (tap any photo thumbnail to enlarge) -->
 <div id="image-lightbox-overlay" class="modal-overlay lightbox-overlay hidden" onclick="closeImageLightbox()">
   <img id="image-lightbox-img" class="lightbox-img" src="" alt="">
+</div>
+
+<!-- AI coach chat modal -->
+<div id="coach-chat-overlay" class="modal-overlay hidden">
+  <div class="modal-box modal-box-wide chat-modal-box" id="coach-chat-content"></div>
 </div>
 
 <!-- ================= DIARY ================= -->
@@ -703,7 +718,7 @@ async function saveEntries(moduleKey, arr){
 
 /* ---- app settings (GitHub sync config) ---- */
 const SETTINGS_KEY = 'app:settings';
-const APP_VERSION = 'v3.0';
+const APP_VERSION = 'v3.1';
 let _appSettings = {};
 let _syncState = 'unset'; // unset | ok | warn | err
 async function getAppSettings(){
@@ -1871,7 +1886,10 @@ function goalsCardHtml(person){
   return `<div class="goals-card">
     <div class="goals-card-head">
       <span class="brush" style="font-size:1.15rem;">🎯 ${esc(person.name)}的目標</span>
-      <button class="tiny-link" onclick="openGoalsForm()">編輯目標</button>
+      <div style="display:flex;gap:.6rem;">
+        <button class="tiny-link" onclick="openGoalsForm()">編輯目標</button>
+        <button class="tiny-link" onclick="openCoachChatModal()">💬 跟教練聊聊</button>
+      </div>
     </div>
     ${rows.length ? `<div class="goals-grid">${rows.map(r=>`<div><span>${r[0]}</span><span>${esc(String(r[1]))}${r[2]}</span></div>`).join('')}</div>` : `<div class="empty-state" style="padding:1rem;">還沒設定目標，點「編輯目標」開始吧。</div>`}
     ${g.extra ? `<div style="margin-top:.6rem;font-size:.85rem;color:var(--ink-soft);">📌 ${esc(g.extra)}</div>` : ''}
@@ -2044,26 +2062,121 @@ function buildCoachPrompt(person, log){
   if(log.exerciseType) logLines.push(`運動：${log.exerciseType}，${log.exerciseDuration||'?'}分鐘，約消耗${log.caloriesBurned||'?'}大卡`);
   return `你是一位親切、專業的健身與飲食教練。這是「${person.name}」的目標：\n${goalLines.join('、') || '（尚未設定目標）'}\n\n這是${log.date}當天的紀錄：\n${logLines.join('\n')}\n\n請用繁體中文給予簡短具體的回饋與建議（200字以內），可以包含飲食調整、運動安排、生活習慣的建議。`;
 }
-async function callAiCoach(prompt){
+async function callAiChat(messages){
   const provider = _appSettings.aiProvider;
   if(!provider || !_appSettings.aiApiKey) throw new Error('尚未設定 AI 教練，請到 ⚙️ 設定裡填入 API Key。');
   if(provider === 'gemini'){
     const model = _appSettings.aiModel || 'gemini-2.0-flash';
     const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${encodeURIComponent(_appSettings.aiApiKey)}`;
-    const res = await fetch(url, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ contents:[{ parts:[{ text: prompt }] }] }) });
+    const contents = messages.map(m => ({ role: m.role==='model'?'model':'user', parts:[{ text: m.text }] }));
+    const res = await fetch(url, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ contents }) });
     if(!res.ok){ const t = await res.text().catch(()=>''); throw new Error('AI 回應失敗（'+res.status+'）'+t.slice(0,150)); }
     const json = await res.json();
     return (json.candidates && json.candidates[0] && json.candidates[0].content && json.candidates[0].content.parts && json.candidates[0].content.parts[0] && json.candidates[0].content.parts[0].text) || '（沒有收到回應內容）';
   } else {
     const model = _appSettings.aiModel || 'gpt-4o-mini';
+    const oaMessages = messages.map(m => ({ role: m.role==='model'?'assistant':'user', content: m.text }));
     const res = await fetch('https://api.openai.com/v1/chat/completions', {
       method:'POST',
       headers:{ 'Content-Type':'application/json', 'Authorization':'Bearer ' + _appSettings.aiApiKey },
-      body: JSON.stringify({ model, messages:[{ role:'user', content: prompt }] })
+      body: JSON.stringify({ model, messages: oaMessages })
     });
     if(!res.ok){ const t = await res.text().catch(()=>''); throw new Error('AI 回應失敗（'+res.status+'）'+t.slice(0,150)); }
     const json = await res.json();
     return (json.choices && json.choices[0] && json.choices[0].message && json.choices[0].message.content) || '（沒有收到回應內容）';
+  }
+}
+async function callAiCoach(prompt){
+  return await callAiChat([{ role:'user', text: prompt }]);
+}
+function recentLogsSummary(person, count){
+  const logs = [...(person.logs||[])].sort((a,b)=>(b.date||'').localeCompare(a.date||'')).slice(0, count||7);
+  return logs.map(l => {
+    const parts = [];
+    if(l.weight!==undefined) parts.push('體重'+l.weight+'kg');
+    if(l.bodyFat!==undefined) parts.push('體脂'+l.bodyFat+'%');
+    if(l.calorieIntake!==undefined) parts.push('攝取'+l.calorieIntake+'大卡');
+    if(l.exerciseType) parts.push('運動:'+l.exerciseType+(l.exerciseDuration?l.exerciseDuration+'分':''));
+    parts.push(l.bowel?'有排便':'未排便');
+    return l.date + '：' + (parts.join('、') || '（無詳細數據）');
+  }).join('\n');
+}
+function goalLinesFor(person){
+  const g = person.goals || {};
+  const lines = [];
+  if(g.weight!==undefined) lines.push(`目標體重 ${g.weight}kg`);
+  if(g.bodyFat!==undefined) lines.push(`目標體脂 ${g.bodyFat}%`);
+  if(g.bmi!==undefined) lines.push(`目標BMI ${g.bmi}`);
+  if(g.waist!==undefined) lines.push(`目標腰圍 ${g.waist}cm`);
+  if(g.hip!==undefined) lines.push(`目標臀圍 ${g.hip}cm`);
+  if(g.extra) lines.push(g.extra);
+  return lines;
+}
+function buildCoachChatMessages(person){
+  const context = `你是一位親切、專業的健身與飲食教練，服務對象是「${person.name}」。\n目前的目標：${goalLinesFor(person).join('、') || '尚未設定，可以先跟使用者討論怎麼訂目標'}\n最近的紀錄（最新幾筆）：\n${recentLogsSummary(person) || '（目前還沒有任何紀錄）'}\n\n接下來請用繁體中文，跟使用者討論健身目標、飲食、訓練計畫等相關問題，語氣親切、具體、務實，會參考上面的目標與紀錄給建議。`;
+  const messages = [
+    { role:'user', text: context },
+    { role:'model', text: `好的，我了解${person.name}目前的狀況了！我們可以先聊聊要怎麼設定目標和訓練計畫，或者你想先問什麼都可以喔。` },
+  ];
+  (person.coachChat||[]).forEach(m => messages.push({ role: m.role, text: m.text }));
+  return messages;
+}
+function openCoachChatModal(){
+  const p = getActivePerson();
+  renderCoachChatModal(p);
+  document.getElementById('coach-chat-overlay').classList.remove('hidden');
+}
+function closeCoachChatModal(){ document.getElementById('coach-chat-overlay').classList.add('hidden'); }
+function renderCoachChatModal(person){
+  const chat = person.coachChat || [];
+  const bubbles = chat.map(m => `<div class="chat-bubble ${m.role==='user'?'chat-user':'chat-coach'}">${esc(m.text)}</div>`).join('');
+  document.getElementById('coach-chat-content').innerHTML = `
+    <div class="chat-header">
+      <span class="brush" style="font-size:1.15rem;">💬 跟${esc(person.name)}的教練聊聊</span>
+      <div style="display:flex;gap:.4rem;">
+        ${chat.length ? `<button class="tiny-link tiny-link-danger" onclick="clearCoachChat()">清空對話</button>` : ''}
+        <button class="icon-btn" onclick="closeCoachChatModal()">✕</button>
+      </div>
+    </div>
+    <p class="chat-hint">教練會參考${esc(person.name)}的目標和最近紀錄來回答。可以先討論怎麼設定目標、訂訓練計畫，之後執行一陣子再回來這裡跟教練聊聊進度、請他依狀況調整計畫。</p>
+    <div class="chat-messages" id="chat-messages-scroll">${bubbles || '<div class="empty-state">還沒有聊過，輸入訊息開始吧。</div>'}</div>
+    <div class="chat-input-row">
+      <textarea id="chat-input" placeholder="想問教練什麼呢？" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendCoachChatMessage();}"></textarea>
+      <button class="btn btn-primary btn-sm" onclick="sendCoachChatMessage()">送出</button>
+    </div>`;
+  const scrollEl = document.getElementById('chat-messages-scroll');
+  if(scrollEl) scrollEl.scrollTop = scrollEl.scrollHeight;
+}
+function clearCoachChat(){
+  const p = getActivePerson();
+  showConfirmModal('確定要清空跟教練的對話紀錄嗎？', async () => {
+    p.coachChat = [];
+    await persistFitness();
+    renderCoachChatModal(p);
+  }, '確定清空');
+}
+async function sendCoachChatMessage(){
+  const input = document.getElementById('chat-input');
+  const text = input.value.trim();
+  if(!text) return;
+  const p = getActivePerson();
+  if(!p.coachChat) p.coachChat = [];
+  p.coachChat.push({ role:'user', text });
+  input.value = '';
+  renderCoachChatModal(p);
+  const scrollEl = document.getElementById('chat-messages-scroll');
+  if(scrollEl) scrollEl.insertAdjacentHTML('beforeend', `<div class="chat-bubble chat-coach chat-loading" id="chat-loading-bubble">教練思考中…</div>`);
+  if(scrollEl) scrollEl.scrollTop = scrollEl.scrollHeight;
+  try{
+    const messages = buildCoachChatMessages(p);
+    const reply = await callAiChat(messages);
+    p.coachChat.push({ role:'model', text: reply.trim() });
+    await persistFitness();
+    renderCoachChatModal(p);
+  }catch(e){
+    p.coachChat.pop();
+    renderCoachChatModal(p);
+    showInfoModal('教練回覆失敗：' + e.message);
   }
 }
 async function askAiCoach(logId){
