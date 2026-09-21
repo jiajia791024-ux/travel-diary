@@ -329,6 +329,7 @@ a{color:inherit;}
 .chat-loading{ opacity:.6; font-style:italic; }
 .chat-input-row{ display:flex; gap:.5rem; margin-top:.6rem; align-items:flex-end; flex-shrink:0; }
 .chat-input-row textarea{ flex:1; min-height:2.6rem; max-height:6rem; border:2px solid #ecdfc9; border-radius:12px; padding:.5rem .7rem; font-size:.9rem; resize:vertical; font-family:'Noto Sans TC',sans-serif; }
+.trend-chart-wrap{ background:var(--white); border-radius:14px; padding:.8rem; box-shadow:0 4px 12px var(--shadow); }
 
 @media (max-width:480px){ .desk-item{ width:44%; min-width:150px; } }
 </style>
@@ -403,6 +404,11 @@ a{color:inherit;}
 <!-- AI coach chat modal -->
 <div id="coach-chat-overlay" class="modal-overlay hidden">
   <div class="modal-box modal-box-wide chat-modal-box" id="coach-chat-content"></div>
+</div>
+
+<!-- trend chart modal -->
+<div id="trend-chart-overlay" class="modal-overlay hidden">
+  <div class="modal-box modal-box-wide" id="trend-chart-content"></div>
 </div>
 
 <!-- ================= DIARY ================= -->
@@ -718,7 +724,7 @@ async function saveEntries(moduleKey, arr){
 
 /* ---- app settings (GitHub sync config) ---- */
 const SETTINGS_KEY = 'app:settings';
-const APP_VERSION = 'v3.3';
+const APP_VERSION = 'v3.4';
 let _appSettings = {};
 let _syncState = 'unset'; // unset | ok | warn | err
 async function getAppSettings(){
@@ -1888,6 +1894,7 @@ function goalsCardHtml(person){
       <span class="brush" style="font-size:1.15rem;">🎯 ${esc(person.name)}的目標</span>
       <div style="display:flex;gap:.6rem;">
         <button class="tiny-link" onclick="openGoalsForm()">編輯目標</button>
+        <button class="tiny-link" onclick="openTrendChartModal()">📈 數據曲線</button>
         <button class="tiny-link" onclick="openCoachChatModal()">💬 跟教練聊聊</button>
       </div>
     </div>
@@ -1941,9 +1948,10 @@ function fitnessLogFormHtml(log){
       <div class="field"><label>體脂（%）</label><input type="number" step="0.1" id="log-bodyfat" value="${l.bodyFat!==undefined?l.bodyFat:''}"></div>
     </div>
     <div class="row-2">
+      <div class="field"><label>BMI</label><input type="number" step="0.1" id="log-bmi" value="${l.bmi!==undefined?l.bmi:''}"></div>
       <div class="field"><label>腰圍（cm）</label><input type="number" step="0.1" id="log-waist" value="${l.waist!==undefined?l.waist:''}"></div>
-      <div class="field"><label>臀圍（cm）</label><input type="number" step="0.1" id="log-hip" value="${l.hip!==undefined?l.hip:''}"></div>
     </div>
+    <div class="field"><label>臀圍（cm）</label><input type="number" step="0.1" id="log-hip" value="${l.hip!==undefined?l.hip:''}"></div>
     <div class="row-2">
       <div class="field"><label>攝取熱量（大卡）</label><input type="number" id="log-calories" value="${l.calorieIntake!==undefined?l.calorieIntake:''}"></div>
       <div class="field"><label>飲水量（ml）</label><input type="number" id="log-water" value="${l.water!==undefined?l.water:''}"></div>
@@ -1978,6 +1986,7 @@ async function saveFitnessLogForm(){
   log.date = val('log-date') || new Date().toISOString().slice(0,10);
   log.weight = val('log-weight')===''?undefined:parseFloat(val('log-weight'));
   log.bodyFat = val('log-bodyfat')===''?undefined:parseFloat(val('log-bodyfat'));
+  log.bmi = val('log-bmi')===''?undefined:parseFloat(val('log-bmi'));
   log.waist = val('log-waist')===''?undefined:parseFloat(val('log-waist'));
   log.hip = val('log-hip')===''?undefined:parseFloat(val('log-hip'));
   log.calorieIntake = val('log-calories')===''?undefined:parseFloat(val('log-calories'));
@@ -2008,6 +2017,7 @@ function fitnessLogCardHtml(log){
   const metrics = [];
   if(log.weight!==undefined) metrics.push('⚖️ ' + log.weight + 'kg');
   if(log.bodyFat!==undefined) metrics.push('体脂 ' + log.bodyFat + '%');
+  if(log.bmi!==undefined) metrics.push('BMI ' + log.bmi);
   if(log.waist!==undefined) metrics.push('腰 ' + log.waist + 'cm');
   if(log.hip!==undefined) metrics.push('臀 ' + log.hip + 'cm');
   if(log.calorieIntake!==undefined) metrics.push('🍽️ ' + log.calorieIntake + '大卡');
@@ -2053,6 +2063,7 @@ function buildCoachPrompt(person, log){
   const logLines = [];
   if(log.weight!==undefined) logLines.push(`體重 ${log.weight}kg`);
   if(log.bodyFat!==undefined) logLines.push(`體脂 ${log.bodyFat}%`);
+  if(log.bmi!==undefined) logLines.push(`BMI ${log.bmi}`);
   if(log.waist!==undefined) logLines.push(`腰圍 ${log.waist}cm`);
   if(log.hip!==undefined) logLines.push(`臀圍 ${log.hip}cm`);
   if(log.calorieIntake!==undefined) logLines.push(`攝取熱量 ${log.calorieIntake}大卡`);
@@ -2069,6 +2080,65 @@ function simpleMarkdownToHtml(text){
   return out;
 }
 function sleep(ms){ return new Promise(r => setTimeout(r, ms)); }
+
+/* ---- trend chart ---- */
+const FITNESS_METRICS = [
+  ['weight','體重','kg'], ['bodyFat','體脂','%'], ['bmi','BMI',''], ['waist','腰圍','cm'], ['hip','臀圍','cm'],
+];
+function fmtDateShortMD(dateStr){
+  const p = (dateStr||'').split('-');
+  if(p.length!==3) return dateStr||'';
+  return `${parseInt(p[1],10)}/${parseInt(p[2],10)}`;
+}
+function buildTrendChartSvg(logs, metricKey, unit){
+  const pts = (logs||[]).filter(l => l[metricKey]!==undefined && l[metricKey]!==null && l[metricKey]!=='')
+    .sort((a,b)=>(a.date||'').localeCompare(b.date||''));
+  if(pts.length===0) return `<div class="empty-state">這個項目還沒有資料，新增紀錄時填上就會出現在圖上。</div>`;
+  if(pts.length===1){
+    return `<div class="empty-state">目前只有一筆資料（${esc(fmtDate(pts[0].date))}：${esc(String(pts[0][metricKey]))}${unit}），累積兩筆以上才會畫成曲線。</div>`;
+  }
+  const W=600, H=260, padL=48, padR=16, padT=16, padB=32;
+  const vals = pts.map(p=>parseFloat(p[metricKey]));
+  let minY = Math.min(...vals), maxY = Math.max(...vals);
+  if(minY===maxY){ minY -= 1; maxY += 1; }
+  const rangeY = maxY - minY;
+  const stepX = (W-padL-padR)/(pts.length-1);
+  const xAt = i => padL + stepX*i;
+  const yAt = v => padT + (H-padT-padB) * (1 - (v-minY)/rangeY);
+  const linePoints = pts.map((p,i)=>`${xAt(i)},${yAt(parseFloat(p[metricKey]))}`).join(' ');
+  const dots = pts.map((p,i)=>`<circle cx="${xAt(i)}" cy="${yAt(parseFloat(p[metricKey]))}" r="3.5" fill="var(--fitness-accent)"></circle>`).join('');
+  const labelEvery = Math.max(1, Math.ceil(pts.length/6));
+  const xLabels = pts.map((p,i)=> (i%labelEvery===0 || i===pts.length-1) ? `<text x="${xAt(i)}" y="${H-padB+16}" font-size="10" text-anchor="middle" fill="#9c9284">${esc(fmtDateShortMD(p.date))}</text>` : '').join('');
+  const midY = (minY+maxY)/2;
+  const yLabels = [minY, midY, maxY].map(v => `<text x="${padL-8}" y="${yAt(v)+4}" font-size="10" text-anchor="end" fill="#9c9284">${v.toFixed(1)}</text><line x1="${padL}" x2="${W-padR}" y1="${yAt(v)}" y2="${yAt(v)}" stroke="#eee0cc" stroke-width="1"></line>`).join('');
+  return `<svg viewBox="0 0 ${W} ${H}" style="width:100%;height:auto;display:block;">
+    ${yLabels}
+    <polyline points="${linePoints}" fill="none" stroke="var(--fitness-accent)" stroke-width="2.5"></polyline>
+    ${dots}
+    ${xLabels}
+  </svg>`;
+}
+function openTrendChartModal(){
+  if(!state.fitness.chartMetric) state.fitness.chartMetric = 'weight';
+  renderTrendChartModal();
+  document.getElementById('trend-chart-overlay').classList.remove('hidden');
+}
+function closeTrendChartModal(){ document.getElementById('trend-chart-overlay').classList.add('hidden'); }
+function switchTrendMetric(key){ state.fitness.chartMetric = key; renderTrendChartModal(); }
+function renderTrendChartModal(){
+  const p = getActivePerson();
+  const metricKey = state.fitness.chartMetric || 'weight';
+  const m = FITNESS_METRICS.find(x=>x[0]===metricKey) || FITNESS_METRICS[0];
+  document.getElementById('trend-chart-content').innerHTML = `
+    <div class="chat-header">
+      <span class="brush" style="font-size:1.15rem;">📈 ${esc(p.name)}的${m[1]}曲線</span>
+      <button class="icon-btn" onclick="closeTrendChartModal()">✕</button>
+    </div>
+    <div class="checklist-pills" style="margin-bottom:.8rem;">
+      ${FITNESS_METRICS.map(x=>`<button class="pill ${x[0]===metricKey?'pill-active':''}" onclick="switchTrendMetric('${x[0]}')">${x[1]}</button>`).join('')}
+    </div>
+    <div class="trend-chart-wrap">${buildTrendChartSvg(p.logs, metricKey, m[2])}</div>`;
+}
 async function callAiChat(messages){
   const provider = _appSettings.aiProvider;
   if(!provider || !_appSettings.aiApiKey) throw new Error('尚未設定 AI 教練，請到 ⚙️ 設定裡填入 API Key。');
@@ -2119,6 +2189,7 @@ function recentLogsSummary(person, count){
     const parts = [];
     if(l.weight!==undefined) parts.push('體重'+l.weight+'kg');
     if(l.bodyFat!==undefined) parts.push('體脂'+l.bodyFat+'%');
+    if(l.bmi!==undefined) parts.push('BMI'+l.bmi);
     if(l.calorieIntake!==undefined) parts.push('攝取'+l.calorieIntake+'大卡');
     if(l.exerciseType) parts.push('運動:'+l.exerciseType+(l.exerciseDuration?l.exerciseDuration+'分':''));
     parts.push(l.bowel?'有排便':'未排便');
