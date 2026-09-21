@@ -718,7 +718,7 @@ async function saveEntries(moduleKey, arr){
 
 /* ---- app settings (GitHub sync config) ---- */
 const SETTINGS_KEY = 'app:settings';
-const APP_VERSION = 'v3.2';
+const APP_VERSION = 'v3.3';
 let _appSettings = {};
 let _syncState = 'unset'; // unset | ok | warn | err
 async function getAppSettings(){
@@ -2021,7 +2021,7 @@ function fitnessLogCardHtml(log){
     <div class="fitness-metrics">${metrics.map(m=>`<span>${esc(m)}</span>`).join('')}</div>
     ${log.mealNotes?`<div class="fitness-exercise-block" style="background:var(--white);border:1px dashed #eee0cc;">🍽️ ${esc(log.mealNotes)}</div>`:''}
     ${(log.exerciseType||log.exerciseDuration||log.caloriesBurned)?`<div class="fitness-exercise-block">🏋️ ${esc(log.exerciseType||'運動')}${log.exerciseDuration?`・${esc(String(log.exerciseDuration))}分鐘`:''}${log.caloriesBurned?`・約消耗 ${esc(String(log.caloriesBurned))}大卡`:''}</div>`:''}
-    ${log.aiFeedback ? `<div class="ai-feedback-block"><div class="ai-feedback-label">🤖 教練建議</div>${esc(log.aiFeedback)}</div>` : ''}
+    ${log.aiFeedback ? `<div class="ai-feedback-block"><div class="ai-feedback-label">🤖 教練建議</div>${simpleMarkdownToHtml(log.aiFeedback)}</div>` : ''}
     <div class="form-actions" style="margin-top:.6rem;">
       <button class="btn btn-ghost btn-sm" onclick="askAiCoach('${log.id}')">🤖 請教練給建議</button>
     </div>
@@ -2062,28 +2062,52 @@ function buildCoachPrompt(person, log){
   if(log.exerciseType) logLines.push(`運動：${log.exerciseType}，${log.exerciseDuration||'?'}分鐘，約消耗${log.caloriesBurned||'?'}大卡`);
   return `你是一位親切、專業的健身與飲食教練。這是「${person.name}」的目標：\n${goalLines.join('、') || '（尚未設定目標）'}\n\n這是${log.date}當天的紀錄：\n${logLines.join('\n')}\n\n請用繁體中文給予簡短具體的回饋與建議（200字以內），可以包含飲食調整、運動安排、生活習慣的建議。`;
 }
+function simpleMarkdownToHtml(text){
+  let out = esc(text);
+  out = out.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+  out = out.replace(/\n/g, '<br>');
+  return out;
+}
+function sleep(ms){ return new Promise(r => setTimeout(r, ms)); }
 async function callAiChat(messages){
   const provider = _appSettings.aiProvider;
   if(!provider || !_appSettings.aiApiKey) throw new Error('尚未設定 AI 教練，請到 ⚙️ 設定裡填入 API Key。');
-  if(provider === 'gemini'){
-    const model = _appSettings.aiModel || 'gemini-3.8-flash';
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${encodeURIComponent(_appSettings.aiApiKey)}`;
-    const contents = messages.map(m => ({ role: m.role==='model'?'model':'user', parts:[{ text: m.text }] }));
-    const res = await fetch(url, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ contents }) });
-    if(!res.ok){ const t = await res.text().catch(()=>''); throw new Error('AI 回應失敗（'+res.status+'）'+t.slice(0,150)); }
-    const json = await res.json();
-    return (json.candidates && json.candidates[0] && json.candidates[0].content && json.candidates[0].content.parts && json.candidates[0].content.parts[0] && json.candidates[0].content.parts[0].text) || '（沒有收到回應內容）';
-  } else {
-    const model = _appSettings.aiModel || 'gpt-4o-mini';
-    const oaMessages = messages.map(m => ({ role: m.role==='model'?'assistant':'user', content: m.text }));
-    const res = await fetch('https://api.openai.com/v1/chat/completions', {
-      method:'POST',
-      headers:{ 'Content-Type':'application/json', 'Authorization':'Bearer ' + _appSettings.aiApiKey },
-      body: JSON.stringify({ model, messages: oaMessages })
-    });
-    if(!res.ok){ const t = await res.text().catch(()=>''); throw new Error('AI 回應失敗（'+res.status+'）'+t.slice(0,150)); }
-    const json = await res.json();
-    return (json.choices && json.choices[0] && json.choices[0].message && json.choices[0].message.content) || '（沒有收到回應內容）';
+  const maxAttempts = 3;
+  for(let attempt=1; attempt<=maxAttempts; attempt++){
+    try{
+      if(provider === 'gemini'){
+        const model = _appSettings.aiModel || 'gemini-3.8-flash';
+        const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${encodeURIComponent(_appSettings.aiApiKey)}`;
+        const contents = messages.map(m => ({ role: m.role==='model'?'model':'user', parts:[{ text: m.text }] }));
+        const res = await fetch(url, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ contents }) });
+        if(!res.ok){
+          const t = await res.text().catch(()=>'');
+          const err = new Error('AI 回應失敗（'+res.status+'）'+t.slice(0,150)); err.status = res.status;
+          throw err;
+        }
+        const json = await res.json();
+        return (json.candidates && json.candidates[0] && json.candidates[0].content && json.candidates[0].content.parts && json.candidates[0].content.parts[0] && json.candidates[0].content.parts[0].text) || '（沒有收到回應內容）';
+      } else {
+        const model = _appSettings.aiModel || 'gpt-4o-mini';
+        const oaMessages = messages.map(m => ({ role: m.role==='model'?'assistant':'user', content: m.text }));
+        const res = await fetch('https://api.openai.com/v1/chat/completions', {
+          method:'POST',
+          headers:{ 'Content-Type':'application/json', 'Authorization':'Bearer ' + _appSettings.aiApiKey },
+          body: JSON.stringify({ model, messages: oaMessages })
+        });
+        if(!res.ok){
+          const t = await res.text().catch(()=>'');
+          const err = new Error('AI 回應失敗（'+res.status+'）'+t.slice(0,150)); err.status = res.status;
+          throw err;
+        }
+        const json = await res.json();
+        return (json.choices && json.choices[0] && json.choices[0].message && json.choices[0].message.content) || '（沒有收到回應內容）';
+      }
+    }catch(e){
+      const retryable = e.status === 503 || e.status === 429;
+      if(retryable && attempt < maxAttempts){ await sleep(1500 * attempt); continue; }
+      throw e;
+    }
   }
 }
 async function callAiCoach(prompt){
