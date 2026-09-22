@@ -330,6 +330,16 @@ a{color:inherit;}
 .chat-input-row{ display:flex; gap:.5rem; margin-top:.6rem; align-items:flex-end; flex-shrink:0; }
 .chat-input-row textarea{ flex:1; min-height:2.6rem; max-height:6rem; border:2px solid #ecdfc9; border-radius:12px; padding:.5rem .7rem; font-size:.9rem; resize:vertical; font-family:'Noto Sans TC',sans-serif; }
 .trend-chart-wrap{ background:var(--white); border-radius:14px; padding:.8rem; box-shadow:0 4px 12px var(--shadow); }
+.meal-row, .exercise-row{ display:grid; gap:.4rem; margin-bottom:.5rem; align-items:center; }
+.meal-row{ grid-template-columns:70px 1fr 80px 28px; }
+.exercise-row{ grid-template-columns:1fr 60px 60px 70px 28px; }
+.meal-row select, .meal-row input, .exercise-row input{ border:2px solid #ecdfc9; border-radius:10px; padding:.4rem .5rem; font-size:.85rem; width:100%; }
+@media (max-width:480px){
+  .meal-row{ grid-template-columns:1fr 1fr; grid-template-areas:"type type" "food food" "portion x"; }
+  .meal-row select{ grid-area:type; } .meal-row .meal-food{ grid-area:food; } .meal-row .meal-portion{ grid-area:portion; } .meal-row .tiny-x{ grid-area:x; justify-self:end; }
+  .exercise-row{ grid-template-columns:1fr 1fr; grid-template-areas:"name name" "sets reps" "rest x"; }
+  .exercise-row .ex-name{ grid-area:name; } .exercise-row .ex-sets{ grid-area:sets; } .exercise-row .ex-reps{ grid-area:reps; } .exercise-row .ex-rest{ grid-area:rest; } .exercise-row .tiny-x{ grid-area:x; justify-self:end; }
+}
 
 @media (max-width:480px){ .desk-item{ width:44%; min-width:150px; } }
 </style>
@@ -724,7 +734,7 @@ async function saveEntries(moduleKey, arr){
 
 /* ---- app settings (GitHub sync config) ---- */
 const SETTINGS_KEY = 'app:settings';
-const APP_VERSION = 'v3.4';
+const APP_VERSION = 'v3.5';
 let _appSettings = {};
 let _syncState = 'unset'; // unset | ok | warn | err
 async function getAppSettings(){
@@ -1061,7 +1071,7 @@ const state = {
   diary: { entries: null, editingId: null, calYear: new Date().getFullYear(), calMonth: new Date().getMonth(), selectedDate: new Date().toISOString().slice(0,10) },
   recipes: { entries: null, editingId: null, activeCategory: null, madeFilter: 'all', minRating: 0 },
   books: { entries: null, editingId: null, activeCategory: null },
-  fitness: { entries: null, activePersonId: null, editingLogId: null, logFormOpen: false, personFormOpen: false },
+  fitness: { entries: null, activePersonId: null, editingLogId: null, logFormOpen: false, personFormOpen: false, formMeals: [], formExercises: [], chartMetric: 'weight' },
 };
 
 /* ===================== navigation ===================== */
@@ -1939,8 +1949,56 @@ async function saveGoalsForm(){
   renderFitnessContent();
 }
 
+function syncMealsFromDom(){
+  const rows = document.querySelectorAll('#log-meals-editor .meal-row');
+  state.fitness.formMeals = Array.from(rows).map(row => ({
+    id: row.dataset.id,
+    type: row.querySelector('.meal-type').value,
+    food: row.querySelector('.meal-food').value,
+    portion: row.querySelector('.meal-portion').value,
+  }));
+}
+function addMealRow(){ syncMealsFromDom(); state.fitness.formMeals.push({ id: uid(), type:'早餐', food:'', portion:'' }); renderMealsEditor(); }
+function removeMealRow(id){ syncMealsFromDom(); state.fitness.formMeals = state.fitness.formMeals.filter(m=>m.id!==id); renderMealsEditor(); }
+function renderMealsEditor(){
+  const el = document.getElementById('log-meals-editor');
+  if(!el) return;
+  el.innerHTML = state.fitness.formMeals.map(m => `
+    <div class="meal-row" data-id="${m.id}">
+      <select class="meal-type">${['早餐','午餐','晚餐','點心'].map(t=>`<option ${m.type===t?'selected':''}>${t}</option>`).join('')}</select>
+      <input type="text" class="meal-food" value="${esc(m.food)}" placeholder="吃了什麼">
+      <input type="text" class="meal-portion" value="${esc(m.portion)}" placeholder="份量">
+      <button type="button" class="tiny-x" onclick="removeMealRow('${m.id}')">✕</button>
+    </div>`).join('') + `<button type="button" class="btn btn-ghost btn-sm" onclick="addMealRow()">+ 新增一餐</button>`;
+}
+function syncExercisesFromDom(){
+  const rows = document.querySelectorAll('#log-exercises-editor .exercise-row');
+  state.fitness.formExercises = Array.from(rows).map(row => ({
+    id: row.dataset.id,
+    name: row.querySelector('.ex-name').value,
+    sets: row.querySelector('.ex-sets').value,
+    reps: row.querySelector('.ex-reps').value,
+    rest: row.querySelector('.ex-rest').value,
+  }));
+}
+function addExerciseRow(){ syncExercisesFromDom(); state.fitness.formExercises.push({ id: uid(), name:'', sets:'', reps:'', rest:'' }); renderExercisesEditor(); }
+function removeExerciseRow(id){ syncExercisesFromDom(); state.fitness.formExercises = state.fitness.formExercises.filter(x=>x.id!==id); renderExercisesEditor(); }
+function renderExercisesEditor(){
+  const el = document.getElementById('log-exercises-editor');
+  if(!el) return;
+  el.innerHTML = state.fitness.formExercises.map(x => `
+    <div class="exercise-row" data-id="${x.id}">
+      <input type="text" class="ex-name" value="${esc(x.name)}" placeholder="項目／部位，例如橋式">
+      <input type="number" class="ex-sets" value="${esc(x.sets)}" placeholder="組數">
+      <input type="number" class="ex-reps" value="${esc(x.reps)}" placeholder="每組次數">
+      <input type="number" class="ex-rest" value="${esc(x.rest)}" placeholder="組間休息(秒)">
+      <button type="button" class="tiny-x" onclick="removeExerciseRow('${x.id}')">✕</button>
+    </div>`).join('') + `<button type="button" class="btn btn-ghost btn-sm" onclick="addExerciseRow()">+ 新增訓練項目</button>`;
+}
 function fitnessLogFormHtml(log){
   const l = log || {};
+  state.fitness.formMeals = (l.meals || []).map(m => ({...m}));
+  state.fitness.formExercises = (l.exercises || []).map(x => ({...x}));
   return `<div class="form-panel">
     <div class="field"><label>日期</label><input type="date" id="log-date" value="${esc(l.date || new Date().toISOString().slice(0,10))}"></div>
     <div class="row-2">
@@ -1952,18 +2010,22 @@ function fitnessLogFormHtml(log){
       <div class="field"><label>腰圍（cm）</label><input type="number" step="0.1" id="log-waist" value="${l.waist!==undefined?l.waist:''}"></div>
     </div>
     <div class="field"><label>臀圍（cm）</label><input type="number" step="0.1" id="log-hip" value="${l.hip!==undefined?l.hip:''}"></div>
-    <div class="row-2">
+
+    <div class="subtab-h" style="margin-top:.8rem;">🍽️ 飲食</div>
+    <div id="log-meals-editor"></div>
+    <div class="row-2" style="margin-top:.6rem;">
       <div class="field"><label>攝取熱量（大卡）</label><input type="number" id="log-calories" value="${l.calorieIntake!==undefined?l.calorieIntake:''}"></div>
       <div class="field"><label>飲水量（ml）</label><input type="number" id="log-water" value="${l.water!==undefined?l.water:''}"></div>
     </div>
-    <div class="field"><label>飲食內容（選填）</label><textarea id="log-meals" placeholder="早餐、午餐、晚餐吃了什麼…">${esc(l.mealNotes)}</textarea></div>
     <div class="field checkbox-field"><label><input type="checkbox" id="log-bowel" ${l.bowel?'checked':''}> 今天有排便</label></div>
+
     <div class="subtab-h" style="margin-top:.8rem;">🏋️ 運動</div>
-    <div class="row-2">
-      <div class="field"><label>訓練項目／部位</label><input type="text" id="log-ex-type" value="${esc(l.exerciseType)}" placeholder="跑步／胸背／瑜伽…"></div>
-      <div class="field"><label>時間（分鐘）</label><input type="number" id="log-ex-duration" value="${l.exerciseDuration!==undefined?l.exerciseDuration:''}"></div>
+    <div id="log-exercises-editor"></div>
+    <div class="field" style="margin-top:.6rem;"><label>估計消耗熱量（大卡）</label><input type="number" id="log-ex-calories" value="${l.caloriesBurned!==undefined?l.caloriesBurned:''}"></div>
+
+    <div class="form-actions" style="margin-top:.6rem;">
+      <button type="button" class="btn btn-ghost btn-sm" onclick="estimateCaloriesWithAi()">🤖 用 AI 估算今日熱量</button>
     </div>
-    <div class="field"><label>估計消耗熱量（大卡）</label><input type="number" id="log-ex-calories" value="${l.caloriesBurned!==undefined?l.caloriesBurned:''}"></div>
     <div class="form-actions">
       <button class="btn btn-primary" onclick="saveFitnessLogForm()">儲存</button>
       <button class="btn btn-ghost" onclick="closeFitnessLogForm()">取消</button>
@@ -1976,10 +2038,37 @@ function openFitnessLogForm(editId){
   const p = getActivePerson();
   const log = editId ? p.logs.find(l=>l.id===editId) : null;
   document.getElementById('fitness-form-slot').innerHTML = fitnessLogFormHtml(log);
+  renderMealsEditor();
+  renderExercisesEditor();
   document.getElementById('fitness-form-slot').scrollIntoView({behavior:'smooth', block:'start'});
 }
 function closeFitnessLogForm(){ state.fitness.editingLogId = null; document.getElementById('fitness-form-slot').innerHTML = ''; renderFitnessContent(); }
+async function estimateCaloriesWithAi(){
+  syncMealsFromDom();
+  syncExercisesFromDom();
+  const meals = state.fitness.formMeals.filter(m=>m.food.trim());
+  const exercises = state.fitness.formExercises.filter(x=>x.name.trim());
+  if(meals.length===0 && exercises.length===0){ showInfoModal('請先填一些飲食或運動項目，AI 才有東西可以估算。'); return; }
+  const mealLines = meals.map(m => `${m.type}：${m.food}${m.portion?`（${m.portion}）`:''}`).join('\n') || '（無）';
+  const exLines = exercises.map(x => `${x.name}：${x.sets||'?'}組 x ${x.reps||'?'}下${x.rest?`，組間休息${x.rest}秒`:''}`).join('\n') || '（無）';
+  const prompt = `請你是一位營養與運動教練，幫忙估算下面這一天的總熱量。\n\n飲食內容：\n${mealLines}\n\n運動內容：\n${exLines}\n\n請用繁體中文回答，第一行固定寫「攝取熱量：數字」（單位大卡，只寫數字），第二行固定寫「消耗熱量：數字」（單位大卡，只寫數字，若無運動內容可寫0），之後可以再用一兩句話簡短說明估算依據或提醒。`;
+  showSyncBanner('🤖 教練估算中…');
+  try{
+    const reply = await callAiCoach(prompt);
+    const intakeMatch = reply.match(/攝取熱量[：:]\s*([\d.]+)/);
+    const burnedMatch = reply.match(/消耗熱量[：:]\s*([\d.]+)/);
+    if(intakeMatch) document.getElementById('log-calories').value = intakeMatch[1];
+    if(burnedMatch) document.getElementById('log-ex-calories').value = burnedMatch[1];
+    document.getElementById('sync-banner').classList.add('hidden');
+    showInfoModal((intakeMatch||burnedMatch) ? ('已幫你填入估算的熱量。\n\n教練說明：\n' + reply.trim()) : ('AI 回覆但沒能解析出數字，這是原始回覆：\n\n' + reply.trim()));
+  }catch(e){
+    document.getElementById('sync-banner').classList.add('hidden');
+    showInfoModal('估算失敗：' + e.message);
+  }
+}
 async function saveFitnessLogForm(){
+  syncMealsFromDom();
+  syncExercisesFromDom();
   const p = getActivePerson();
   const editId = state.fitness.editingLogId;
   let log = editId ? p.logs.find(l=>l.id===editId) : { id: uid(), createdAt: Date.now() };
@@ -1991,10 +2080,9 @@ async function saveFitnessLogForm(){
   log.hip = val('log-hip')===''?undefined:parseFloat(val('log-hip'));
   log.calorieIntake = val('log-calories')===''?undefined:parseFloat(val('log-calories'));
   log.water = val('log-water')===''?undefined:parseFloat(val('log-water'));
-  log.mealNotes = val('log-meals').trim();
   log.bowel = document.getElementById('log-bowel').checked;
-  log.exerciseType = val('log-ex-type').trim();
-  log.exerciseDuration = val('log-ex-duration')===''?undefined:parseFloat(val('log-ex-duration'));
+  log.meals = state.fitness.formMeals.filter(m => m.food.trim()).map(m => ({ id:m.id, type:m.type, food:m.food.trim(), portion:m.portion.trim() }));
+  log.exercises = state.fitness.formExercises.filter(x => x.name.trim()).map(x => ({ id:x.id, name:x.name.trim(), sets:x.sets, reps:x.reps, rest:x.rest }));
   log.caloriesBurned = val('log-ex-calories')===''?undefined:parseFloat(val('log-ex-calories'));
   if(!editId) p.logs.push(log);
   state.fitness.editingLogId = null;
@@ -2020,17 +2108,20 @@ function fitnessLogCardHtml(log){
   if(log.bmi!==undefined) metrics.push('BMI ' + log.bmi);
   if(log.waist!==undefined) metrics.push('腰 ' + log.waist + 'cm');
   if(log.hip!==undefined) metrics.push('臀 ' + log.hip + 'cm');
-  if(log.calorieIntake!==undefined) metrics.push('🍽️ ' + log.calorieIntake + '大卡');
+  if(log.calorieIntake!==undefined) metrics.push('🍽️ 攝取' + log.calorieIntake + '大卡');
+  if(log.caloriesBurned!==undefined) metrics.push('🔥 消耗' + log.caloriesBurned + '大卡');
   if(log.water!==undefined) metrics.push('💧 ' + log.water + 'ml');
   metrics.push(log.bowel ? '💩 有排便' : '💩 未排便');
+  const meals = log.meals || [];
+  const exercises = log.exercises || [];
   return `<div class="fitness-log-card">
     <div class="fitness-log-top">
       <span class="fitness-log-date brush">${esc(fmtDate(log.date))}</span>
       <button class="tiny-link" onclick="openFitnessLogForm('${log.id}')">編輯</button>
     </div>
     <div class="fitness-metrics">${metrics.map(m=>`<span>${esc(m)}</span>`).join('')}</div>
-    ${log.mealNotes?`<div class="fitness-exercise-block" style="background:var(--white);border:1px dashed #eee0cc;">🍽️ ${esc(log.mealNotes)}</div>`:''}
-    ${(log.exerciseType||log.exerciseDuration||log.caloriesBurned)?`<div class="fitness-exercise-block">🏋️ ${esc(log.exerciseType||'運動')}${log.exerciseDuration?`・${esc(String(log.exerciseDuration))}分鐘`:''}${log.caloriesBurned?`・約消耗 ${esc(String(log.caloriesBurned))}大卡`:''}</div>`:''}
+    ${meals.length?`<div class="fitness-exercise-block" style="background:var(--white);border:1px dashed #eee0cc;">🍽️ ${meals.map(m=>`${esc(m.type)}：${esc(m.food)}${m.portion?`（${esc(m.portion)}）`:''}`).join('　')}</div>`:''}
+    ${exercises.length?`<div class="fitness-exercise-block">🏋️ ${exercises.map(x=>`${esc(x.name)} ${x.sets||'?'}組x${x.reps||'?'}下${x.rest?`(休${x.rest}秒)`:''}`).join('　')}</div>`:''}
     ${log.aiFeedback ? `<div class="ai-feedback-block"><div class="ai-feedback-label">🤖 教練建議</div>${simpleMarkdownToHtml(log.aiFeedback)}</div>` : ''}
     <div class="form-actions" style="margin-top:.6rem;">
       <button class="btn btn-ghost btn-sm" onclick="askAiCoach('${log.id}')">🤖 請教練給建議</button>
@@ -2067,10 +2158,10 @@ function buildCoachPrompt(person, log){
   if(log.waist!==undefined) logLines.push(`腰圍 ${log.waist}cm`);
   if(log.hip!==undefined) logLines.push(`臀圍 ${log.hip}cm`);
   if(log.calorieIntake!==undefined) logLines.push(`攝取熱量 ${log.calorieIntake}大卡`);
-  if(log.mealNotes) logLines.push(`飲食內容：${log.mealNotes}`);
+  if(log.meals && log.meals.length) logLines.push(`飲食：${log.meals.map(m=>`${m.type} ${m.food}${m.portion?`(${m.portion})`:''}`).join('、')}`);
   if(log.water!==undefined) logLines.push(`飲水 ${log.water}ml`);
   logLines.push(log.bowel ? '今天有排便' : '今天沒有排便');
-  if(log.exerciseType) logLines.push(`運動：${log.exerciseType}，${log.exerciseDuration||'?'}分鐘，約消耗${log.caloriesBurned||'?'}大卡`);
+  if(log.exercises && log.exercises.length) logLines.push(`運動：${log.exercises.map(x=>`${x.name} ${x.sets||'?'}組x${x.reps||'?'}下`).join('、')}${log.caloriesBurned?`，約消耗${log.caloriesBurned}大卡`:''}`);
   return `你是一位親切、專業的健身與飲食教練。這是「${person.name}」的目標：\n${goalLines.join('、') || '（尚未設定目標）'}\n\n這是${log.date}當天的紀錄：\n${logLines.join('\n')}\n\n請用繁體中文給予簡短具體的回饋與建議（200字以內），可以包含飲食調整、運動安排、生活習慣的建議。`;
 }
 function simpleMarkdownToHtml(text){
@@ -2191,7 +2282,7 @@ function recentLogsSummary(person, count){
     if(l.bodyFat!==undefined) parts.push('體脂'+l.bodyFat+'%');
     if(l.bmi!==undefined) parts.push('BMI'+l.bmi);
     if(l.calorieIntake!==undefined) parts.push('攝取'+l.calorieIntake+'大卡');
-    if(l.exerciseType) parts.push('運動:'+l.exerciseType+(l.exerciseDuration?l.exerciseDuration+'分':''));
+    if(l.exercises && l.exercises.length) parts.push('運動:'+l.exercises.map(x=>x.name).join('/'));
     parts.push(l.bowel?'有排便':'未排便');
     return l.date + '：' + (parts.join('、') || '（無詳細數據）');
   }).join('\n');
