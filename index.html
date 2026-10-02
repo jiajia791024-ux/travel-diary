@@ -337,9 +337,18 @@ a{color:inherit;}
 @media (max-width:480px){
   .meal-row{ grid-template-columns:1fr 1fr; grid-template-areas:"type type" "food food" "portion x"; }
   .meal-row select{ grid-area:type; } .meal-row .meal-food{ grid-area:food; } .meal-row .meal-portion{ grid-area:portion; } .meal-row .tiny-x{ grid-area:x; justify-self:end; }
-  .exercise-row{ grid-template-columns:1fr 1fr; grid-template-areas:"name name" "sets reps" "rest x"; }
-  .exercise-row .ex-name{ grid-area:name; } .exercise-row .ex-sets{ grid-area:sets; } .exercise-row .ex-reps{ grid-area:reps; } .exercise-row .ex-rest{ grid-area:rest; } .exercise-row .tiny-x{ grid-area:x; justify-self:end; }
 }
+.meal-row-card{ border:1px solid #eee0cc; border-radius:12px; padding:.6rem; margin-bottom:.6rem; background:var(--white); }
+.meal-row-card .meal-row{ margin-bottom:0; }
+.meal-photo-row{ display:flex; align-items:center; gap:.5rem; margin-top:.5rem; }
+.meal-photo-strip{ display:flex; gap:.4rem; margin-top:.4rem; flex-wrap:wrap; }
+.exercise-row-card{ border:1px solid #eee0cc; border-radius:12px; padding:.6rem; margin-bottom:.6rem; background:var(--white); }
+.exercise-row-top{ display:flex; gap:.5rem; align-items:center; }
+.exercise-row-top .ex-name{ flex:1; border:2px solid #ecdfc9; border-radius:10px; padding:.4rem .5rem; font-size:.88rem; }
+.exercise-row-hint{ font-size:.72rem; color:var(--ink-soft); margin:.35rem 0; }
+.exercise-row-fields{ display:grid; grid-template-columns:repeat(4,1fr); gap:.4rem; }
+.exercise-row-fields input{ border:2px solid #ecdfc9; border-radius:10px; padding:.4rem .5rem; font-size:.85rem; width:100%; }
+@media (max-width:480px){ .exercise-row-fields{ grid-template-columns:1fr 1fr; } }
 
 @media (max-width:480px){ .desk-item{ width:44%; min-width:150px; } }
 </style>
@@ -734,7 +743,7 @@ async function saveEntries(moduleKey, arr){
 
 /* ---- app settings (GitHub sync config) ---- */
 const SETTINGS_KEY = 'app:settings';
-const APP_VERSION = 'v3.5';
+const APP_VERSION = 'v3.6';
 let _appSettings = {};
 let _syncState = 'unset'; // unset | ok | warn | err
 async function getAppSettings(){
@@ -1950,49 +1959,76 @@ async function saveGoalsForm(){
 }
 
 function syncMealsFromDom(){
-  const rows = document.querySelectorAll('#log-meals-editor .meal-row');
-  state.fitness.formMeals = Array.from(rows).map(row => ({
-    id: row.dataset.id,
-    type: row.querySelector('.meal-type').value,
-    food: row.querySelector('.meal-food').value,
-    portion: row.querySelector('.meal-portion').value,
-  }));
+  const rows = document.querySelectorAll('#log-meals-editor .meal-row-card');
+  state.fitness.formMeals = Array.from(rows).map(row => {
+    const id = row.dataset.id;
+    const existing = (state.fitness.formMeals||[]).find(m=>m.id===id) || {};
+    return {
+      id,
+      type: row.querySelector('.meal-type').value,
+      food: row.querySelector('.meal-food').value,
+      portion: row.querySelector('.meal-portion').value,
+      photo: existing.photo,
+    };
+  });
 }
 function addMealRow(){ syncMealsFromDom(); state.fitness.formMeals.push({ id: uid(), type:'早餐', food:'', portion:'' }); renderMealsEditor(); }
 function removeMealRow(id){ syncMealsFromDom(); state.fitness.formMeals = state.fitness.formMeals.filter(m=>m.id!==id); renderMealsEditor(); }
+async function handleMealPhotoChange(id, inputEl){
+  if(!inputEl.files || !inputEl.files[0]) return;
+  syncMealsFromDom();
+  const dataUrl = await fileToDataURL(inputEl.files[0], 500, 0.7);
+  const m = state.fitness.formMeals.find(x=>x.id===id);
+  if(m) m.photo = dataUrl;
+  renderMealsEditor();
+}
 function renderMealsEditor(){
   const el = document.getElementById('log-meals-editor');
   if(!el) return;
   el.innerHTML = state.fitness.formMeals.map(m => `
-    <div class="meal-row" data-id="${m.id}">
-      <select class="meal-type">${['早餐','午餐','晚餐','點心'].map(t=>`<option ${m.type===t?'selected':''}>${t}</option>`).join('')}</select>
-      <input type="text" class="meal-food" value="${esc(m.food)}" placeholder="吃了什麼">
-      <input type="text" class="meal-portion" value="${esc(m.portion)}" placeholder="份量">
-      <button type="button" class="tiny-x" onclick="removeMealRow('${m.id}')">✕</button>
+    <div class="meal-row-card" data-id="${m.id}">
+      <div class="meal-row">
+        <select class="meal-type">${['早餐','午餐','晚餐','點心'].map(t=>`<option ${m.type===t?'selected':''}>${t}</option>`).join('')}</select>
+        <input type="text" class="meal-food" value="${esc(m.food)}" placeholder="吃了什麼">
+        <input type="text" class="meal-portion" value="${esc(m.portion)}" placeholder="份量">
+        <button type="button" class="tiny-x" onclick="removeMealRow('${m.id}')">✕</button>
+      </div>
+      <div class="meal-photo-row">
+        ${m.photo ? `<img src="${m.photo}" class="checklist-item-thumb" onclick="openImageLightbox(this.src)">` : ''}
+        <input type="file" accept="image/*" id="mealphoto-${m.id}" style="display:none" onchange="handleMealPhotoChange('${m.id}', this)">
+        <button type="button" class="tiny-link" onclick="document.getElementById('mealphoto-${m.id}').click()">📷 ${m.photo?'換照片':'加照片'}</button>
+      </div>
     </div>`).join('') + `<button type="button" class="btn btn-ghost btn-sm" onclick="addMealRow()">+ 新增一餐</button>`;
 }
 function syncExercisesFromDom(){
-  const rows = document.querySelectorAll('#log-exercises-editor .exercise-row');
+  const rows = document.querySelectorAll('#log-exercises-editor .exercise-row-card');
   state.fitness.formExercises = Array.from(rows).map(row => ({
     id: row.dataset.id,
     name: row.querySelector('.ex-name').value,
     sets: row.querySelector('.ex-sets').value,
     reps: row.querySelector('.ex-reps').value,
     rest: row.querySelector('.ex-rest').value,
+    duration: row.querySelector('.ex-duration').value,
   }));
 }
-function addExerciseRow(){ syncExercisesFromDom(); state.fitness.formExercises.push({ id: uid(), name:'', sets:'', reps:'', rest:'' }); renderExercisesEditor(); }
+function addExerciseRow(){ syncExercisesFromDom(); state.fitness.formExercises.push({ id: uid(), name:'', sets:'', reps:'', rest:'', duration:'' }); renderExercisesEditor(); }
 function removeExerciseRow(id){ syncExercisesFromDom(); state.fitness.formExercises = state.fitness.formExercises.filter(x=>x.id!==id); renderExercisesEditor(); }
 function renderExercisesEditor(){
   const el = document.getElementById('log-exercises-editor');
   if(!el) return;
   el.innerHTML = state.fitness.formExercises.map(x => `
-    <div class="exercise-row" data-id="${x.id}">
-      <input type="text" class="ex-name" value="${esc(x.name)}" placeholder="項目／部位，例如橋式">
-      <input type="number" class="ex-sets" value="${esc(x.sets)}" placeholder="組數">
-      <input type="number" class="ex-reps" value="${esc(x.reps)}" placeholder="每組次數">
-      <input type="number" class="ex-rest" value="${esc(x.rest)}" placeholder="組間休息(秒)">
-      <button type="button" class="tiny-x" onclick="removeExerciseRow('${x.id}')">✕</button>
+    <div class="exercise-row-card" data-id="${x.id}">
+      <div class="exercise-row-top">
+        <input type="text" class="ex-name" value="${esc(x.name)}" placeholder="項目／部位，例如橋式或慢跑">
+        <button type="button" class="tiny-x" onclick="removeExerciseRow('${x.id}')">✕</button>
+      </div>
+      <p class="exercise-row-hint">用組數次數，或用時間記錄都可以，兩種都填也沒問題</p>
+      <div class="exercise-row-fields">
+        <input type="number" class="ex-sets" value="${esc(x.sets)}" placeholder="組數">
+        <input type="number" class="ex-reps" value="${esc(x.reps)}" placeholder="每組次數">
+        <input type="number" class="ex-rest" value="${esc(x.rest)}" placeholder="組間休息(秒)">
+        <input type="number" class="ex-duration" value="${esc(x.duration)}" placeholder="時間(分鐘)">
+      </div>
     </div>`).join('') + `<button type="button" class="btn btn-ghost btn-sm" onclick="addExerciseRow()">+ 新增訓練項目</button>`;
 }
 function fitnessLogFormHtml(log){
@@ -2081,8 +2117,8 @@ async function saveFitnessLogForm(){
   log.calorieIntake = val('log-calories')===''?undefined:parseFloat(val('log-calories'));
   log.water = val('log-water')===''?undefined:parseFloat(val('log-water'));
   log.bowel = document.getElementById('log-bowel').checked;
-  log.meals = state.fitness.formMeals.filter(m => m.food.trim()).map(m => ({ id:m.id, type:m.type, food:m.food.trim(), portion:m.portion.trim() }));
-  log.exercises = state.fitness.formExercises.filter(x => x.name.trim()).map(x => ({ id:x.id, name:x.name.trim(), sets:x.sets, reps:x.reps, rest:x.rest }));
+  log.meals = state.fitness.formMeals.filter(m => m.food.trim()).map(m => ({ id:m.id, type:m.type, food:m.food.trim(), portion:m.portion.trim(), photo:m.photo }));
+  log.exercises = state.fitness.formExercises.filter(x => x.name.trim()).map(x => ({ id:x.id, name:x.name.trim(), sets:x.sets, reps:x.reps, rest:x.rest, duration:x.duration }));
   log.caloriesBurned = val('log-ex-calories')===''?undefined:parseFloat(val('log-ex-calories'));
   if(!editId) p.logs.push(log);
   state.fitness.editingLogId = null;
@@ -2101,6 +2137,13 @@ function deleteFitnessLog(id){
   });
 }
 
+function exerciseSummaryText(x){
+  const parts = [];
+  if(x.sets || x.reps) parts.push(`${x.sets||'?'}組x${x.reps||'?'}下`);
+  if(x.duration) parts.push(`${x.duration}分鐘`);
+  if(x.rest) parts.push(`休${x.rest}秒`);
+  return `${x.name}${parts.length ? ' '+parts.join('，') : ''}`;
+}
 function fitnessLogCardHtml(log){
   const metrics = [];
   if(log.weight!==undefined) metrics.push('⚖️ ' + log.weight + 'kg');
@@ -2120,8 +2163,11 @@ function fitnessLogCardHtml(log){
       <button class="tiny-link" onclick="openFitnessLogForm('${log.id}')">編輯</button>
     </div>
     <div class="fitness-metrics">${metrics.map(m=>`<span>${esc(m)}</span>`).join('')}</div>
-    ${meals.length?`<div class="fitness-exercise-block" style="background:var(--white);border:1px dashed #eee0cc;">🍽️ ${meals.map(m=>`${esc(m.type)}：${esc(m.food)}${m.portion?`（${esc(m.portion)}）`:''}`).join('　')}</div>`:''}
-    ${exercises.length?`<div class="fitness-exercise-block">🏋️ ${exercises.map(x=>`${esc(x.name)} ${x.sets||'?'}組x${x.reps||'?'}下${x.rest?`(休${x.rest}秒)`:''}`).join('　')}</div>`:''}
+    ${meals.length?`<div class="fitness-exercise-block" style="background:var(--white);border:1px dashed #eee0cc;">
+      🍽️ ${meals.map(m=>`${esc(m.type)}：${esc(m.food)}${m.portion?`（${esc(m.portion)}）`:''}`).join('　')}
+      ${meals.some(m=>m.photo) ? `<div class="meal-photo-strip">${meals.filter(m=>m.photo).map(m=>`<img src="${m.photo}" class="checklist-item-thumb" onclick="openImageLightbox(this.src)">`).join('')}</div>` : ''}
+    </div>`:''}
+    ${exercises.length?`<div class="fitness-exercise-block">🏋️ ${exercises.map(x=>esc(exerciseSummaryText(x))).join('　')}</div>`:''}
     ${log.aiFeedback ? `<div class="ai-feedback-block"><div class="ai-feedback-label">🤖 教練建議</div>${simpleMarkdownToHtml(log.aiFeedback)}</div>` : ''}
     <div class="form-actions" style="margin-top:.6rem;">
       <button class="btn btn-ghost btn-sm" onclick="askAiCoach('${log.id}')">🤖 請教練給建議</button>
