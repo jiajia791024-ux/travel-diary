@@ -21,6 +21,7 @@
   --recipe-accent:#8FC17E; --recipe-accent-dark:#5F9C4E; --recipe-bg:#EAF7E4; --recipe-bg-2:#F4FBF0;
   --book-accent:#C98BC9;   --book-accent-dark:#A15FA1;   --book-bg:#F6EAF8;   --book-bg-2:#FBF2FC;
   --fitness-accent:#4FB6A8; --fitness-accent-dark:#33897D; --fitness-bg:#E1F5F1; --fitness-bg-2:#F0FBF9;
+  --todo-accent:#E6708A;    --todo-accent-dark:#C04A66;    --todo-bg:#FCE4EA;    --todo-bg-2:#FEF1F4;
 
   --status-planning-bg:#FFE3C2; --status-planning-fg:#B5651D;
   --status-soon-bg:#FFD6D6;     --status-soon-fg:#C0392B;
@@ -92,6 +93,8 @@ a{color:inherit;}
 .desk-item.i-books .badge{ background:var(--book-bg); }
 .desk-item.i-fitness{ border-color:var(--fitness-accent); }
 .desk-item.i-fitness .badge{ background:var(--fitness-bg); }
+.desk-item.i-todo{ border-color:var(--todo-accent); }
+.desk-item.i-todo .badge{ background:var(--todo-bg); }
 
 /* ============ shared module chrome ============ */
 .module-view{ min-height:100vh; padding-bottom:4rem; }
@@ -141,6 +144,36 @@ a{color:inherit;}
 #view-fitness{ background:var(--fitness-bg-2); } #view-fitness .module-title, #view-fitness .back-link{ color:var(--fitness-accent-dark); } #view-fitness .btn-primary{ background:var(--fitness-accent); }
 #view-fitness .pill{ border-color:var(--fitness-accent); color:var(--fitness-accent-dark); }
 #view-fitness .pill-active{ background:var(--fitness-accent); color:#fff; }
+#view-todo{ background:var(--todo-bg-2); } #view-todo .module-title, #view-todo .back-link{ color:var(--todo-accent-dark); } #view-todo .btn-primary{ background:var(--todo-accent); }
+#view-todo .pill{ border-color:var(--todo-accent); color:var(--todo-accent-dark); }
+#view-todo .pill-active{ background:var(--todo-accent); color:#fff; }
+.todo-section-h{ font-family:'ZCOOL KuaiLe',cursive; font-size:1.1rem; color:var(--todo-accent-dark); margin:1.1rem 0 .5rem; }
+.todo-item{ display:flex; gap:.7rem; align-items:flex-start; background:var(--white); border-radius:14px; padding:.7rem .9rem; margin-bottom:.6rem; box-shadow:0 3px 10px var(--shadow); }
+.todo-item input[type=checkbox]{ width:19px; height:19px; margin-top:.15rem; accent-color:var(--todo-accent); flex-shrink:0; }
+.todo-item-body{ flex:1; min-width:0; }
+.todo-item-title{ font-weight:600; font-size:.95rem; }
+.todo-item.is-done .todo-item-title{ text-decoration:line-through; color:var(--ink-soft); }
+.todo-item-meta{ display:flex; gap:.6rem; flex-wrap:wrap; font-size:.78rem; color:var(--ink-soft); margin-top:.25rem; }
+.todo-item-notes{ font-size:.82rem; color:var(--ink-soft); margin-top:.3rem; white-space:pre-wrap; }
+.cal-mark{ position:absolute; top:1px; right:2px; font-size:.58rem; line-height:1; }
+.diary-extra-block{ margin-top:1rem; }
+.diary-extra-row{ background:var(--white); border:1px dashed #eee0cc; border-radius:12px; padding:.55rem .8rem; margin-bottom:.4rem; font-size:.88rem; }
+.todo-steps{ margin-top:.45rem; display:flex; flex-direction:column; gap:.3rem; }
+.todo-step{ display:flex; align-items:center; gap:.5rem; font-size:.86rem; }
+.todo-step input{ width:16px; height:16px; accent-color:var(--todo-accent); flex-shrink:0; }
+.todo-step span{ flex:1; }
+.todo-step.is-done span{ text-decoration:line-through; color:var(--ink-soft); }
+.todo-thumb-sm{ width:30px; height:30px; object-fit:cover; border-radius:6px; cursor:zoom-in; flex-shrink:0; }
+.todo-thumb{ width:58px; height:58px; object-fit:cover; border-radius:10px; cursor:zoom-in; display:block; }
+.todo-photo-strip{ display:flex; gap:.45rem; flex-wrap:wrap; margin-top:.5rem; }
+.todo-photo-wrap{ position:relative; display:inline-block; }
+.todo-photo-wrap .tiny-x{ position:absolute; top:-6px; right:-6px; background:#fff; border-radius:50%; width:19px; height:19px; line-height:17px; padding:0; box-shadow:0 1px 4px rgba(0,0,0,.25); }
+.step-card{ border:1px solid #eee0cc; border-radius:12px; padding:.5rem .6rem; margin-bottom:.5rem; background:var(--white); }
+.step-row{ display:flex; align-items:center; gap:.5rem; }
+.step-row .step-text{ flex:1; min-width:0; border:2px solid #ecdfc9; border-radius:10px; padding:.4rem .55rem; font-size:.88rem; }
+.step-row input[type=checkbox]{ width:18px; height:18px; accent-color:var(--todo-accent); flex-shrink:0; }
+.step-photo-line{ margin-top:.45rem; }
+.todo-cat-tag{ font-size:.72rem; font-weight:600; background:var(--todo-bg); color:var(--todo-accent-dark); border-radius:999px; padding:.1rem .55rem; }
 
 /* ---------- Travel: trip list ---------- */
 .trip-card{ background:var(--white); border-radius:20px; padding:1.1rem 1.2rem; margin-bottom:1rem; box-shadow:0 4px 12px var(--shadow); cursor:pointer; transition:transform .15s ease; }
@@ -375,6 +408,7 @@ a{color:inherit;}
     <button class="desk-item i-recipes" onclick="goTo('recipes')"><span class="badge">🍲</span><span class="d-title brush">食譜卡</span><span class="d-tag">來記一道好菜</span></button>
     <button class="desk-item i-books" onclick="goTo('books')"><span class="badge">📚</span><span class="d-title brush">讀書心得</span><span class="d-tag">最近在讀什麼？</span></button>
     <button class="desk-item i-fitness" onclick="goTo('fitness')"><span class="badge">🏃</span><span class="d-title brush">運動規劃</span><span class="d-tag">今天動了嗎？</span></button>
+    <button class="desk-item i-todo" onclick="goTo('todo')"><span class="badge">📌</span><span class="d-title brush">待辦清單</span><span class="d-tag">接下來要做什麼？</span></button>
   </div>
 </section>
 
@@ -492,6 +526,22 @@ a{color:inherit;}
     <div id="fitness-people-bar"></div>
     <div id="fitness-form-slot"></div>
     <div id="fitness-content"></div>
+  </div>
+</section>
+
+<!-- ================= TODO ================= -->
+<section id="view-todo" class="module-view hidden">
+  <div class="module-header">
+    <div>
+      <button class="back-link" onclick="goTo('home')">← 回到桌面</button>
+      <h2 class="module-title brush">待辦清單</h2>
+      <p class="module-sub">分類管理、可連動日記提醒</p>
+    </div>
+    <button class="btn btn-primary" onclick="openTodoForm()">+ 新增待辦</button>
+  </div>
+  <div class="module-body">
+    <div id="todo-form-slot"></div>
+    <div id="todo-list"></div>
   </div>
 </section>
 
@@ -712,7 +762,7 @@ function fileToDataURL(file, maxDim, quality){
 }
 
 /* ===================== storage (window.storage when available, else localStorage; optional GitHub sync layer) ===================== */
-const STORAGE_KEYS = { travel:'travel:entries', diary:'diary:entries', recipes:'recipes:entries', books:'books:entries', fitness:'fitness:entries' };
+const STORAGE_KEYS = { travel:'travel:entries', diary:'diary:entries', recipes:'recipes:entries', books:'books:entries', fitness:'fitness:entries', todo:'todo:entries' };
 const HAS_CLAUDE_STORAGE = (typeof window.storage !== 'undefined' && window.storage !== null);
 
 async function localGet(key){
@@ -743,7 +793,7 @@ async function saveEntries(moduleKey, arr){
 
 /* ---- app settings (GitHub sync config) ---- */
 const SETTINGS_KEY = 'app:settings';
-const APP_VERSION = 'v3.6';
+const APP_VERSION = 'v3.9';
 let _appSettings = {};
 let _syncState = 'unset'; // unset | ok | warn | err
 async function getAppSettings(){
@@ -992,7 +1042,8 @@ async function buildFullSnapshot(){
   const recipes = state.recipes.entries !== null ? state.recipes.entries : await loadEntries('recipes');
   const books = state.books.entries !== null ? state.books.entries : await loadEntries('books');
   const fitness = state.fitness.entries !== null ? state.fitness.entries : await loadEntries('fitness');
-  return { travel, diary, recipes, books, fitness, updatedAt: Date.now() };
+  const todo = state.todo.entries !== null ? state.todo.entries : await loadEntries('todo');
+  return { travel, diary, recipes, books, fitness, todo, updatedAt: Date.now() };
 }
 async function pushToGithub(){
   if(!githubConfigured()) return;
@@ -1036,6 +1087,7 @@ async function pullFromGithub(){
   await saveEntriesRaw('recipes', data.recipes || []);
   await saveEntriesRaw('books', data.books || []);
   await saveEntriesRaw('fitness', data.fitness || []);
+  await saveEntriesRaw('todo', data.todo || []);
   _appSettings.lastSyncedAt = Date.now();
   await setAppSettings(_appSettings);
   _syncState = 'ok';
@@ -1080,6 +1132,7 @@ const state = {
   diary: { entries: null, editingId: null, calYear: new Date().getFullYear(), calMonth: new Date().getMonth(), selectedDate: new Date().toISOString().slice(0,10) },
   recipes: { entries: null, editingId: null, activeCategory: null, madeFilter: 'all', minRating: 0 },
   books: { entries: null, editingId: null, activeCategory: null },
+  todo: { entries: null, activeCategory: null, showDone: false, editingId: null, formSteps: [], formPhotos: [] },
   fitness: { entries: null, activePersonId: null, editingLogId: null, logFormOpen: false, personFormOpen: false, formMeals: [], formExercises: [], chartMetric: 'weight' },
 };
 
@@ -1093,6 +1146,8 @@ function goTo(view){
     initModule(view);
   } else if(view === 'travel'){
     renderTravelModule();
+  } else if(view === 'todo'){
+    renderTodoModule();
   }
 }
 
@@ -1113,10 +1168,18 @@ async function initModule(moduleKey){
     renderTravelModule();
     return;
   }
+  if(moduleKey === 'todo'){
+    document.getElementById('todo-list').innerHTML = '<div class="loading-msg">翻頁中…</div>';
+    state.todo.entries = await loadEntries('todo');
+    renderTodoModule();
+    return;
+  }
   if(moduleKey === 'diary'){
     document.getElementById('diary-calendar').innerHTML = '<div class="loading-msg">翻頁中…</div>';
     const entries = await loadEntries('diary');
     state.diary.entries = entries;
+    if(state.todo.entries === null) state.todo.entries = await loadEntries('todo');
+    if(state.travel.entries === null) _tripsForDiary = await loadEntries('travel');
     renderDiaryModule();
     return;
   }
@@ -2279,7 +2342,7 @@ function renderTrendChartModal(){
 async function callAiChat(messages){
   const provider = _appSettings.aiProvider;
   if(!provider || !_appSettings.aiApiKey) throw new Error('尚未設定 AI 教練，請到 ⚙️ 設定裡填入 API Key。');
-  const maxAttempts = 3;
+  const maxAttempts = 5;
   for(let attempt=1; attempt<=maxAttempts; attempt++){
     try{
       if(provider === 'gemini'){
@@ -2312,7 +2375,12 @@ async function callAiChat(messages){
       }
     }catch(e){
       const retryable = e.status === 503 || e.status === 429;
-      if(retryable && attempt < maxAttempts){ await sleep(1500 * attempt); continue; }
+      if(retryable && attempt < maxAttempts){ await sleep(1200 * attempt); continue; }
+      if(retryable){
+        const friendly = new Error('AI 服務目前太忙（這是 Google／OpenAI 那邊伺服器的狀況，不是這個網頁的問題），已經自動重試 '+maxAttempts+' 次還是一樣，建議等個 1-2 分鐘再試一次。');
+        friendly.status = e.status;
+        throw friendly;
+      }
       throw e;
     }
   }
@@ -2427,6 +2495,286 @@ async function askAiCoach(logId){
     document.getElementById('sync-banner').classList.add('hidden');
     showInfoModal('請教練失敗：' + e.message);
   }
+}
+
+/* ===================== TODO module ===================== */
+let _tripsForDiary = [];
+function localDateStr(d){
+  const y=d.getFullYear(), m=String(d.getMonth()+1).padStart(2,'0'), day=String(d.getDate()).padStart(2,'0');
+  return `${y}-${m}-${day}`;
+}
+function todayStr(){ return localDateStr(new Date()); }
+function addDaysStr(dateStr, n){
+  const p = dateStr.split('-').map(Number);
+  return localDateStr(new Date(p[0], p[1]-1, p[2]+n));
+}
+async function persistTodo(){ await saveEntries('todo', state.todo.entries); }
+function todoCategories(){
+  const set = new Set();
+  (state.todo.entries||[]).forEach(t => { if(t.category) set.add(t.category); });
+  return [...set].sort();
+}
+function todoSectionOf(t, today){
+  if(t.done) return 'done';
+  if(!t.dueDate) return 'nodate';
+  if(t.dueDate < today) return 'overdue';
+  if(t.dueDate === today) return 'today';
+  if(t.dueDate === addDaysStr(today,1)) return 'tomorrow';
+  if(t.dueDate <= addDaysStr(today,7)) return 'week';
+  return 'later';
+}
+const TODO_SECTIONS = [
+  ['overdue','⚠️ 已逾期'], ['today','今天'], ['tomorrow','明天'], ['week','接下來 7 天'], ['later','之後'], ['nodate','沒有日期'], ['done','已完成'],
+];
+function todoStepsHtml(t){
+  const steps = t.steps || [];
+  if(!steps.length) return '';
+  return `<div class="todo-steps">` + steps.map(s => `
+    <label class="todo-step ${s.done?'is-done':''}">
+      <input type="checkbox" ${s.done?'checked':''} onchange="toggleTodoStep('${t.id}','${s.id}')">
+      <span>${esc(s.text)}</span>
+      ${s.photo ? `<img class="todo-thumb-sm" src="${s.photo}" onclick="event.preventDefault();event.stopPropagation();openImageLightbox(this.src)">` : ''}
+    </label>`).join('') + `</div>`;
+}
+function todoPhotosHtml(t){
+  const photos = t.photos || [];
+  if(!photos.length) return '';
+  return `<div class="todo-photo-strip">` + photos.map(src => `<img class="todo-thumb" src="${src}" onclick="openImageLightbox(this.src)">`).join('') + `</div>`;
+}
+function todoItemHtml(t){
+  const metas = [];
+  if(t.category) metas.push(`<span class="todo-cat-tag">${esc(t.category)}</span>`);
+  if(t.dueDate) metas.push(`<span>📅 ${esc(fmtDayLabel(t.dueDate))}${t.dueTime?' '+esc(t.dueTime):''}</span>`);
+  else if(t.dueTime) metas.push(`<span>🕒 ${esc(t.dueTime)}</span>`);
+  const steps = t.steps || [];
+  if(steps.length) metas.push(`<span>☑️ ${steps.filter(s=>s.done).length}/${steps.length}</span>`);
+  if(t.dueDate && t.linkDiary!==false) metas.push(`<span>📖 日記提醒</span>`);
+  return `<div class="todo-item ${t.done?'is-done':''}">
+    <input type="checkbox" ${t.done?'checked':''} onchange="toggleTodoDone('${t.id}')">
+    <div class="todo-item-body">
+      <div class="todo-item-title">${esc(t.title)}</div>
+      ${metas.length?`<div class="todo-item-meta">${metas.join('')}</div>`:''}
+      ${todoStepsHtml(t)}
+      ${todoPhotosHtml(t)}
+      ${t.notes?`<div class="todo-item-notes">${esc(t.notes)}</div>`:''}
+    </div>
+    <button class="tiny-link" onclick="openTodoForm('${t.id}')">編輯</button>
+  </div>`;
+}
+async function toggleTodoStep(todoId, stepId){
+  const t = state.todo.entries.find(x=>x.id===todoId);
+  if(!t) return;
+  const st = (t.steps||[]).find(x=>x.id===stepId);
+  if(!st) return;
+  st.done = !st.done;
+  refreshTodoAndDiary();
+  await persistTodo();
+}
+function renderTodoModule(){
+  const el = document.getElementById('todo-list');
+  if(!el || state.todo.entries === null) return;
+  const st = state.todo;
+  const today = todayStr();
+  const cats = todoCategories();
+  let html = '';
+  if(cats.length){
+    html += `<div class="checklist-pills" style="margin-bottom:.8rem;">` +
+      `<button class="pill ${!st.activeCategory?'pill-active':''}" onclick="setTodoCategoryFilter(null)">全部</button>` +
+      cats.map(c => `<button class="pill ${st.activeCategory===c?'pill-active':''}" onclick="setTodoCategoryFilter('${esc(c)}')">${esc(c)}</button>`).join('') +
+      `</div>`;
+  }
+  const list = (st.entries||[]).filter(t => !st.activeCategory || t.category === st.activeCategory);
+  const groups = {};
+  list.forEach(t => { (groups[todoSectionOf(t, today)] = groups[todoSectionOf(t, today)] || []).push(t); });
+  const doneCount = (groups.done||[]).length;
+  let shown = 0;
+  TODO_SECTIONS.forEach(([key,label]) => {
+    if(key==='done' && !st.showDone) return;
+    const items = (groups[key]||[]).sort((a,b)=>((a.dueDate||'9999')+(a.dueTime||'')).localeCompare((b.dueDate||'9999')+(b.dueTime||'')));
+    if(!items.length) return;
+    shown += items.length;
+    html += `<div class="todo-section-h">${label}　${items.length}</div>` + items.map(todoItemHtml).join('');
+  });
+  if(shown===0){
+    html += `<div class="empty-state">${(st.entries||[]).length ? '這個條件下沒有待辦事項。' : '還沒有待辦事項，點右上角「+ 新增待辦」開始吧。'}</div>`;
+  }
+  if(doneCount){
+    html += `<div style="text-align:center;margin:1rem 0;"><button class="btn btn-ghost btn-sm" onclick="toggleShowDoneTodos()">${st.showDone?'隱藏':'顯示'}已完成（${doneCount}）</button></div>`;
+  }
+  el.innerHTML = html;
+}
+function setTodoCategoryFilter(c){ state.todo.activeCategory = c; renderTodoModule(); }
+function toggleShowDoneTodos(){ state.todo.showDone = !state.todo.showDone; renderTodoModule(); }
+function refreshTodoAndDiary(){
+  renderTodoModule();
+  if(state.diary.entries !== null) renderDiaryModule();
+}
+async function toggleTodoDone(id){
+  const t = state.todo.entries.find(x=>x.id===id);
+  if(!t) return;
+  t.done = !t.done;
+  refreshTodoAndDiary();
+  await persistTodo();
+}
+async function toggleTodoFromDiary(id){ await toggleTodoDone(id); }
+function syncStepsFromDom(){
+  const cards = document.querySelectorAll('#todo-steps-editor .step-card');
+  state.todo.formSteps = Array.from(cards).map(c => {
+    const id = c.dataset.id;
+    const existing = (state.todo.formSteps||[]).find(x=>x.id===id) || {};
+    return { id, done: c.querySelector('.step-done').checked, text: c.querySelector('.step-text').value, photo: existing.photo };
+  });
+}
+function addStepRow(){
+  syncStepsFromDom();
+  state.todo.formSteps.push({ id: uid(), done:false, text:'' });
+  renderTodoStepsEditor();
+  const inputs = document.querySelectorAll('#todo-steps-editor .step-text');
+  if(inputs.length) inputs[inputs.length-1].focus();
+}
+function removeStepRow(id){ syncStepsFromDom(); state.todo.formSteps = state.todo.formSteps.filter(x=>x.id!==id); renderTodoStepsEditor(); }
+async function handleStepPhotoChange(id, inputEl){
+  if(!inputEl.files || !inputEl.files[0]) return;
+  syncStepsFromDom();
+  const dataUrl = await fileToDataURL(inputEl.files[0], 500, 0.7);
+  const st = state.todo.formSteps.find(x=>x.id===id);
+  if(st) st.photo = dataUrl;
+  renderTodoStepsEditor();
+}
+function removeStepPhoto(id){ syncStepsFromDom(); const st = state.todo.formSteps.find(x=>x.id===id); if(st) st.photo = undefined; renderTodoStepsEditor(); }
+function renderTodoStepsEditor(){
+  const el = document.getElementById('todo-steps-editor');
+  if(!el) return;
+  el.innerHTML = state.todo.formSteps.map(s => `
+    <div class="step-card" data-id="${s.id}">
+      <div class="step-row">
+        <input type="checkbox" class="step-done" ${s.done?'checked':''}>
+        <input type="text" class="step-text" value="${esc(s.text)}" placeholder="小事項" onkeydown="if(event.key==='Enter'){event.preventDefault();addStepRow();}">
+        <input type="file" accept="image/*" id="steppic-${s.id}" style="display:none" onchange="handleStepPhotoChange('${s.id}', this)">
+        <button type="button" class="tiny-icon-btn" onclick="document.getElementById('steppic-${s.id}').click()" title="附圖">📷</button>
+        <button type="button" class="tiny-x" onclick="removeStepRow('${s.id}')">✕</button>
+      </div>
+      ${s.photo ? `<div class="step-photo-line"><span class="todo-photo-wrap"><img class="todo-thumb" src="${s.photo}" onclick="openImageLightbox(this.src)"><button type="button" class="tiny-x" onclick="removeStepPhoto('${s.id}')">✕</button></span></div>` : ''}
+    </div>`).join('') + `<button type="button" class="btn btn-ghost btn-sm" onclick="addStepRow()">+ 新增步驟</button>`;
+}
+async function handleTodoPhotosChange(inputEl){
+  if(!inputEl.files || !inputEl.files.length) return;
+  for(const f of Array.from(inputEl.files)){
+    state.todo.formPhotos.push(await fileToDataURL(f, 800, 0.72));
+  }
+  inputEl.value = '';
+  renderTodoPhotosEditor();
+}
+function removeTodoPhoto(i){ state.todo.formPhotos.splice(i,1); renderTodoPhotosEditor(); }
+function renderTodoPhotosEditor(){
+  const el = document.getElementById('todo-photos-editor');
+  if(!el) return;
+  el.innerHTML = (state.todo.formPhotos.length ? `<div class="todo-photo-strip" style="margin-bottom:.5rem;">` + state.todo.formPhotos.map((src,i) =>
+    `<span class="todo-photo-wrap"><img class="todo-thumb" src="${src}" onclick="openImageLightbox(this.src)"><button type="button" class="tiny-x" onclick="removeTodoPhoto(${i})">✕</button></span>`).join('') + `</div>` : '') +
+    `<input type="file" accept="image/*" multiple onchange="handleTodoPhotosChange(this)">`;
+}
+function todoFormHtml(t){
+  const x = t || {};
+  state.todo.formSteps = (x.steps||[]).map(s => ({...s}));
+  state.todo.formPhotos = (x.photos||[]).slice();
+  return `<div class="form-panel">
+    <div class="field"><label>待辦內容</label><input type="text" id="todo-title" value="${esc(x.title)}" placeholder="例如：預訂機票"></div>
+    <div class="field"><label>分類（自己打，例如出國／每年目標／購物清單）</label>
+      <input type="text" id="todo-category" list="todo-category-list" value="${esc(x.category)}" placeholder="出國">
+      <datalist id="todo-category-list">${todoCategories().map(c=>`<option value="${esc(c)}">`).join('')}</datalist>
+    </div>
+    <div class="row-2">
+      <div class="field"><label>日期（選填）</label><input type="date" id="todo-date" value="${esc(x.dueDate)}"></div>
+      <div class="field"><label>時間（選填）</label><input type="time" id="todo-time" value="${esc(x.dueTime)}"></div>
+    </div>
+    <div class="field checkbox-field"><label><input type="checkbox" id="todo-link-diary" ${x.linkDiary!==false?'checked':''}> 連動到日記（在日記那一天顯示提醒）</label></div>
+    <div class="subtab-h" style="margin-top:.6rem;">☑️ 步驟（小事項，可各自附圖）</div>
+    <div id="todo-steps-editor"></div>
+    <div class="subtab-h" style="margin-top:.8rem;">🖼️ 圖片</div>
+    <div id="todo-photos-editor"></div>
+    <div class="field" style="margin-top:.8rem;"><label>備註</label><textarea id="todo-notes" placeholder="想補充的細節…">${esc(x.notes)}</textarea></div>
+    <div class="form-actions">
+      <button class="btn btn-primary" onclick="saveTodoForm()">儲存</button>
+      <button class="btn btn-ghost" onclick="closeTodoForm()">取消</button>
+      ${t ? `<button class="btn btn-danger" onclick="deleteTodo('${t.id}')">刪除</button>` : ''}
+    </div>
+  </div>`;
+}
+function openTodoForm(editId){
+  state.todo.editingId = editId || null;
+  const t = editId ? state.todo.entries.find(x=>x.id===editId) : null;
+  const slot = document.getElementById('todo-form-slot');
+  slot.innerHTML = todoFormHtml(t);
+  renderTodoStepsEditor();
+  renderTodoPhotosEditor();
+  slot.scrollIntoView({behavior:'smooth', block:'start'});
+}
+function closeTodoForm(){ state.todo.editingId = null; document.getElementById('todo-form-slot').innerHTML = ''; }
+async function saveTodoForm(){
+  const editId = state.todo.editingId;
+  let t = editId ? state.todo.entries.find(x=>x.id===editId) : { id: uid(), createdAt: Date.now(), done:false };
+  if(!t){ t = { id: uid(), createdAt: Date.now(), done:false }; }
+  t.title = val('todo-title').trim() || '未命名待辦';
+  t.category = val('todo-category').trim();
+  t.dueDate = val('todo-date') || undefined;
+  t.dueTime = val('todo-time') || undefined;
+  t.linkDiary = document.getElementById('todo-link-diary').checked;
+  t.notes = val('todo-notes').trim();
+  syncStepsFromDom();
+  t.steps = state.todo.formSteps.filter(s => s.text.trim()).map(s => ({ id:s.id, text:s.text.trim(), done:s.done, photo:s.photo }));
+  t.photos = state.todo.formPhotos.slice();
+  if(!editId) state.todo.entries.push(t);
+  closeTodoForm();
+  refreshTodoAndDiary();
+  await persistTodo();
+}
+function deleteTodo(id){
+  showConfirmModal('確定要刪除這個待辦嗎？', async () => {
+    state.todo.entries = state.todo.entries.filter(x=>x.id!==id);
+    closeTodoForm();
+    refreshTodoAndDiary();
+    await persistTodo();
+  });
+}
+
+/* ---- diary integration: todos & trips shown on the diary day ---- */
+function diaryTodosOn(dateStr){
+  return (state.todo.entries||[]).filter(t => t.dueDate===dateStr && t.linkDiary!==false)
+    .sort((a,b)=>(a.dueTime||'').localeCompare(b.dueTime||''));
+}
+function diaryTripsOn(dateStr){
+  const trips = state.travel.entries !== null ? state.travel.entries : _tripsForDiary;
+  const out = [];
+  (trips||[]).forEach(tr => {
+    const day = (tr.days||[]).find(d => d.date===dateStr);
+    if(day) out.push({ trip: tr, day });
+  });
+  return out;
+}
+function diaryExtrasHtml(dateStr){
+  let html = '';
+  const trips = diaryTripsOn(dateStr);
+  if(trips.length){
+    html += `<div class="diary-extra-block"><div class="subtab-h">✈️ 這天的旅行行程</div>` + trips.map(({trip,day}) =>
+      `<div class="diary-extra-row">${esc(trip.title)}${trip.destination?`・${esc(trip.destination)}`:''}${day.title?`：${esc(day.title)}`:''}${day.stay?`　🏨 ${esc(day.stay)}`:''}</div>`
+    ).join('') + `</div>`;
+  }
+  const todos = diaryTodosOn(dateStr);
+  if(todos.length){
+    html += `<div class="diary-extra-block"><div class="subtab-h">📌 這天的待辦提醒</div>` + todos.map(t =>
+      `<div class="todo-item ${t.done?'is-done':''}" style="box-shadow:none;border:1px dashed #eee0cc;">
+        <input type="checkbox" ${t.done?'checked':''} onchange="toggleTodoFromDiary('${t.id}')">
+        <div class="todo-item-body">
+          <div class="todo-item-title">${esc(t.title)}</div>
+          <div class="todo-item-meta">${t.dueTime?`<span>🕒 ${esc(t.dueTime)}</span>`:''}${t.category?`<span class="todo-cat-tag">${esc(t.category)}</span>`:''}</div>
+          ${todoStepsHtml(t)}
+          ${todoPhotosHtml(t)}
+          ${t.notes?`<div class="todo-item-notes">${esc(t.notes)}</div>`:''}
+        </div>
+      </div>`
+    ).join('') + `</div>`;
+  }
+  return html;
 }
 
 const formBuilders = {
@@ -2599,6 +2947,7 @@ function diaryDetailPanelHtml(byDate){
         <button class="tiny-link" onclick='openForm("diary", ${attrJson(e)})'>編輯</button>
       </div>`).join('');
   }
+  html += diaryExtrasHtml(sel);
   return html;
 }
 function renderDiaryEntryPanel(){
@@ -2626,6 +2975,7 @@ function renderDiaryCalendarGrid(){
     const dateStr = `${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
     const dayEntries = byDate[dateStr] || [];
     const badge = diaryDayBadge(dayEntries);
+    const marks = (diaryTripsOn(dateStr).length ? '✈️' : '') + (diaryTodosOn(dateStr).some(t=>!t.done) ? '📌' : '');
     const cls = ['cal-cell'];
     if(dateStr===todayStr) cls.push('is-today');
     if(dateStr===state.diary.selectedDate) cls.push('is-selected');
@@ -2633,6 +2983,7 @@ function renderDiaryCalendarGrid(){
     cells += `<button class="${cls.join(' ')}" onclick="selectDiaryDate('${dateStr}')">
       <span class="cal-daynum">${d}</span>
       ${badge ? `<span class="cal-day-badge">${esc(badge)}</span>` : ''}
+      ${marks ? `<span class="cal-mark">${marks}</span>` : ''}
     </button>`;
   }
   document.getElementById('diary-calendar').innerHTML = `
