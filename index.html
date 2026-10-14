@@ -22,6 +22,7 @@
   --book-accent:#C98BC9;   --book-accent-dark:#A15FA1;   --book-bg:#F6EAF8;   --book-bg-2:#FBF2FC;
   --fitness-accent:#4FB6A8; --fitness-accent-dark:#33897D; --fitness-bg:#E1F5F1; --fitness-bg-2:#F0FBF9;
   --todo-accent:#E6708A;    --todo-accent-dark:#C04A66;    --todo-bg:#FCE4EA;    --todo-bg-2:#FEF1F4;
+  --song-accent:#E8A838;    --song-accent-dark:#B87D12;    --song-bg:#FFEFCC;    --song-bg-2:#FFF8E9;
 
   --status-planning-bg:#FFE3C2; --status-planning-fg:#B5651D;
   --status-soon-bg:#FFD6D6;     --status-soon-fg:#C0392B;
@@ -95,6 +96,8 @@ a{color:inherit;}
 .desk-item.i-fitness .badge{ background:var(--fitness-bg); }
 .desk-item.i-todo{ border-color:var(--todo-accent); }
 .desk-item.i-todo .badge{ background:var(--todo-bg); }
+.desk-item.i-songs{ border-color:var(--song-accent); }
+.desk-item.i-songs .badge{ background:var(--song-bg); }
 
 /* ============ shared module chrome ============ */
 .module-view{ min-height:100vh; padding-bottom:4rem; }
@@ -147,6 +150,21 @@ a{color:inherit;}
 #view-todo{ background:var(--todo-bg-2); } #view-todo .module-title, #view-todo .back-link{ color:var(--todo-accent-dark); } #view-todo .btn-primary{ background:var(--todo-accent); }
 #view-todo .pill{ border-color:var(--todo-accent); color:var(--todo-accent-dark); }
 #view-todo .pill-active{ background:var(--todo-accent); color:#fff; }
+#view-songs{ background:var(--song-bg-2); } #view-songs .module-title, #view-songs .back-link{ color:var(--song-accent-dark); } #view-songs .btn-primary{ background:var(--song-accent); }
+#view-songs .pill{ border-color:var(--song-accent); color:var(--song-accent-dark); }
+#view-songs .pill-active{ background:var(--song-accent); color:#fff; }
+.song-card{ display:flex; align-items:center; justify-content:space-between; gap:.8rem; background:var(--white); border-radius:16px; padding:.9rem 1.1rem; margin-bottom:.7rem; box-shadow:0 3px 10px var(--shadow); cursor:pointer; transition:transform .15s ease; }
+.song-card:hover{ transform:translateY(-2px); }
+.song-card-main{ min-width:0; }
+.song-title-link, .song-title-text{ font-family:'ZCOOL KuaiLe',cursive; font-size:1.2rem; color:var(--ink); word-break:break-word; }
+.song-title-link{ color:var(--song-accent-dark); text-decoration:underline; text-decoration-style:dotted; text-underline-offset:4px; }
+.song-badges{ display:flex; gap:.4rem; flex-wrap:wrap; margin-top:.35rem; }
+.song-badge{ font-size:.72rem; font-weight:600; border-radius:999px; padding:.12rem .6rem; }
+.song-badge.yt{ background:#FFE0DE; color:#C0392B; }
+.song-badge.style{ background:#E9E4FF; color:#5B47B0; }
+.song-badge.mem{ background:var(--song-bg); color:var(--song-accent-dark); }
+.song-more{ font-size:.8rem; color:var(--ink-soft); white-space:nowrap; }
+.song-lyrics{ white-space:pre-wrap; line-height:1.9; font-size:.95rem; background:var(--song-bg-2); border-radius:14px; padding:.9rem 1rem; margin-top:.7rem; max-height:50vh; overflow-y:auto; }
 .todo-section-h{ font-family:'ZCOOL KuaiLe',cursive; font-size:1.1rem; color:var(--todo-accent-dark); margin:1.1rem 0 .5rem; }
 .todo-item{ display:flex; gap:.7rem; align-items:flex-start; background:var(--white); border-radius:14px; padding:.7rem .9rem; margin-bottom:.6rem; box-shadow:0 3px 10px var(--shadow); }
 .todo-item input[type=checkbox]{ width:19px; height:19px; margin-top:.15rem; accent-color:var(--todo-accent); flex-shrink:0; }
@@ -409,6 +427,7 @@ a{color:inherit;}
     <button class="desk-item i-books" onclick="goTo('books')"><span class="badge">📚</span><span class="d-title brush">讀書心得</span><span class="d-tag">最近在讀什麼？</span></button>
     <button class="desk-item i-fitness" onclick="goTo('fitness')"><span class="badge">🏃</span><span class="d-title brush">運動規劃</span><span class="d-tag">今天動了嗎？</span></button>
     <button class="desk-item i-todo" onclick="goTo('todo')"><span class="badge">📌</span><span class="d-title brush">待辦清單</span><span class="d-tag">接下來要做什麼？</span></button>
+    <button class="desk-item i-songs" onclick="goTo('songs')"><span class="badge">🎵</span><span class="d-title brush">創作歌</span><span class="d-tag">今天寫了什麼歌？</span></button>
   </div>
 </section>
 
@@ -544,6 +563,27 @@ a{color:inherit;}
     <div id="todo-list"></div>
   </div>
 </section>
+
+<!-- ================= SONGS ================= -->
+<section id="view-songs" class="module-view hidden">
+  <div class="module-header">
+    <div>
+      <button class="back-link" onclick="goTo('home')">← 回到桌面</button>
+      <h2 class="module-title brush">創作歌</h2>
+      <p class="module-sub">我寫的歌與歌詞</p>
+    </div>
+    <button class="btn btn-primary" onclick="openSongForm()">+ 新增歌曲</button>
+  </div>
+  <div class="module-body">
+    <div id="songs-form-slot"></div>
+    <div id="songs-list"></div>
+  </div>
+</section>
+
+<!-- song detail modal -->
+<div id="song-detail-overlay" class="modal-overlay hidden">
+  <div class="modal-box modal-box-wide" id="song-detail-content"></div>
+</div>
 
 <script>
 /* ===================== helpers ===================== */
@@ -762,7 +802,7 @@ function fileToDataURL(file, maxDim, quality){
 }
 
 /* ===================== storage (window.storage when available, else localStorage; optional GitHub sync layer) ===================== */
-const STORAGE_KEYS = { travel:'travel:entries', diary:'diary:entries', recipes:'recipes:entries', books:'books:entries', fitness:'fitness:entries', todo:'todo:entries' };
+const STORAGE_KEYS = { travel:'travel:entries', diary:'diary:entries', recipes:'recipes:entries', books:'books:entries', fitness:'fitness:entries', todo:'todo:entries', songs:'songs:entries' };
 const HAS_CLAUDE_STORAGE = (typeof window.storage !== 'undefined' && window.storage !== null);
 
 async function localGet(key){
@@ -793,7 +833,7 @@ async function saveEntries(moduleKey, arr){
 
 /* ---- app settings (GitHub sync config) ---- */
 const SETTINGS_KEY = 'app:settings';
-const APP_VERSION = 'v3.9';
+const APP_VERSION = 'v4.1';
 let _appSettings = {};
 let _syncState = 'unset'; // unset | ok | warn | err
 async function getAppSettings(){
@@ -1043,7 +1083,8 @@ async function buildFullSnapshot(){
   const books = state.books.entries !== null ? state.books.entries : await loadEntries('books');
   const fitness = state.fitness.entries !== null ? state.fitness.entries : await loadEntries('fitness');
   const todo = state.todo.entries !== null ? state.todo.entries : await loadEntries('todo');
-  return { travel, diary, recipes, books, fitness, todo, updatedAt: Date.now() };
+  const songs = state.songs.entries !== null ? state.songs.entries : await loadEntries('songs');
+  return { travel, diary, recipes, books, fitness, todo, songs, updatedAt: Date.now() };
 }
 async function pushToGithub(){
   if(!githubConfigured()) return;
@@ -1088,6 +1129,7 @@ async function pullFromGithub(){
   await saveEntriesRaw('books', data.books || []);
   await saveEntriesRaw('fitness', data.fitness || []);
   await saveEntriesRaw('todo', data.todo || []);
+  await saveEntriesRaw('songs', data.songs || []);
   _appSettings.lastSyncedAt = Date.now();
   await setAppSettings(_appSettings);
   _syncState = 'ok';
@@ -1132,6 +1174,7 @@ const state = {
   diary: { entries: null, editingId: null, calYear: new Date().getFullYear(), calMonth: new Date().getMonth(), selectedDate: new Date().toISOString().slice(0,10) },
   recipes: { entries: null, editingId: null, activeCategory: null, madeFilter: 'all', minRating: 0 },
   books: { entries: null, editingId: null, activeCategory: null },
+  songs: { entries: null, editingId: null, filter: 'all', styleFilter: null },
   todo: { entries: null, activeCategory: null, showDone: false, editingId: null, formSteps: [], formPhotos: [] },
   fitness: { entries: null, activePersonId: null, editingLogId: null, logFormOpen: false, personFormOpen: false, formMeals: [], formExercises: [], chartMetric: 'weight' },
 };
@@ -1166,6 +1209,12 @@ async function initModule(moduleKey){
     });
     state.travel.entries = entries;
     renderTravelModule();
+    return;
+  }
+  if(moduleKey === 'songs'){
+    document.getElementById('songs-list').innerHTML = '<div class="loading-msg">翻頁中…</div>';
+    state.songs.entries = await loadEntries('songs');
+    renderSongsModule();
     return;
   }
   if(moduleKey === 'todo'){
@@ -2775,6 +2824,142 @@ function diaryExtrasHtml(dateStr){
     ).join('') + `</div>`;
   }
   return html;
+}
+
+/* ===================== SONGS module ===================== */
+function songUrl(u){
+  u = (u||'').trim();
+  if(!u) return '';
+  return /^https?:\/\//i.test(u) ? u : 'https://' + u;
+}
+async function persistSongs(){ await saveEntries('songs', state.songs.entries); }
+function songStyles(){
+  const set = new Set();
+  (state.songs.entries||[]).forEach(sg => { if(sg.style) set.add(sg.style); });
+  return [...set].sort();
+}
+function songBadgesHtml(sg){
+  return (sg.style ? `<span class="song-badge style">🎸 ${esc(sg.style)}</span>` : '')
+    + (sg.onYoutube ? '<span class="song-badge yt">▶ 已上傳 YouTube</span>' : '')
+    + (sg.memberOnly ? '<span class="song-badge mem">⭐ 會員製作</span>' : '');
+}
+function setSongStyleFilter(c){ state.songs.styleFilter = c; renderSongsModule(); }
+function songRowHtml(sg){
+  const title = sg.link
+    ? `<a class="song-title-link" href="${esc(songUrl(sg.link))}" target="_blank" rel="noopener" onclick="event.stopPropagation()">${esc(sg.title)} 🔗</a>`
+    : `<span class="song-title-text">${esc(sg.title)}</span>`;
+  const badges = songBadgesHtml(sg);
+  return `<div class="song-card" onclick="openSongDetail('${sg.id}')">
+    <div class="song-card-main">${title}${badges?`<div class="song-badges">${badges}</div>`:''}</div>
+    <span class="song-more">詳細 ›</span>
+  </div>`;
+}
+function renderSongsModule(){
+  const el = document.getElementById('songs-list');
+  if(!el || state.songs.entries === null) return;
+  const f = state.songs.filter;
+  const all = state.songs.entries;
+  const sf = state.songs.styleFilter;
+  const list = all.filter(sg => f==='yt' ? sg.onYoutube : (f==='member' ? sg.memberOnly : true))
+    .filter(sg => !sf || sg.style === sf)
+    .sort((a,b)=>(b.createdAt||0)-(a.createdAt||0));
+  let html = '';
+  if(all.length){
+    html += `<div class="checklist-pills" style="margin-bottom:.9rem;">
+      <button class="pill ${f==='all'?'pill-active':''}" onclick="setSongFilter('all')">全部（${all.length}）</button>
+      <button class="pill ${f==='yt'?'pill-active':''}" onclick="setSongFilter('yt')">▶ 已上傳 YouTube</button>
+      <button class="pill ${f==='member'?'pill-active':''}" onclick="setSongFilter('member')">⭐ 會員製作</button>
+    </div>`;
+    const styles = songStyles();
+    if(styles.length){
+      html += `<div class="checklist-pills" style="margin-bottom:.9rem;">
+        <button class="pill ${!sf?'pill-active':''}" onclick="setSongStyleFilter(null)">全部風格</button>` +
+        styles.map(c => `<button class="pill ${sf===c?'pill-active':''}" onclick="setSongStyleFilter('${esc(c)}')">🎸 ${esc(c)}</button>`).join('') + `</div>`;
+    }
+  }
+  if(list.length===0){
+    html += `<div class="empty-state">${all.length ? '這個條件下沒有歌曲。' : '還沒有創作歌，點右上角「+ 新增歌曲」記下第一首吧。'}</div>`;
+  } else {
+    html += list.map(songRowHtml).join('');
+  }
+  el.innerHTML = html;
+}
+function setSongFilter(f){ state.songs.filter = f; renderSongsModule(); }
+
+function openSongDetail(id){
+  const sg = state.songs.entries.find(x=>x.id===id);
+  if(!sg) return;
+  const badges = songBadgesHtml(sg);
+  document.getElementById('song-detail-content').innerHTML = `
+    <div class="chat-header">
+      <span class="brush" style="font-size:1.3rem;">🎵 ${esc(sg.title)}</span>
+      <button class="icon-btn" onclick="closeSongDetail()">✕</button>
+    </div>
+    <div class="song-badges" style="margin:.3rem 0 .5rem;">
+      ${badges || '<span class="song-badge" style="background:#eee;color:#888;">尚未上傳 YouTube</span>'}
+    </div>
+    ${sg.link ? `<a class="btn btn-primary btn-sm" style="display:inline-block;text-decoration:none;" href="${esc(songUrl(sg.link))}" target="_blank" rel="noopener">🔗 開啟連結</a>` : ''}
+    <div class="subtab-h" style="margin-top:.9rem;">歌詞</div>
+    <div class="song-lyrics">${sg.lyrics ? esc(sg.lyrics) : '（還沒有填歌詞）'}</div>
+    <div class="form-actions" style="margin-top:.9rem;">
+      <button class="btn btn-primary" onclick="editSongFromDetail('${sg.id}')">編輯</button>
+      <button class="btn btn-ghost" onclick="closeSongDetail()">關閉</button>
+    </div>`;
+  document.getElementById('song-detail-overlay').classList.remove('hidden');
+}
+function closeSongDetail(){ document.getElementById('song-detail-overlay').classList.add('hidden'); }
+function editSongFromDetail(id){ closeSongDetail(); openSongForm(id); }
+
+function songFormHtml(sg){
+  const x = sg || {};
+  return `<div class="form-panel">
+    <div class="field"><label>歌名</label><input type="text" id="song-title" value="${esc(x.title)}" placeholder="歌曲名稱"></div>
+    <div class="field"><label>Style 風格（自己打，例如流行、民謠、搖滾）</label>
+      <input type="text" id="song-style" list="song-style-list" value="${esc(x.style)}" placeholder="流行">
+      <datalist id="song-style-list">${songStyles().map(c=>`<option value="${esc(c)}">`).join('')}</datalist>
+    </div>
+    <div class="field"><label>歌詞</label><textarea id="song-lyrics" style="min-height:12rem;" placeholder="貼上或寫下歌詞（換行會保留）">${esc(x.lyrics)}</textarea></div>
+    <div class="field checkbox-field"><label><input type="checkbox" id="song-yt" ${x.onYoutube?'checked':''}> 已上傳 YouTube</label></div>
+    <div class="field checkbox-field"><label><input type="checkbox" id="song-member" ${x.memberOnly?'checked':''}> 會員製作（會員專屬）</label></div>
+    <div class="field"><label>連結（點歌名就會開啟）</label><input type="text" id="song-link" value="${esc(x.link)}" placeholder="貼上 YouTube 或其他網址"></div>
+    <div class="form-actions">
+      <button class="btn btn-primary" onclick="saveSongForm()">儲存</button>
+      <button class="btn btn-ghost" onclick="closeSongForm()">取消</button>
+      ${sg ? `<button class="btn btn-danger" onclick="deleteSong('${sg.id}')">刪除</button>` : ''}
+    </div>
+  </div>`;
+}
+function openSongForm(editId){
+  state.songs.editingId = editId || null;
+  const sg = editId ? state.songs.entries.find(x=>x.id===editId) : null;
+  const slot = document.getElementById('songs-form-slot');
+  slot.innerHTML = songFormHtml(sg);
+  slot.scrollIntoView({behavior:'smooth', block:'start'});
+}
+function closeSongForm(){ state.songs.editingId = null; document.getElementById('songs-form-slot').innerHTML = ''; }
+async function saveSongForm(){
+  const editId = state.songs.editingId;
+  let sg = editId ? state.songs.entries.find(x=>x.id===editId) : null;
+  const isNew = !sg;
+  if(isNew) sg = { id: uid(), createdAt: Date.now() };
+  sg.title = val('song-title').trim() || '未命名歌曲';
+  sg.style = val('song-style').trim();
+  sg.lyrics = val('song-lyrics');
+  sg.onYoutube = document.getElementById('song-yt').checked;
+  sg.memberOnly = document.getElementById('song-member').checked;
+  sg.link = val('song-link').trim();
+  if(isNew) state.songs.entries.push(sg);
+  closeSongForm();
+  renderSongsModule();
+  await persistSongs();
+}
+function deleteSong(id){
+  showConfirmModal('確定要刪除這首歌嗎？歌詞也會一起刪除，無法復原。', async () => {
+    state.songs.entries = state.songs.entries.filter(x=>x.id!==id);
+    closeSongForm();
+    renderSongsModule();
+    await persistSongs();
+  });
 }
 
 const formBuilders = {
