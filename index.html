@@ -23,6 +23,7 @@
   --fitness-accent:#4FB6A8; --fitness-accent-dark:#33897D; --fitness-bg:#E1F5F1; --fitness-bg-2:#F0FBF9;
   --todo-accent:#E6708A;    --todo-accent-dark:#C04A66;    --todo-bg:#FCE4EA;    --todo-bg-2:#FEF1F4;
   --song-accent:#E8A838;    --song-accent-dark:#B87D12;    --song-bg:#FFEFCC;    --song-bg-2:#FFF8E9;
+  --ledger-accent:#46A874;  --ledger-accent-dark:#2F8556;  --ledger-bg:#DDF3E6;  --ledger-bg-2:#F0FAF4;
 
   --status-planning-bg:#FFE3C2; --status-planning-fg:#B5651D;
   --status-soon-bg:#FFD6D6;     --status-soon-fg:#C0392B;
@@ -98,6 +99,8 @@ a{color:inherit;}
 .desk-item.i-todo .badge{ background:var(--todo-bg); }
 .desk-item.i-songs{ border-color:var(--song-accent); }
 .desk-item.i-songs .badge{ background:var(--song-bg); }
+.desk-item.i-ledger{ border-color:var(--ledger-accent); }
+.desk-item.i-ledger .badge{ background:var(--ledger-bg); }
 
 /* ============ shared module chrome ============ */
 .module-view{ min-height:100vh; padding-bottom:4rem; }
@@ -164,6 +167,47 @@ a{color:inherit;}
 .song-badge.style{ background:#E9E4FF; color:#5B47B0; }
 .song-badge.mem{ background:var(--song-bg); color:var(--song-accent-dark); }
 .song-more{ font-size:.8rem; color:var(--ink-soft); white-space:nowrap; }
+.ledger-nav{ display:flex; align-items:center; justify-content:center; gap:.8rem; margin:.6rem 0 1rem; flex-wrap:wrap; }
+.ledger-nav .lg-label{ font-family:'ZCOOL KuaiLe',cursive; font-size:1.25rem; color:var(--ledger-accent-dark); min-width:8rem; text-align:center; }
+.ledger-nav input[type=date]{ border:2px solid #ecdfc9; border-radius:12px; padding:.3rem .5rem; font-size:.85rem; }
+.lg-cards{ display:grid; grid-template-columns:repeat(3,1fr); gap:.6rem; margin-bottom:1rem; }
+.lg-card{ background:var(--white); border-radius:16px; padding:.7rem .6rem; text-align:center; box-shadow:0 3px 10px var(--shadow); }
+.lg-card .lg-card-label{ font-size:.75rem; color:var(--ink-soft); }
+.lg-card .lg-card-num{ font-family:'ZCOOL KuaiLe',cursive; font-size:1.15rem; margin-top:.15rem; word-break:break-all; }
+.lg-income{ color:#2F8556; } .lg-expense{ color:#D1495B; } .lg-net-pos{ color:#2F8556; } .lg-net-neg{ color:#D1495B; }
+.lg-section{ background:var(--white); border-radius:18px; padding:1rem 1.1rem; margin-bottom:1rem; box-shadow:0 4px 12px var(--shadow); }
+.lg-section-h{ font-weight:700; font-size:.95rem; margin-bottom:.6rem; color:var(--ledger-accent-dark); }
+.lg-donut-wrap{ display:flex; gap:1rem; align-items:center; flex-wrap:wrap; justify-content:center; }
+.lg-donut{ width:170px; height:170px; flex-shrink:0; }
+.lg-legend{ flex:1; min-width:180px; }
+.lg-legend-row{ display:flex; align-items:center; gap:.5rem; font-size:.85rem; padding:.22rem 0; }
+.lg-dot{ width:11px; height:11px; border-radius:50%; flex-shrink:0; }
+.lg-legend-row .lg-name{ flex:1; }
+.lg-legend-row .lg-pct{ color:var(--ink-soft); width:3.4rem; text-align:right; }
+.lg-legend-row .lg-amt{ width:5.6rem; text-align:right; font-weight:600; }
+.lg-bar-row{ display:flex; align-items:center; gap:.5rem; font-size:.8rem; padding:.2rem 0; }
+.lg-bar-row .lg-bar-label{ width:3.2rem; color:var(--ink-soft); flex-shrink:0; }
+.lg-bar-track{ flex:1; background:var(--ledger-bg-2); border-radius:6px; height:12px; overflow:hidden; }
+.lg-bar-fill{ height:100%; background:#E4879A; border-radius:6px; }
+.lg-bar-row .lg-bar-val{ width:5.6rem; text-align:right; font-weight:600; flex-shrink:0; }
+.lg-tx{ display:flex; align-items:center; gap:.7rem; padding:.55rem 0; border-top:1px dashed #eee0cc; }
+.lg-tx:first-of-type{ border-top:none; }
+.lg-tx-emoji{ font-size:1.3rem; width:2rem; text-align:center; }
+.lg-tx-main{ flex:1; min-width:0; }
+.lg-tx-title{ font-size:.9rem; font-weight:600; }
+.lg-tx-sub{ font-size:.75rem; color:var(--ink-soft); }
+.lg-tx-amt{ font-weight:700; font-size:.95rem; white-space:nowrap; }
+.lg-progress{ background:var(--ledger-bg-2); border-radius:8px; height:12px; overflow:hidden; margin:.4rem 0; }
+.lg-progress-fill{ height:100%; background:var(--ledger-accent); border-radius:8px; }
+.lg-goal{ border:1px solid #e2f0e8; border-radius:14px; padding:.75rem .9rem; margin-bottom:.7rem; }
+.lg-goal-top{ display:flex; justify-content:space-between; align-items:baseline; gap:.5rem; }
+.lg-goal-name{ font-family:'ZCOOL KuaiLe',cursive; font-size:1.1rem; }
+.lg-goal-meta{ font-size:.8rem; color:var(--ink-soft); line-height:1.6; }
+.lg-hint{ background:var(--ledger-bg-2); border-radius:12px; padding:.6rem .8rem; font-size:.84rem; line-height:1.7; margin-bottom:.8rem; }
+#view-ledger{ background:var(--ledger-bg-2); } #view-ledger .module-title, #view-ledger .back-link{ color:var(--ledger-accent-dark); } #view-ledger .btn-primary{ background:var(--ledger-accent); }
+#view-ledger .pill{ border-color:var(--ledger-accent); color:var(--ledger-accent-dark); }
+#view-ledger .pill-active{ background:var(--ledger-accent); color:#fff; }
+@media (max-width:480px){ .lg-cards{ grid-template-columns:1fr; } .lg-card{ display:flex; justify-content:space-between; align-items:center; } }
 .song-lyrics{ white-space:pre-wrap; line-height:1.9; font-size:.95rem; background:var(--song-bg-2); border-radius:14px; padding:.9rem 1rem; margin-top:.7rem; max-height:50vh; overflow-y:auto; }
 .todo-section-h{ font-family:'ZCOOL KuaiLe',cursive; font-size:1.1rem; color:var(--todo-accent-dark); margin:1.1rem 0 .5rem; }
 .todo-item{ display:flex; gap:.7rem; align-items:flex-start; background:var(--white); border-radius:14px; padding:.7rem .9rem; margin-bottom:.6rem; box-shadow:0 3px 10px var(--shadow); }
@@ -428,6 +472,7 @@ a{color:inherit;}
     <button class="desk-item i-fitness" onclick="goTo('fitness')"><span class="badge">🏃</span><span class="d-title brush">運動規劃</span><span class="d-tag">今天動了嗎？</span></button>
     <button class="desk-item i-todo" onclick="goTo('todo')"><span class="badge">📌</span><span class="d-title brush">待辦清單</span><span class="d-tag">接下來要做什麼？</span></button>
     <button class="desk-item i-songs" onclick="goTo('songs')"><span class="badge">🎵</span><span class="d-title brush">創作歌</span><span class="d-tag">今天寫了什麼歌？</span></button>
+    <button class="desk-item i-ledger" onclick="goTo('ledger')"><span class="badge">💰</span><span class="d-title brush">記帳</span><span class="d-tag">錢都花去哪了？</span></button>
   </div>
 </section>
 
@@ -577,6 +622,22 @@ a{color:inherit;}
   <div class="module-body">
     <div id="songs-form-slot"></div>
     <div id="songs-list"></div>
+  </div>
+</section>
+
+<!-- ================= LEDGER ================= -->
+<section id="view-ledger" class="module-view hidden">
+  <div class="module-header">
+    <div>
+      <button class="back-link" onclick="goTo('home')">← 回到桌面</button>
+      <h2 class="module-title brush">記帳</h2>
+      <p class="module-sub">收入、支出、存錢計畫</p>
+    </div>
+    <button class="btn btn-primary" onclick="openLedgerForm()">+ 新增一筆</button>
+  </div>
+  <div class="module-body">
+    <div id="ledger-form-slot"></div>
+    <div id="ledger-content"></div>
   </div>
 </section>
 
@@ -733,7 +794,7 @@ function settingsModalHtml(msg){
     </div>
     <div class="settings-section">
       <div class="settings-section-title">📊 匯出 Excel</div>
-      <p class="settings-hint">即將推出。</p>
+      <p class="settings-hint">「記帳」頁面裡有匯出按鈕，可以匯出每日／每月／每年的明細與彙總（CSV 格式，Excel 直接開啟）。其他模組的匯出之後再加。</p>
     </div>
     <div class="form-actions"><button class="btn btn-ghost" onclick="closeSettingsModal()">關閉</button></div>`;
 }
@@ -802,7 +863,7 @@ function fileToDataURL(file, maxDim, quality){
 }
 
 /* ===================== storage (window.storage when available, else localStorage; optional GitHub sync layer) ===================== */
-const STORAGE_KEYS = { travel:'travel:entries', diary:'diary:entries', recipes:'recipes:entries', books:'books:entries', fitness:'fitness:entries', todo:'todo:entries', songs:'songs:entries' };
+const STORAGE_KEYS = { travel:'travel:entries', diary:'diary:entries', recipes:'recipes:entries', books:'books:entries', fitness:'fitness:entries', todo:'todo:entries', songs:'songs:entries', ledger:'ledger:entries', savings:'savings:entries' };
 const HAS_CLAUDE_STORAGE = (typeof window.storage !== 'undefined' && window.storage !== null);
 
 async function localGet(key){
@@ -833,7 +894,7 @@ async function saveEntries(moduleKey, arr){
 
 /* ---- app settings (GitHub sync config) ---- */
 const SETTINGS_KEY = 'app:settings';
-const APP_VERSION = 'v4.1';
+const APP_VERSION = 'v4.2';
 let _appSettings = {};
 let _syncState = 'unset'; // unset | ok | warn | err
 async function getAppSettings(){
@@ -1084,7 +1145,9 @@ async function buildFullSnapshot(){
   const fitness = state.fitness.entries !== null ? state.fitness.entries : await loadEntries('fitness');
   const todo = state.todo.entries !== null ? state.todo.entries : await loadEntries('todo');
   const songs = state.songs.entries !== null ? state.songs.entries : await loadEntries('songs');
-  return { travel, diary, recipes, books, fitness, todo, songs, updatedAt: Date.now() };
+  const ledger = state.ledger.entries !== null ? state.ledger.entries : await loadEntries('ledger');
+  const savings = state.ledger.entries !== null ? state.ledger.savings : await loadEntries('savings');
+  return { travel, diary, recipes, books, fitness, todo, songs, ledger, savings, updatedAt: Date.now() };
 }
 async function pushToGithub(){
   if(!githubConfigured()) return;
@@ -1130,6 +1193,8 @@ async function pullFromGithub(){
   await saveEntriesRaw('fitness', data.fitness || []);
   await saveEntriesRaw('todo', data.todo || []);
   await saveEntriesRaw('songs', data.songs || []);
+  await saveEntriesRaw('ledger', data.ledger || []);
+  await saveEntriesRaw('savings', data.savings || []);
   _appSettings.lastSyncedAt = Date.now();
   await setAppSettings(_appSettings);
   _syncState = 'ok';
@@ -1174,6 +1239,7 @@ const state = {
   diary: { entries: null, editingId: null, calYear: new Date().getFullYear(), calMonth: new Date().getMonth(), selectedDate: new Date().toISOString().slice(0,10) },
   recipes: { entries: null, editingId: null, activeCategory: null, madeFilter: 'all', minRating: 0 },
   books: { entries: null, editingId: null, activeCategory: null },
+  ledger: { entries: null, savings: [], view: 'month', cursor: localDateStr(new Date()), editingId: null },
   songs: { entries: null, editingId: null, filter: 'all', styleFilter: null },
   todo: { entries: null, activeCategory: null, showDone: false, editingId: null, formSteps: [], formPhotos: [] },
   fitness: { entries: null, activePersonId: null, editingLogId: null, logFormOpen: false, personFormOpen: false, formMeals: [], formExercises: [], chartMetric: 'weight' },
@@ -1191,6 +1257,8 @@ function goTo(view){
     renderTravelModule();
   } else if(view === 'todo'){
     renderTodoModule();
+  } else if(view === 'ledger'){
+    renderLedgerModule();
   }
 }
 
@@ -1209,6 +1277,13 @@ async function initModule(moduleKey){
     });
     state.travel.entries = entries;
     renderTravelModule();
+    return;
+  }
+  if(moduleKey === 'ledger'){
+    document.getElementById('ledger-content').innerHTML = '<div class="loading-msg">翻頁中…</div>';
+    state.ledger.savings = await loadEntries('savings');
+    state.ledger.entries = await loadEntries('ledger');
+    renderLedgerModule();
     return;
   }
   if(moduleKey === 'songs'){
@@ -2960,6 +3035,376 @@ function deleteSong(id){
     renderSongsModule();
     await persistSongs();
   });
+}
+
+/* ===================== LEDGER module ===================== */
+const EXPENSE_CATS = [['食','🍚','#F4A259'],['衣','👕','#EF7B9B'],['住','🏠','#6FA8DC'],['行','🚌','#7BC38B'],['育','📚','#A98FD6'],['樂','🎮','#F2CB4F'],['其他','📦','#B8B2A7']];
+const INCOME_CATS = [['薪水','💼','#46A874'],['紅包','🧧','#E4572E'],['額外收入','✨','#F2CB4F'],['其他','📦','#B8B2A7']];
+function catMeta(type, name){
+  const arr = type==='income' ? INCOME_CATS : EXPENSE_CATS;
+  return arr.find(c=>c[0]===name) || arr[arr.length-1];
+}
+function fmtMoney(n){ return 'NT$ ' + Math.round(n||0).toLocaleString('zh-TW'); }
+async function persistLedger(){ await saveEntries('ledger', state.ledger.entries); }
+async function persistSavings(){ await saveEntries('savings', state.ledger.savings); }
+function clampDate(y, mIdx, d){
+  const dim = new Date(y, mIdx+1, 0).getDate();
+  return localDateStr(new Date(y, mIdx, Math.min(d, dim)));
+}
+function ledgerInPeriod(dateStr){
+  const L = state.ledger, c = L.cursor;
+  if(!dateStr) return false;
+  if(L.view==='day') return dateStr===c;
+  if(L.view==='month') return dateStr.slice(0,7)===c.slice(0,7);
+  return dateStr.slice(0,4)===c.slice(0,4);
+}
+function ledgerPeriodLabel(){
+  const [y,m,d] = state.ledger.cursor.split('-').map(Number);
+  if(state.ledger.view==='day') return `${y}年${m}月${d}日`;
+  if(state.ledger.view==='month') return `${y}年${m}月`;
+  return `${y}年`;
+}
+function shiftLedger(n){
+  const L = state.ledger;
+  const [y,m,d] = L.cursor.split('-').map(Number);
+  if(L.view==='day') L.cursor = addDaysStr(L.cursor, n);
+  else if(L.view==='month') L.cursor = clampDate(y, m-1+n, d);
+  else L.cursor = clampDate(y+n, m-1, d);
+  renderLedgerModule();
+}
+function setLedgerView(v){ state.ledger.view = v; renderLedgerModule(); }
+function setLedgerDate(v){ if(v){ state.ledger.cursor = v; renderLedgerModule(); } }
+function ledgerStats(txs){
+  let income = 0, expense = 0; const cats = {};
+  txs.forEach(t => {
+    const a = parseFloat(t.amount) || 0;
+    if(t.type==='income') income += a;
+    else {
+      expense += a;
+      const name = EXPENSE_CATS.some(c=>c[0]===t.category) ? t.category : '其他';
+      cats[name] = (cats[name]||0) + a;
+    }
+  });
+  return { income, expense, net: income-expense, cats };
+}
+function ledgerTxsInPeriod(){
+  return (state.ledger.entries||[]).filter(t => ledgerInPeriod(t.date))
+    .sort((a,b)=>(b.date||'').localeCompare(a.date||'') || (b.createdAt||0)-(a.createdAt||0));
+}
+function pctText(v, total){ return total>0 ? (v/total*100).toFixed(1)+'%' : '0%'; }
+function donutSvg(cats, total){
+  if(total<=0) return '';
+  let offset = 25;
+  const R = 15.91549430918954;
+  const segs = EXPENSE_CATS.map(([name,,color]) => {
+    const v = cats[name]||0; if(v<=0) return '';
+    const pct = v/total*100;
+    const seg = `<circle cx="21" cy="21" r="${R}" fill="transparent" stroke="${color}" stroke-width="6" stroke-dasharray="${pct.toFixed(3)} ${(100-pct).toFixed(3)}" stroke-dashoffset="${offset.toFixed(3)}"></circle>`;
+    offset -= pct;
+    return seg;
+  }).join('');
+  return `<svg class="lg-donut" viewBox="0 0 42 42"><circle cx="21" cy="21" r="${R}" fill="transparent" stroke="#f1ebdf" stroke-width="6"></circle>${segs}
+    <text x="21" y="20" text-anchor="middle" font-size="3" fill="#94897A">總支出</text>
+    <text x="21" y="25" text-anchor="middle" font-size="3.6" font-weight="700" fill="#4A3F35">${Math.round(total).toLocaleString('zh-TW')}</text></svg>`;
+}
+function ledgerLegendHtml(cats, total){
+  return EXPENSE_CATS.filter(([name]) => (cats[name]||0)>0)
+    .sort((a,b)=>(cats[b[0]]||0)-(cats[a[0]]||0))
+    .map(([name,emoji,color]) => `<div class="lg-legend-row"><span class="lg-dot" style="background:${color}"></span><span class="lg-name">${emoji} ${name}</span><span class="lg-pct">${pctText(cats[name], total)}</span><span class="lg-amt">${fmtMoney(cats[name])}</span></div>`).join('');
+}
+function ledgerTrendHtml(){
+  const L = state.ledger;
+  if(L.view==='day') return '';
+  const all = L.entries||[];
+  const rows = [];
+  if(L.view==='month'){
+    const ym = L.cursor.slice(0,7);
+    const byDay = {};
+    all.filter(t=>t.type==='expense' && (t.date||'').slice(0,7)===ym).forEach(t => { byDay[t.date] = (byDay[t.date]||0) + (parseFloat(t.amount)||0); });
+    Object.keys(byDay).sort().forEach(d => rows.push([`${parseInt(d.slice(8),10)}日`, byDay[d]]));
+  } else {
+    const y = L.cursor.slice(0,4);
+    for(let m=1;m<=12;m++){
+      const ym = `${y}-${String(m).padStart(2,'0')}`;
+      const v = all.filter(t=>t.type==='expense' && (t.date||'').slice(0,7)===ym).reduce((sum,t)=>sum+(parseFloat(t.amount)||0),0);
+      rows.push([`${m}月`, v]);
+    }
+  }
+  const max = Math.max(...rows.map(r=>r[1]), 0);
+  if(!rows.length || max<=0) return '';
+  return `<div class="lg-section"><div class="lg-section-h">${L.view==='month'?'📅 每日支出':'📅 每月支出'}</div>` +
+    rows.map(([label,v]) => `<div class="lg-bar-row"><span class="lg-bar-label">${label}</span><div class="lg-bar-track"><div class="lg-bar-fill" style="width:${(v/max*100).toFixed(1)}%"></div></div><span class="lg-bar-val">${fmtMoney(v)}</span></div>`).join('') + `</div>`;
+}
+function monthsUntil(deadline){
+  const t = new Date();
+  const [y,m] = deadline.split('-').map(Number);
+  return (y - t.getFullYear())*12 + (m-1 - t.getMonth()) + 1;
+}
+function goalMonthlyNeed(g){
+  const remaining = Math.max(0, (parseFloat(g.target)||0) - (parseFloat(g.saved)||0));
+  if(remaining<=0 || !g.deadline) return 0;
+  const months = monthsUntil(g.deadline);
+  return months>0 ? remaining/months : remaining;
+}
+function ledgerSavingsHtml(){
+  const L = state.ledger;
+  const goals = L.savings || [];
+  const ym = L.cursor.slice(0,7);
+  const mStats = ledgerStats((L.entries||[]).filter(t => (t.date||'').slice(0,7)===ym));
+  const totalNeed = goals.reduce((sum,g)=>sum+goalMonthlyNeed(g),0);
+  let hint = `${ym} 收入 ${fmtMoney(mStats.income)}、支出 ${fmtMoney(mStats.expense)}、結餘 <b class="${mStats.net>=0?'lg-net-pos':'lg-net-neg'}">${fmtMoney(mStats.net)}</b>`;
+  if(mStats.income>0) hint += `（存錢率 ${(mStats.net/mStats.income*100).toFixed(1)}%）`;
+  if(totalNeed>0){
+    hint += `<br>為了達成目前所有目標，每月需存 <b>${fmtMoney(totalNeed)}</b>：` + (mStats.net>=totalNeed ? '這個月結餘已達標 🎉' : `這個月還差 <b class="lg-net-neg">${fmtMoney(totalNeed-mStats.net)}</b>`);
+    if(mStats.income>0) hint += `<br>建議這個月支出控制在 <b>${fmtMoney(Math.max(0, mStats.income-totalNeed))}</b> 以內`;
+  }
+  const cards = goals.map(g => {
+    const target = parseFloat(g.target)||0, saved = parseFloat(g.saved)||0;
+    const pct = target>0 ? Math.min(100, saved/target*100) : 0;
+    const need = goalMonthlyNeed(g);
+    let dl = '';
+    if(g.deadline){
+      const mu = monthsUntil(g.deadline);
+      dl = mu>0 ? `期限 ${esc(g.deadline)}（還有 ${mu} 個月）` : (saved>=target ? `期限 ${esc(g.deadline)}` : `期限 ${esc(g.deadline)}（已逾期）`);
+    }
+    return `<div class="lg-goal">
+      <div class="lg-goal-top"><span class="lg-goal-name">🎯 ${esc(g.name)}</span><span class="lg-goal-meta">${pct.toFixed(1)}%</span></div>
+      <div class="lg-progress"><div class="lg-progress-fill" style="width:${pct.toFixed(1)}%"></div></div>
+      <div class="lg-goal-meta">已存 ${fmtMoney(saved)} / 目標 ${fmtMoney(target)}${saved>=target?'　🎉 已達成':`　還差 ${fmtMoney(target-saved)}`}${dl?`<br>${dl}`:''}${need>0?`<br>每月需存 <b>${fmtMoney(need)}</b>`:''}</div>
+      <div class="form-actions" style="margin-top:.4rem;">
+        <button class="btn btn-primary btn-sm" onclick="depositGoal('${g.id}')">+ 存入</button>
+        <button class="btn btn-ghost btn-sm" onclick="openGoalForm('${g.id}')">編輯</button>
+      </div>
+    </div>`;
+  }).join('');
+  return `<div class="lg-section"><div class="lg-section-h">🐷 存錢計畫</div>
+    <div class="lg-hint">${hint}</div>
+    ${cards || '<div class="empty-state" style="padding:.8rem;">還沒有存錢目標，新增一個吧（例如：旅費、緊急預備金）。</div>'}
+    <button class="btn btn-ghost btn-sm" onclick="openGoalForm()">+ 新增存錢目標</button></div>`;
+}
+function ledgerTxHtml(t){
+  const m = catMeta(t.type, t.category);
+  const isIn = t.type==='income';
+  return `<div class="lg-tx">
+    <span class="lg-tx-emoji">${m[1]}</span>
+    <div class="lg-tx-main"><div class="lg-tx-title">${esc(t.note || t.category || (isIn?'收入':'支出'))}</div><div class="lg-tx-sub">${esc(fmtDate(t.date))}・${esc(t.category||'其他')}</div></div>
+    <span class="lg-tx-amt ${isIn?'lg-income':'lg-expense'}">${isIn?'+':'-'}${fmtMoney(t.amount)}</span>
+    <button class="tiny-link" onclick="openLedgerForm('${t.id}')">編輯</button>
+  </div>`;
+}
+function renderLedgerModule(){
+  const el = document.getElementById('ledger-content');
+  if(!el || state.ledger.entries===null) return;
+  const L = state.ledger;
+  const txs = ledgerTxsInPeriod();
+  const st = ledgerStats(txs);
+  let html = `<div class="checklist-pills" style="justify-content:center;">
+      <button class="pill ${L.view==='day'?'pill-active':''}" onclick="setLedgerView('day')">每日</button>
+      <button class="pill ${L.view==='month'?'pill-active':''}" onclick="setLedgerView('month')">每月</button>
+      <button class="pill ${L.view==='year'?'pill-active':''}" onclick="setLedgerView('year')">每年</button>
+    </div>
+    <div class="ledger-nav">
+      <button class="icon-btn" onclick="shiftLedger(-1)">◀</button>
+      <span class="lg-label">${ledgerPeriodLabel()}</span>
+      <button class="icon-btn" onclick="shiftLedger(1)">▶</button>
+      ${L.view==='day' ? `<input type="date" value="${esc(L.cursor)}" onchange="setLedgerDate(this.value)">` : ''}
+    </div>
+    <div class="lg-cards">
+      <div class="lg-card"><div class="lg-card-label">收入</div><div class="lg-card-num lg-income">${fmtMoney(st.income)}</div></div>
+      <div class="lg-card"><div class="lg-card-label">支出</div><div class="lg-card-num lg-expense">${fmtMoney(st.expense)}</div></div>
+      <div class="lg-card"><div class="lg-card-label">結餘</div><div class="lg-card-num ${st.net>=0?'lg-net-pos':'lg-net-neg'}">${fmtMoney(st.net)}</div></div>
+    </div>`;
+  if(st.expense>0){
+    html += `<div class="lg-section"><div class="lg-section-h">🥧 支出比例</div><div class="lg-donut-wrap">${donutSvg(st.cats, st.expense)}<div class="lg-legend">${ledgerLegendHtml(st.cats, st.expense)}</div></div></div>`;
+  } else {
+    html += `<div class="lg-section"><div class="lg-section-h">🥧 支出比例</div><div class="empty-state" style="padding:1rem;">這段期間還沒有支出紀錄。</div></div>`;
+  }
+  html += ledgerTrendHtml();
+  html += ledgerSavingsHtml();
+  html += `<div class="lg-section"><div class="lg-section-h">🧾 ${ledgerPeriodLabel()}明細（${txs.length} 筆）</div>` +
+    (txs.length ? txs.map(ledgerTxHtml).join('') : '<div class="empty-state" style="padding:1rem;">還沒有紀錄，點右上角「+ 新增一筆」開始記帳。</div>') + `</div>`;
+  html += `<div class="lg-section"><div class="lg-section-h">📤 匯出（CSV，Excel 可直接開啟）</div>
+    <div class="form-actions">
+      <button class="btn btn-ghost btn-sm" onclick="exportLedger('detail')">匯出${L.view==='day'?'當日':L.view==='month'?'當月':'當年'}明細</button>
+      <button class="btn btn-ghost btn-sm" onclick="exportLedger('summary')">匯出${L.view==='day'?'當日':L.view==='month'?'當月':'當年'}彙總</button>
+      <button class="btn btn-ghost btn-sm" onclick="exportLedger('all')">匯出全部明細</button>
+    </div></div>`;
+  el.innerHTML = html;
+}
+
+/* ---- ledger forms ---- */
+function ledgerCatOptions(type, selected){
+  const arr = type==='income' ? INCOME_CATS : EXPENSE_CATS;
+  return arr.map(c => `<option value="${c[0]}" ${c[0]===selected?'selected':''}>${c[1]} ${c[0]}</option>`).join('');
+}
+function ledgerTypeChanged(){
+  document.getElementById('lg-category').innerHTML = ledgerCatOptions(val('lg-type'), '');
+}
+function ledgerFormHtml(t){
+  const x = t || { type:'expense' };
+  const defDate = x.date || (state.ledger.view==='day' ? state.ledger.cursor : todayStr());
+  return `<div class="form-panel">
+    <div class="row-2">
+      <div class="field"><label>類型</label><select id="lg-type" onchange="ledgerTypeChanged()"><option value="expense" ${x.type!=='income'?'selected':''}>支出</option><option value="income" ${x.type==='income'?'selected':''}>收入</option></select></div>
+      <div class="field"><label>日期</label><input type="date" id="lg-date" value="${esc(defDate)}"></div>
+    </div>
+    <div class="row-2">
+      <div class="field"><label>金額</label><input type="number" step="1" id="lg-amount" value="${x.amount!==undefined?x.amount:''}" placeholder="0"></div>
+      <div class="field"><label>類別</label><select id="lg-category">${ledgerCatOptions(x.type, x.category)}</select></div>
+    </div>
+    <div class="field"><label>備註（項目）</label><input type="text" id="lg-note" value="${esc(x.note)}" placeholder="例如：午餐便當、1月薪水、紅包"></div>
+    <div class="form-actions">
+      <button class="btn btn-primary" onclick="saveLedgerForm()">儲存</button>
+      <button class="btn btn-ghost" onclick="closeLedgerForm()">取消</button>
+      ${t ? `<button class="btn btn-danger" onclick="deleteLedger('${t.id}')">刪除</button>` : ''}
+    </div>
+  </div>`;
+}
+function openLedgerForm(editId){
+  state.ledger.editingId = editId || null;
+  const t = editId ? state.ledger.entries.find(x=>x.id===editId) : null;
+  const slot = document.getElementById('ledger-form-slot');
+  slot.innerHTML = ledgerFormHtml(t);
+  slot.scrollIntoView({behavior:'smooth', block:'start'});
+}
+function closeLedgerForm(){ state.ledger.editingId = null; document.getElementById('ledger-form-slot').innerHTML = ''; }
+async function saveLedgerForm(){
+  const amount = parseFloat(val('lg-amount'));
+  if(isNaN(amount) || amount<=0){ showInfoModal('請輸入大於 0 的金額。'); return; }
+  const editId = state.ledger.editingId;
+  let t = editId ? state.ledger.entries.find(x=>x.id===editId) : null;
+  const isNew = !t;
+  if(isNew) t = { id: uid(), createdAt: Date.now() };
+  t.type = val('lg-type');
+  t.date = val('lg-date') || todayStr();
+  t.amount = amount;
+  t.category = val('lg-category');
+  t.note = val('lg-note').trim();
+  if(isNew) state.ledger.entries.push(t);
+  closeLedgerForm();
+  renderLedgerModule();
+  await persistLedger();
+}
+function deleteLedger(id){
+  showConfirmModal('確定要刪除這筆紀錄嗎？', async () => {
+    state.ledger.entries = state.ledger.entries.filter(x=>x.id!==id);
+    closeLedgerForm();
+    renderLedgerModule();
+    await persistLedger();
+  });
+}
+function openGoalForm(editId){
+  state.ledger.editingId = null;
+  const g = editId ? state.ledger.savings.find(x=>x.id===editId) : null;
+  const x = g || {};
+  const slot = document.getElementById('ledger-form-slot');
+  slot.innerHTML = `<div class="form-panel" data-goal-id="${g?g.id:''}">
+    <div class="field"><label>目標名稱</label><input type="text" id="goal-name" value="${esc(x.name)}" placeholder="例如：日本旅費、緊急預備金"></div>
+    <div class="row-2">
+      <div class="field"><label>目標金額</label><input type="number" id="goal-target" value="${x.target!==undefined?x.target:''}"></div>
+      <div class="field"><label>目前已存</label><input type="number" id="goal-saved" value="${x.saved!==undefined?x.saved:''}" placeholder="0"></div>
+    </div>
+    <div class="field"><label>希望完成的月份（選填，會算出每月需存多少）</label><input type="month" id="goal-deadline" value="${esc(x.deadline)}"></div>
+    <div class="form-actions">
+      <button class="btn btn-primary" onclick="saveGoalForm()">儲存</button>
+      <button class="btn btn-ghost" onclick="closeLedgerForm()">取消</button>
+      ${g ? `<button class="btn btn-danger" onclick="deleteGoal('${g.id}')">刪除</button>` : ''}
+    </div>
+  </div>`;
+  slot.scrollIntoView({behavior:'smooth', block:'start'});
+}
+async function saveGoalForm(){
+  const target = parseFloat(val('goal-target'));
+  if(isNaN(target) || target<=0){ showInfoModal('請輸入大於 0 的目標金額。'); return; }
+  const gid = document.querySelector('#ledger-form-slot .form-panel').dataset.goalId;
+  let g = gid ? state.ledger.savings.find(x=>x.id===gid) : null;
+  const isNew = !g;
+  if(isNew) g = { id: uid(), createdAt: Date.now() };
+  g.name = val('goal-name').trim() || '存錢目標';
+  g.target = target;
+  g.saved = val('goal-saved')==='' ? 0 : parseFloat(val('goal-saved'));
+  g.deadline = val('goal-deadline') || '';
+  if(isNew) state.ledger.savings.push(g);
+  closeLedgerForm();
+  renderLedgerModule();
+  await persistSavings();
+}
+function deleteGoal(id){
+  showConfirmModal('確定要刪除這個存錢目標嗎？', async () => {
+    state.ledger.savings = state.ledger.savings.filter(x=>x.id!==id);
+    closeLedgerForm();
+    renderLedgerModule();
+    await persistSavings();
+  });
+}
+function depositGoal(id){
+  const g = state.ledger.savings.find(x=>x.id===id);
+  if(!g) return;
+  showPromptModal(`要存入「${g.name}」多少金額？`, '', async (v) => {
+    const n = parseFloat(v);
+    if(isNaN(n) || n<=0){ showInfoModal('請輸入大於 0 的數字。'); return; }
+    g.saved = (parseFloat(g.saved)||0) + n;
+    renderLedgerModule();
+    await persistSavings();
+  });
+}
+
+/* ---- ledger export (CSV, opens in Excel) ---- */
+function csvCell(v){
+  v = String(v===undefined||v===null ? '' : v);
+  return /[",\r\n]/.test(v) ? '"' + v.replace(/"/g,'""') + '"' : v;
+}
+function downloadCsv(filename, rows){
+  const csv = '\ufeff' + rows.map(r => r.map(csvCell).join(',')).join('\r\n');
+  const blob = new Blob([csv], { type:'text/csv;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = filename;
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 1500);
+}
+function buildDetailRows(txs){
+  const rows = [['日期','類型','類別','金額','備註']];
+  [...txs].sort((a,b)=>(a.date||'').localeCompare(b.date||'') || (a.createdAt||0)-(b.createdAt||0))
+    .forEach(t => rows.push([t.date, t.type==='income'?'收入':'支出', t.category||'其他', t.amount, t.note||'']));
+  return rows;
+}
+function buildSummaryRows(){
+  const L = state.ledger;
+  const all = L.entries||[];
+  const rows = [];
+  if(L.view==='month'){
+    rows.push(['日期','收入','支出','結餘']);
+    const days = [...new Set(all.filter(t=>(t.date||'').slice(0,7)===L.cursor.slice(0,7)).map(t=>t.date))].sort();
+    days.forEach(d => { const st = ledgerStats(all.filter(t=>t.date===d)); rows.push([d, st.income, st.expense, st.net]); });
+  } else if(L.view==='year'){
+    rows.push(['月份','收入','支出','結餘']);
+    const y = L.cursor.slice(0,4);
+    for(let m=1;m<=12;m++){
+      const ym = `${y}-${String(m).padStart(2,'0')}`;
+      const st = ledgerStats(all.filter(t=>(t.date||'').slice(0,7)===ym));
+      rows.push([ym, st.income, st.expense, st.net]);
+    }
+  } else {
+    rows.push(['日期','收入','支出','結餘']);
+    const st = ledgerStats(all.filter(t=>t.date===L.cursor));
+    rows.push([L.cursor, st.income, st.expense, st.net]);
+  }
+  const pst = ledgerStats(ledgerTxsInPeriod());
+  rows.push([]);
+  rows.push(['支出類別','金額','占比']);
+  EXPENSE_CATS.forEach(([name]) => { const v = pst.cats[name]||0; if(v>0) rows.push([name, v, pctText(v, pst.expense)]); });
+  rows.push(['合計', pst.expense, pst.expense>0?'100%':'0%']);
+  return rows;
+}
+function ledgerFileTag(){
+  const c = state.ledger.cursor;
+  return state.ledger.view==='day' ? c : (state.ledger.view==='month' ? c.slice(0,7) : c.slice(0,4));
+}
+function exportLedger(kind){
+  if(kind==='all'){ downloadCsv('記帳明細_全部.csv', buildDetailRows(state.ledger.entries||[])); return; }
+  if(kind==='detail'){ downloadCsv(`記帳明細_${ledgerFileTag()}.csv`, buildDetailRows(ledgerTxsInPeriod())); return; }
+  downloadCsv(`記帳彙總_${ledgerFileTag()}.csv`, buildSummaryRows());
 }
 
 const formBuilders = {
