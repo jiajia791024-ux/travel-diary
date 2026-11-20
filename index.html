@@ -170,6 +170,15 @@ a{color:inherit;}
 .ledger-nav{ display:flex; align-items:center; justify-content:center; gap:.8rem; margin:.6rem 0 1rem; flex-wrap:wrap; }
 .ledger-nav .lg-label{ font-family:'ZCOOL KuaiLe',cursive; font-size:1.25rem; color:var(--ledger-accent-dark); min-width:8rem; text-align:center; }
 .ledger-nav input[type=date]{ border:2px solid #ecdfc9; border-radius:12px; padding:.3rem .5rem; font-size:.85rem; }
+.lg-search{ background:var(--white); border-radius:16px; padding:.7rem .9rem; margin-bottom:.9rem; box-shadow:0 3px 10px var(--shadow); }
+.lg-search input[type=search], .lg-search input[type=date], .lg-search select{ border:2px solid #ecdfc9; border-radius:10px; padding:.4rem .6rem; font-size:.88rem; background:var(--white); }
+.lg-search input[type=search]{ width:100%; margin-bottom:.5rem; }
+.lg-search-row{ display:flex; gap:.4rem; flex-wrap:wrap; align-items:center; font-size:.85rem; }
+.cat-row{ display:flex; gap:.5rem; align-items:center; margin-bottom:.45rem; }
+.cat-row input{ border:2px solid #ecdfc9; border-radius:10px; padding:.4rem .5rem; font-size:.9rem; }
+.cat-row .cat-emoji{ width:3.4rem; text-align:center; }
+.cat-row .cat-name{ flex:1; min-width:0; }
+.lg-range-note{ text-align:center; font-size:.78rem; color:var(--ink-soft); margin:-.4rem 0 .9rem; }
 .lg-cards{ display:grid; grid-template-columns:repeat(3,1fr); gap:.6rem; margin-bottom:1rem; }
 .lg-card{ background:var(--white); border-radius:16px; padding:.7rem .6rem; text-align:center; box-shadow:0 3px 10px var(--shadow); }
 .lg-card .lg-card-label{ font-size:.75rem; color:var(--ink-soft); }
@@ -637,6 +646,15 @@ a{color:inherit;}
   </div>
   <div class="module-body">
     <div id="ledger-form-slot"></div>
+    <div class="lg-search">
+      <input type="search" id="lg-q" placeholder="🔎 搜尋備註、類別、金額、日期（例如 午餐、10/3、2026-10）" oninput="renderLedgerSearch()">
+      <div class="lg-search-row">
+        <input type="date" id="lg-from" onchange="renderLedgerSearch()"> ～ <input type="date" id="lg-to" onchange="renderLedgerSearch()">
+        <select id="lg-stype" onchange="renderLedgerSearch()"><option value="">收入＋支出</option><option value="expense">只看支出</option><option value="income">只看收入</option></select>
+        <button class="tiny-link" onclick="clearLedgerSearch()">清除搜尋</button>
+      </div>
+    </div>
+    <div id="lg-search-results"></div>
     <div id="ledger-content"></div>
   </div>
 </section>
@@ -863,7 +881,7 @@ function fileToDataURL(file, maxDim, quality){
 }
 
 /* ===================== storage (window.storage when available, else localStorage; optional GitHub sync layer) ===================== */
-const STORAGE_KEYS = { travel:'travel:entries', diary:'diary:entries', recipes:'recipes:entries', books:'books:entries', fitness:'fitness:entries', todo:'todo:entries', songs:'songs:entries', ledger:'ledger:entries', savings:'savings:entries' };
+const STORAGE_KEYS = { travel:'travel:entries', diary:'diary:entries', recipes:'recipes:entries', books:'books:entries', fitness:'fitness:entries', todo:'todo:entries', songs:'songs:entries', ledger:'ledger:entries', savings:'savings:entries', ledgerSettings:'ledgerSettings:entries' };
 const HAS_CLAUDE_STORAGE = (typeof window.storage !== 'undefined' && window.storage !== null);
 
 async function localGet(key){
@@ -894,7 +912,7 @@ async function saveEntries(moduleKey, arr){
 
 /* ---- app settings (GitHub sync config) ---- */
 const SETTINGS_KEY = 'app:settings';
-const APP_VERSION = 'v4.2';
+const APP_VERSION = 'v4.3';
 let _appSettings = {};
 let _syncState = 'unset'; // unset | ok | warn | err
 async function getAppSettings(){
@@ -1147,7 +1165,8 @@ async function buildFullSnapshot(){
   const songs = state.songs.entries !== null ? state.songs.entries : await loadEntries('songs');
   const ledger = state.ledger.entries !== null ? state.ledger.entries : await loadEntries('ledger');
   const savings = state.ledger.entries !== null ? state.ledger.savings : await loadEntries('savings');
-  return { travel, diary, recipes, books, fitness, todo, songs, ledger, savings, updatedAt: Date.now() };
+  const ledgerSettings = state.ledger.entries !== null ? [ledgerSettingsObj()] : await loadEntries('ledgerSettings');
+  return { travel, diary, recipes, books, fitness, todo, songs, ledger, savings, ledgerSettings, updatedAt: Date.now() };
 }
 async function pushToGithub(){
   if(!githubConfigured()) return;
@@ -1195,6 +1214,7 @@ async function pullFromGithub(){
   await saveEntriesRaw('songs', data.songs || []);
   await saveEntriesRaw('ledger', data.ledger || []);
   await saveEntriesRaw('savings', data.savings || []);
+  await saveEntriesRaw('ledgerSettings', data.ledgerSettings || []);
   _appSettings.lastSyncedAt = Date.now();
   await setAppSettings(_appSettings);
   _syncState = 'ok';
@@ -1239,7 +1259,7 @@ const state = {
   diary: { entries: null, editingId: null, calYear: new Date().getFullYear(), calMonth: new Date().getMonth(), selectedDate: new Date().toISOString().slice(0,10) },
   recipes: { entries: null, editingId: null, activeCategory: null, madeFilter: 'all', minRating: 0 },
   books: { entries: null, editingId: null, activeCategory: null },
-  ledger: { entries: null, savings: [], view: 'month', cursor: localDateStr(new Date()), editingId: null },
+  ledger: { entries: null, savings: [], view: 'month', cursor: localDateStr(new Date()), editingId: null, startDay: 5, expenseCats: null, incomeCats: null, formCats: { expense: [], income: [] } },
   songs: { entries: null, editingId: null, filter: 'all', styleFilter: null },
   todo: { entries: null, activeCategory: null, showDone: false, editingId: null, formSteps: [], formPhotos: [] },
   fitness: { entries: null, activePersonId: null, editingLogId: null, logFormOpen: false, personFormOpen: false, formMeals: [], formExercises: [], chartMetric: 'weight' },
@@ -1282,6 +1302,12 @@ async function initModule(moduleKey){
   if(moduleKey === 'ledger'){
     document.getElementById('ledger-content').innerHTML = '<div class="loading-msg">翻頁中…</div>';
     state.ledger.savings = await loadEntries('savings');
+    const lset = await loadEntries('ledgerSettings');
+    if(lset[0]){
+      if(lset[0].startDay) state.ledger.startDay = lset[0].startDay;
+      if(Array.isArray(lset[0].expenseCats) && lset[0].expenseCats.length) state.ledger.expenseCats = lset[0].expenseCats;
+      if(Array.isArray(lset[0].incomeCats) && lset[0].incomeCats.length) state.ledger.incomeCats = lset[0].incomeCats;
+    }
     state.ledger.entries = await loadEntries('ledger');
     renderLedgerModule();
     return;
@@ -3038,12 +3064,22 @@ function deleteSong(id){
 }
 
 /* ===================== LEDGER module ===================== */
-const EXPENSE_CATS = [['食','🍚','#F4A259'],['衣','👕','#EF7B9B'],['住','🏠','#6FA8DC'],['行','🚌','#7BC38B'],['育','📚','#A98FD6'],['樂','🎮','#F2CB4F'],['其他','📦','#B8B2A7']];
-const INCOME_CATS = [['薪水','💼','#46A874'],['紅包','🧧','#E4572E'],['額外收入','✨','#F2CB4F'],['其他','📦','#B8B2A7']];
+const DEFAULT_EXPENSE_CATS = [['食','🍚','#F4A259'],['衣','👕','#EF7B9B'],['住','🏠','#6FA8DC'],['行','🚌','#7BC38B'],['育','📚','#A98FD6'],['樂','🎮','#F2CB4F'],['其他','📦','#B8B2A7']];
+const DEFAULT_INCOME_CATS = [['薪水','💼','#46A874'],['紅包','🧧','#E4572E'],['額外收入','✨','#F2CB4F'],['其他','📦','#B8B2A7']];
+const CAT_PALETTE = ['#F4A259','#EF7B9B','#6FA8DC','#7BC38B','#A98FD6','#F2CB4F','#4FB6A8','#E4879A','#8D6E63','#5C6BC0','#26A69A','#B8B2A7'];
+function expenseCats(){ const a = state.ledger.expenseCats; return (a && a.length) ? a : DEFAULT_EXPENSE_CATS; }
+function incomeCats(){ const a = state.ledger.incomeCats; return (a && a.length) ? a : DEFAULT_INCOME_CATS; }
 function catMeta(type, name){
-  const arr = type==='income' ? INCOME_CATS : EXPENSE_CATS;
-  return arr.find(c=>c[0]===name) || arr[arr.length-1];
+  const arr = type==='income' ? incomeCats() : expenseCats();
+  return arr.find(c=>c[0]===name) || [name||'其他','🏷️','#B8B2A7'];
 }
+function ledgerCatList(cats){
+  const cur = expenseCats();
+  const out = cur.filter(c => (cats[c[0]]||0) > 0);
+  Object.keys(cats).forEach(n => { if((cats[n]||0)>0 && !cur.some(c=>c[0]===n)) out.push([n,'🏷️','#B8B2A7']); });
+  return out;
+}
+function ledgerSettingsObj(){ return { startDay: state.ledger.startDay, expenseCats: state.ledger.expenseCats, incomeCats: state.ledger.incomeCats }; }
 function fmtMoney(n){ return 'NT$ ' + Math.round(n||0).toLocaleString('zh-TW'); }
 async function persistLedger(){ await saveEntries('ledger', state.ledger.entries); }
 async function persistSavings(){ await saveEntries('savings', state.ledger.savings); }
@@ -3051,25 +3087,60 @@ function clampDate(y, mIdx, d){
   const dim = new Date(y, mIdx+1, 0).getDate();
   return localDateStr(new Date(y, mIdx, Math.min(d, dim)));
 }
-function ledgerInPeriod(dateStr){
-  const L = state.ledger, c = L.cursor;
-  if(!dateStr) return false;
-  if(L.view==='day') return dateStr===c;
-  if(L.view==='month') return dateStr.slice(0,7)===c.slice(0,7);
-  return dateStr.slice(0,4)===c.slice(0,4);
+function ledgerStartDay(){
+  const n = parseInt(state.ledger.startDay, 10);
+  return (n>=1 && n<=28) ? n : 1;
 }
+function accMonthStartOf(dateStr){
+  const [y,m,d] = dateStr.split('-').map(Number);
+  if(d >= ledgerStartDay()) return [y, m];
+  return m===1 ? [y-1, 12] : [y, m-1];
+}
+function accMonthRange(y, m){
+  const S = ledgerStartDay();
+  return { start: localDateStr(new Date(y, m-1, S)), end: localDateStr(new Date(y, m, S-1)) };
+}
+function ledgerRange(){
+  const L = state.ledger;
+  if(L.view==='day') return { start: L.cursor, end: L.cursor };
+  if(L.view==='month'){ const [y,m] = accMonthStartOf(L.cursor); return accMonthRange(y,m); }
+  const [y] = accMonthStartOf(L.cursor);
+  return { start: accMonthRange(y,1).start, end: accMonthRange(y,12).end };
+}
+function ledgerInPeriod(dateStr){
+  if(!dateStr) return false;
+  const r = ledgerRange();
+  return dateStr >= r.start && dateStr <= r.end;
+}
+function fmtRangeDate(ds){ const [y,m,d] = ds.split('-').map(Number); return `${y}/${m}/${d}`; }
 function ledgerPeriodLabel(){
-  const [y,m,d] = state.ledger.cursor.split('-').map(Number);
-  if(state.ledger.view==='day') return `${y}年${m}月${d}日`;
-  if(state.ledger.view==='month') return `${y}年${m}月`;
-  return `${y}年`;
+  const L = state.ledger, S = ledgerStartDay();
+  if(L.view==='day'){ const [y,m,d] = L.cursor.split('-').map(Number); return `${y}年${m}月${d}日`; }
+  if(L.view==='month'){ const [y,m] = accMonthStartOf(L.cursor); return S===1 ? `${y}年${m}月` : `${y}年${m}月帳`; }
+  const [y] = accMonthStartOf(L.cursor);
+  return S===1 ? `${y}年` : `${y}年度`;
+}
+function ledgerRangeNote(){
+  const S = ledgerStartDay();
+  const r = ledgerRange();
+  const rule = S===1 ? '一般日曆月（每月 1 號起算）' : `每月 ${S} 號～次月 ${S-1} 號`;
+  const period = state.ledger.view==='day' ? '' : `期間：${fmtRangeDate(r.start)} ～ ${fmtRangeDate(r.end)}　`;
+  return `<div class="lg-range-note">${period}記帳月：${rule} <button class="tiny-link" onclick="openLedgerStartDayPrompt()">調整</button>　<button class="tiny-link" onclick="openCatManager()">🏷️ 管理類別</button></div>`;
+}
+function openLedgerStartDayPrompt(){
+  showPromptModal('每月幾號開始算新的一個記帳月？（填 1～28，填 1 就是一般的日曆月；例如發薪日是 5 號就填 5）', String(ledgerStartDay()), async (v) => {
+    const n = parseInt(v, 10);
+    if(!(n>=1 && n<=28)){ showInfoModal('請輸入 1 到 28 之間的整數。'); return; }
+    state.ledger.startDay = n;
+    renderLedgerModule();
+    await saveEntries('ledgerSettings', [ledgerSettingsObj()]);
+  });
 }
 function shiftLedger(n){
-  const L = state.ledger;
-  const [y,m,d] = L.cursor.split('-').map(Number);
+  const L = state.ledger, S = ledgerStartDay();
   if(L.view==='day') L.cursor = addDaysStr(L.cursor, n);
-  else if(L.view==='month') L.cursor = clampDate(y, m-1+n, d);
-  else L.cursor = clampDate(y+n, m-1, d);
+  else if(L.view==='month'){ const [y,m] = accMonthStartOf(L.cursor); L.cursor = localDateStr(new Date(y, m-1+n, S)); }
+  else { const [y] = accMonthStartOf(L.cursor); L.cursor = localDateStr(new Date(y+n, 0, S)); }
   renderLedgerModule();
 }
 function setLedgerView(v){ state.ledger.view = v; renderLedgerModule(); }
@@ -3081,7 +3152,7 @@ function ledgerStats(txs){
     if(t.type==='income') income += a;
     else {
       expense += a;
-      const name = EXPENSE_CATS.some(c=>c[0]===t.category) ? t.category : '其他';
+      const name = t.category || '其他';
       cats[name] = (cats[name]||0) + a;
     }
   });
@@ -3096,7 +3167,7 @@ function donutSvg(cats, total){
   if(total<=0) return '';
   let offset = 25;
   const R = 15.91549430918954;
-  const segs = EXPENSE_CATS.map(([name,,color]) => {
+  const segs = ledgerCatList(cats).map(([name,,color]) => {
     const v = cats[name]||0; if(v<=0) return '';
     const pct = v/total*100;
     const seg = `<circle cx="21" cy="21" r="${R}" fill="transparent" stroke="${color}" stroke-width="6" stroke-dasharray="${pct.toFixed(3)} ${(100-pct).toFixed(3)}" stroke-dashoffset="${offset.toFixed(3)}"></circle>`;
@@ -3108,25 +3179,25 @@ function donutSvg(cats, total){
     <text x="21" y="25" text-anchor="middle" font-size="3.6" font-weight="700" fill="#4A3F35">${Math.round(total).toLocaleString('zh-TW')}</text></svg>`;
 }
 function ledgerLegendHtml(cats, total){
-  return EXPENSE_CATS.filter(([name]) => (cats[name]||0)>0)
+  return ledgerCatList(cats)
     .sort((a,b)=>(cats[b[0]]||0)-(cats[a[0]]||0))
     .map(([name,emoji,color]) => `<div class="lg-legend-row"><span class="lg-dot" style="background:${color}"></span><span class="lg-name">${emoji} ${name}</span><span class="lg-pct">${pctText(cats[name], total)}</span><span class="lg-amt">${fmtMoney(cats[name])}</span></div>`).join('');
 }
 function ledgerTrendHtml(){
   const L = state.ledger;
   if(L.view==='day') return '';
-  const all = L.entries||[];
+  const all = (L.entries||[]).filter(t => t.type==='expense');
   const rows = [];
   if(L.view==='month'){
-    const ym = L.cursor.slice(0,7);
+    const r = ledgerRange();
     const byDay = {};
-    all.filter(t=>t.type==='expense' && (t.date||'').slice(0,7)===ym).forEach(t => { byDay[t.date] = (byDay[t.date]||0) + (parseFloat(t.amount)||0); });
-    Object.keys(byDay).sort().forEach(d => rows.push([`${parseInt(d.slice(8),10)}日`, byDay[d]]));
+    all.filter(t => t.date>=r.start && t.date<=r.end).forEach(t => { byDay[t.date] = (byDay[t.date]||0) + (parseFloat(t.amount)||0); });
+    Object.keys(byDay).sort().forEach(d => rows.push([`${parseInt(d.slice(5,7),10)}/${parseInt(d.slice(8),10)}`, byDay[d]]));
   } else {
-    const y = L.cursor.slice(0,4);
+    const [y] = accMonthStartOf(L.cursor);
     for(let m=1;m<=12;m++){
-      const ym = `${y}-${String(m).padStart(2,'0')}`;
-      const v = all.filter(t=>t.type==='expense' && (t.date||'').slice(0,7)===ym).reduce((sum,t)=>sum+(parseFloat(t.amount)||0),0);
+      const r = accMonthRange(y,m);
+      const v = all.filter(t => t.date>=r.start && t.date<=r.end).reduce((sum,t)=>sum+(parseFloat(t.amount)||0),0);
       rows.push([`${m}月`, v]);
     }
   }
@@ -3149,14 +3220,16 @@ function goalMonthlyNeed(g){
 function ledgerSavingsHtml(){
   const L = state.ledger;
   const goals = L.savings || [];
-  const ym = L.cursor.slice(0,7);
-  const mStats = ledgerStats((L.entries||[]).filter(t => (t.date||'').slice(0,7)===ym));
+  const [accY, accM] = accMonthStartOf(L.cursor);
+  const accR = accMonthRange(accY, accM);
+  const accLabel = `${accY}年${accM}月${ledgerStartDay()===1?'':'帳'}（${fmtRangeDate(accR.start)}～${fmtRangeDate(accR.end)}）`;
+  const mStats = ledgerStats((L.entries||[]).filter(t => t.date>=accR.start && t.date<=accR.end));
   const totalNeed = goals.reduce((sum,g)=>sum+goalMonthlyNeed(g),0);
-  let hint = `${ym} 收入 ${fmtMoney(mStats.income)}、支出 ${fmtMoney(mStats.expense)}、結餘 <b class="${mStats.net>=0?'lg-net-pos':'lg-net-neg'}">${fmtMoney(mStats.net)}</b>`;
+  let hint = `${accLabel} 收入 ${fmtMoney(mStats.income)}、支出 ${fmtMoney(mStats.expense)}、結餘 <b class="${mStats.net>=0?'lg-net-pos':'lg-net-neg'}">${fmtMoney(mStats.net)}</b>`;
   if(mStats.income>0) hint += `（存錢率 ${(mStats.net/mStats.income*100).toFixed(1)}%）`;
   if(totalNeed>0){
-    hint += `<br>為了達成目前所有目標，每月需存 <b>${fmtMoney(totalNeed)}</b>：` + (mStats.net>=totalNeed ? '這個月結餘已達標 🎉' : `這個月還差 <b class="lg-net-neg">${fmtMoney(totalNeed-mStats.net)}</b>`);
-    if(mStats.income>0) hint += `<br>建議這個月支出控制在 <b>${fmtMoney(Math.max(0, mStats.income-totalNeed))}</b> 以內`;
+    hint += `<br>為了達成目前所有目標，每月需存 <b>${fmtMoney(totalNeed)}</b>：` + (mStats.net>=totalNeed ? '這個記帳月結餘已達標 🎉' : `這個記帳月還差 <b class="lg-net-neg">${fmtMoney(totalNeed-mStats.net)}</b>`);
+    if(mStats.income>0) hint += `<br>建議這個記帳月支出控制在 <b>${fmtMoney(Math.max(0, mStats.income-totalNeed))}</b> 以內`;
   }
   const cards = goals.map(g => {
     const target = parseFloat(g.target)||0, saved = parseFloat(g.saved)||0;
@@ -3209,6 +3282,7 @@ function renderLedgerModule(){
       <button class="icon-btn" onclick="shiftLedger(1)">▶</button>
       ${L.view==='day' ? `<input type="date" value="${esc(L.cursor)}" onchange="setLedgerDate(this.value)">` : ''}
     </div>
+    ${ledgerRangeNote()}
     <div class="lg-cards">
       <div class="lg-card"><div class="lg-card-label">收入</div><div class="lg-card-num lg-income">${fmtMoney(st.income)}</div></div>
       <div class="lg-card"><div class="lg-card-label">支出</div><div class="lg-card-num lg-expense">${fmtMoney(st.expense)}</div></div>
@@ -3230,12 +3304,138 @@ function renderLedgerModule(){
       <button class="btn btn-ghost btn-sm" onclick="exportLedger('all')">匯出全部明細</button>
     </div></div>`;
   el.innerHTML = html;
+  renderLedgerSearch();
+}
+
+/* ---- ledger category manager ---- */
+function openCatManager(){
+  const mk = arr => arr.map(c => ({ id: uid(), orig: c[0], name: c[0], emoji: c[1], color: c[2] }));
+  state.ledger.formCats = { expense: mk(expenseCats()), income: mk(incomeCats()) };
+  state.ledger.editingId = null;
+  const slot = document.getElementById('ledger-form-slot');
+  slot.innerHTML = `<div class="form-panel" id="cat-manager">
+    <div class="subtab-h">🏷️ 管理類別</div>
+    <p class="settings-hint">可以隨時新增、改名、刪除。改名會連舊紀錄的類別一起更新；刪除只是從選單拿掉，過去的紀錄會保留原本的類別名稱。</p>
+    <div class="subtab-h" style="margin-top:.6rem;">支出類別</div>
+    <div id="cat-editor-expense"></div>
+    <div class="subtab-h" style="margin-top:.8rem;">收入類別</div>
+    <div id="cat-editor-income"></div>
+    <div class="form-actions" style="margin-top:.8rem;">
+      <button class="btn btn-primary" onclick="saveCatManager()">儲存</button>
+      <button class="btn btn-ghost" onclick="closeLedgerForm()">取消</button>
+      <button class="btn btn-ghost" onclick="resetCatDefaults()">還原預設</button>
+    </div>
+  </div>`;
+  renderCatEditors();
+  slot.scrollIntoView({behavior:'smooth', block:'start'});
+}
+function renderCatEditors(){
+  ['expense','income'].forEach(type => {
+    const el = document.getElementById('cat-editor-' + type);
+    if(!el) return;
+    el.innerHTML = state.ledger.formCats[type].map(c => `
+      <div class="cat-row" data-id="${c.id}">
+        <span class="lg-dot" style="background:${c.color}"></span>
+        <input type="text" class="cat-emoji" maxlength="4" value="${esc(c.emoji)}">
+        <input type="text" class="cat-name" value="${esc(c.name)}" placeholder="類別名稱">
+        <button type="button" class="tiny-x" onclick="removeCatRow('${type}','${c.id}')">✕</button>
+      </div>`).join('') + `<button type="button" class="btn btn-ghost btn-sm" onclick="addCatRow('${type}')">+ 新增${type==='expense'?'支出':'收入'}類別</button>`;
+  });
+}
+function syncCatsFromDom(){
+  ['expense','income'].forEach(type => {
+    const rows = document.querySelectorAll(`#cat-editor-${type} .cat-row`);
+    const prev = state.ledger.formCats[type];
+    state.ledger.formCats[type] = Array.from(rows).map(r => {
+      const id = r.dataset.id; const ex = prev.find(x=>x.id===id) || {};
+      return { id, orig: ex.orig, color: ex.color, emoji: r.querySelector('.cat-emoji').value.trim() || '🏷️', name: r.querySelector('.cat-name').value };
+    });
+  });
+}
+function addCatRow(type){
+  syncCatsFromDom();
+  const list = state.ledger.formCats[type];
+  const used = new Set(list.map(c=>c.color));
+  const color = CAT_PALETTE.find(c=>!used.has(c)) || CAT_PALETTE[list.length % CAT_PALETTE.length];
+  list.push({ id: uid(), orig: '', name: '', emoji: '🏷️', color });
+  renderCatEditors();
+  const inputs = document.querySelectorAll(`#cat-editor-${type} .cat-name`);
+  if(inputs.length) inputs[inputs.length-1].focus();
+}
+function removeCatRow(type, id){
+  syncCatsFromDom();
+  state.ledger.formCats[type] = state.ledger.formCats[type].filter(c=>c.id!==id);
+  renderCatEditors();
+}
+function resetCatDefaults(){
+  const mk = arr => arr.map(c => ({ id: uid(), orig: '', name: c[0], emoji: c[1], color: c[2] }));
+  state.ledger.formCats = { expense: mk(DEFAULT_EXPENSE_CATS), income: mk(DEFAULT_INCOME_CATS) };
+  renderCatEditors();
+}
+async function saveCatManager(){
+  syncCatsFromDom();
+  const L = state.ledger;
+  const result = {}; const renames = { expense: {}, income: {} };
+  for(const type of ['expense','income']){
+    const label = type==='expense' ? '支出' : '收入';
+    const rows = L.formCats[type].filter(c => c.name.trim() || c.orig);
+    if(rows.some(c => !c.name.trim())){ showInfoModal(`${label}類別有名稱被清空了，請補上名稱，或按 ✕ 刪除那一列。`); return; }
+    const names = rows.map(c => c.name.trim());
+    if(new Set(names).size !== names.length){ showInfoModal(`${label}類別有重複的名稱，請改成不同的名稱。`); return; }
+    if(names.length === 0){ showInfoModal(`${label}類別至少要留一個。`); return; }
+    result[type] = rows.map(c => [c.name.trim(), c.emoji, c.color]);
+    rows.forEach(c => { if(c.orig && c.orig !== c.name.trim()) renames[type][c.orig] = c.name.trim(); });
+  }
+  let changed = 0;
+  (L.entries||[]).forEach(t => {
+    const map = renames[t.type==='income' ? 'income' : 'expense'];
+    if(Object.prototype.hasOwnProperty.call(map, t.category)){ t.category = map[t.category]; changed++; }
+  });
+  L.expenseCats = result.expense;
+  L.incomeCats = result.income;
+  closeLedgerForm();
+  renderLedgerModule();
+  await saveEntries('ledgerSettings', [ledgerSettingsObj()]);
+  if(changed) await persistLedger();
+}
+
+/* ---- ledger search ---- */
+function txSearchText(t){
+  const [y,m,d] = (t.date||'').split('-').map(Number);
+  return [t.note, t.category, t.amount, t.date, `${y}/${m}/${d}`, `${m}/${d}`, `${m}月${d}日`, t.type==='income'?'收入':'支出'].join(' ').toLowerCase();
+}
+function renderLedgerSearch(){
+  const box = document.getElementById('lg-search-results');
+  if(!box) return;
+  const entries = state.ledger.entries;
+  if(entries===null){ box.innerHTML = ''; return; }
+  const q = val('lg-q'), from = val('lg-from'), to = val('lg-to'), type = val('lg-stype');
+  const words = q.trim().toLowerCase().split(/\s+/).filter(Boolean);
+  if(!words.length && !from && !to && !type){ box.innerHTML = ''; return; }
+  const list = entries
+    .filter(t => (!from || t.date>=from) && (!to || t.date<=to) && (!type || t.type===type) && words.every(w => txSearchText(t).includes(w)))
+    .sort((a,b)=>(b.date||'').localeCompare(a.date||'') || (b.createdAt||0)-(a.createdAt||0));
+  const st = ledgerStats(list);
+  let html = `<div class="lg-section"><div class="lg-section-h">🔎 搜尋結果（${list.length} 筆）</div>`;
+  if(!list.length){
+    html += `<div class="empty-state" style="padding:1rem;">找不到符合的紀錄。</div>`;
+  } else {
+    html += `<div class="lg-hint">收入 <b class="lg-income">${fmtMoney(st.income)}</b>　支出 <b class="lg-expense">${fmtMoney(st.expense)}</b>　結餘 <b class="${st.net>=0?'lg-net-pos':'lg-net-neg'}">${fmtMoney(st.net)}</b></div>`;
+    html += list.slice(0,200).map(ledgerTxHtml).join('');
+    if(list.length>200) html += `<div class="lg-tx-sub" style="text-align:center;padding:.5rem;">只顯示最新 200 筆，請再縮小搜尋條件。</div>`;
+  }
+  box.innerHTML = html + `</div>`;
+}
+function clearLedgerSearch(){
+  ['lg-q','lg-from','lg-to','lg-stype'].forEach(id => { const el = document.getElementById(id); if(el) el.value = ''; });
+  renderLedgerSearch();
 }
 
 /* ---- ledger forms ---- */
 function ledgerCatOptions(type, selected){
-  const arr = type==='income' ? INCOME_CATS : EXPENSE_CATS;
-  return arr.map(c => `<option value="${c[0]}" ${c[0]===selected?'selected':''}>${c[1]} ${c[0]}</option>`).join('');
+  const arr = (type==='income' ? incomeCats() : expenseCats()).slice();
+  if(selected && !arr.some(c=>c[0]===selected)) arr.push([selected,'🏷️','#B8B2A7']);
+  return arr.map(c => `<option value="${esc(c[0])}" ${c[0]===selected?'selected':''}>${c[1]} ${esc(c[0])}</option>`).join('');
 }
 function ledgerTypeChanged(){
   document.getElementById('lg-category').innerHTML = ledgerCatOptions(val('lg-type'), '');
@@ -3373,17 +3573,18 @@ function buildSummaryRows(){
   const L = state.ledger;
   const all = L.entries||[];
   const rows = [];
+  const r = ledgerRange();
   if(L.view==='month'){
     rows.push(['日期','收入','支出','結餘']);
-    const days = [...new Set(all.filter(t=>(t.date||'').slice(0,7)===L.cursor.slice(0,7)).map(t=>t.date))].sort();
+    const days = [...new Set(all.filter(t=>t.date>=r.start && t.date<=r.end).map(t=>t.date))].sort();
     days.forEach(d => { const st = ledgerStats(all.filter(t=>t.date===d)); rows.push([d, st.income, st.expense, st.net]); });
   } else if(L.view==='year'){
-    rows.push(['月份','收入','支出','結餘']);
-    const y = L.cursor.slice(0,4);
+    rows.push(['記帳月','期間','收入','支出','結餘']);
+    const [y] = accMonthStartOf(L.cursor);
     for(let m=1;m<=12;m++){
-      const ym = `${y}-${String(m).padStart(2,'0')}`;
-      const st = ledgerStats(all.filter(t=>(t.date||'').slice(0,7)===ym));
-      rows.push([ym, st.income, st.expense, st.net]);
+      const mr = accMonthRange(y,m);
+      const st = ledgerStats(all.filter(t=>t.date>=mr.start && t.date<=mr.end));
+      rows.push([`${y}-${String(m).padStart(2,'0')}`, `${mr.start}～${mr.end}`, st.income, st.expense, st.net]);
     }
   } else {
     rows.push(['日期','收入','支出','結餘']);
@@ -3393,13 +3594,16 @@ function buildSummaryRows(){
   const pst = ledgerStats(ledgerTxsInPeriod());
   rows.push([]);
   rows.push(['支出類別','金額','占比']);
-  EXPENSE_CATS.forEach(([name]) => { const v = pst.cats[name]||0; if(v>0) rows.push([name, v, pctText(v, pst.expense)]); });
+  ledgerCatList(pst.cats).forEach(([name]) => { const v = pst.cats[name]; rows.push([name, v, pctText(v, pst.expense)]); });
   rows.push(['合計', pst.expense, pst.expense>0?'100%':'0%']);
   return rows;
 }
 function ledgerFileTag(){
-  const c = state.ledger.cursor;
-  return state.ledger.view==='day' ? c : (state.ledger.view==='month' ? c.slice(0,7) : c.slice(0,4));
+  const L = state.ledger;
+  if(L.view==='day') return L.cursor;
+  const r = ledgerRange();
+  if(ledgerStartDay()===1) return L.view==='month' ? r.start.slice(0,7) : r.start.slice(0,4);
+  return `${r.start}_${r.end}`;
 }
 function exportLedger(kind){
   if(kind==='all'){ downloadCsv('記帳明細_全部.csv', buildDetailRows(state.ledger.entries||[])); return; }
